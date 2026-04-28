@@ -21,6 +21,7 @@ import {
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import NewDevolucionModal from '../components/NewDevolucionModal';
+import DevolucionDetailModal from '../components/DevolucionDetailModal';
 import apiClient from '../services/apiClient';
 import { Devolucion } from '../types';
 
@@ -29,6 +30,8 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDevolucion, setSelectedDevolucion] = useState<Devolucion | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   
   // Pagination & Search state
   const [page, setPage] = useState(1);
@@ -246,7 +249,11 @@ const DashboardPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -10 }}
                       transition={{ delay: Math.min(idx * 0.01, 0.3) }}
-                      className="group hover:bg-primary/[0.02] transition-all"
+                      className="group hover:bg-primary/[0.02] transition-all cursor-pointer"
+                      onClick={() => {
+                        setSelectedDevolucion(dev);
+                        setIsDetailModalOpen(true);
+                      }}
                     >
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
@@ -285,17 +292,28 @@ const DashboardPage = () => {
                             to={`/public/equipment/${dev.IdEquipo}`}
                             className="p-2 hover:bg-primary/10 text-muted-foreground/40 hover:text-primary rounded-xl transition-all"
                             title="Historial"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <History size={14} strokeWidth={2.5} />
                           </Link>
                           <button 
-                            onClick={() => printZebraLabel(dev.IdEquipo || '')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              printZebraLabel(dev.IdEquipo || '');
+                            }}
                             className="p-2 hover:bg-emerald-500/10 text-muted-foreground/40 hover:text-emerald-500 rounded-xl transition-all"
                             title="Imprimir Etiqueta Zebra"
                           >
                             <Printer size={14} strokeWidth={2.5} />
                           </button>
-                          <button className="p-2 hover:bg-muted text-muted-foreground/40 hover:text-foreground rounded-xl transition-all">
+                          <button 
+                            className="p-2 hover:bg-muted text-muted-foreground/40 hover:text-foreground rounded-xl transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDevolucion(dev);
+                              setIsDetailModalOpen(true);
+                            }}
+                          >
                             <ChevronRight size={16} strokeWidth={2.5} />
                           </button>
                         </div>
@@ -361,6 +379,15 @@ const DashboardPage = () => {
               fetchDevoluciones();
               fetchStats();
             }} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isDetailModalOpen && selectedDevolucion && (
+          <DevolucionDetailModal 
+            devolucion={selectedDevolucion}
+            onClose={() => setIsDetailModalOpen(false)}
           />
         )}
       </AnimatePresence>

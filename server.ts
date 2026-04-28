@@ -27,8 +27,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev';
 const AZURE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
 const AZURE_CONTAINER = process.env.AZURE_STORAGE_CONTAINER || 'stecnico';
 
-const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_CONNECTION_STRING);
-const containerClient = blobServiceClient.getContainerClient(AZURE_CONTAINER);
+let containerClient: any = null;
+if (AZURE_CONNECTION_STRING) {
+  try {
+    const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_CONNECTION_STRING);
+    containerClient = blobServiceClient.getContainerClient(AZURE_CONTAINER);
+    console.log('✅ Azure Blob Storage configurado correctamente');
+  } catch (err) {
+    console.error('❌ Error al inicializar Azure Blob Storage:', err);
+  }
+} else {
+  console.warn('⚠️ AZURE_STORAGE_CONNECTION_STRING no definida. Las subidas de imágenes no funcionarán.');
+}
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -244,6 +254,10 @@ app.post('/api/upload', authenticateToken, upload.single('image'), async (req: a
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No se ha proporcionado ninguna imagen' });
+    }
+
+    if (!containerClient) {
+      return res.status(503).json({ message: 'El servicio de almacenamiento de imágenes no está configurado en el servidor' });
     }
 
     // Generar un nombre único para el archivo
