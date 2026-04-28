@@ -171,7 +171,7 @@ const DashboardPage = () => {
             >
               <div className="flex items-center justify-between">
                 <div className={`p-2 rounded-lg ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
-                  {React.createElement(stat.icon as any, { size: 16 })}
+                  <stat.icon size={16} />
                 </div>
                 <span className="text-[9px] font-black tracking-widest text-muted-foreground/30 uppercase">LIVE</span>
               </div>

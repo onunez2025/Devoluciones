@@ -42,7 +42,7 @@ const Navbar = () => {
       <div className="flex items-center gap-4 md:gap-6">
         <div className="hidden sm:flex items-center gap-3 px-4 py-2 bg-muted/40 rounded-full border border-border">
           <User className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-muted-foreground">{user?.name}</span>
+          <span className="text-sm font-medium text-muted-foreground">{user?.fullName}</span>
         </div>
 
         <div className="h-8 w-[1px] bg-border hidden sm:block" />

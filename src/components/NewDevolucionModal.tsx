@@ -25,6 +25,7 @@ interface Props {
 const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
@@ -56,6 +57,37 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
       setIdEquipoFound(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tamaño (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('La imagen es demasiado grande. Máximo 10MB.');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+    
+    const uploadData = new FormData();
+    uploadData.append('image', file);
+
+    try {
+      const response = await apiClient.post('/upload', uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      setFormData(prev => ({ ...prev, Adjunto: response.data.imageUrl }));
+      console.log('✅ Imagen subida a Azure:', response.data.imageUrl);
+    } catch (err: any) {
+      console.error('Error al subir imagen:', err);
+      setError('No se pudo subir la imagen a Azure. Intente nuevamente.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -225,15 +257,40 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
                 <label className="form-label flex items-center gap-1.5">
                   <Camera className="w-3 h-3 text-primary/60" /> Evidencia Fotográfica
                 </label>
-                <div className="drop-zone border-dashed border-primary/20 hover:border-primary/40 bg-primary/5">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110">
-                    <Upload className="w-5 h-5 text-primary" />
+                <label className="relative group cursor-pointer block">
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                  />
+                  <div className={`drop-zone border-dashed transition-all ${
+                    formData.Adjunto 
+                      ? 'border-emerald-500/40 bg-emerald-500/5' 
+                      : 'border-primary/20 hover:border-primary/40 bg-primary/5'
+                  }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
+                      formData.Adjunto ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'
+                    }`}>
+                      {uploading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : formData.Adjunto ? (
+                        <CheckCircle2 className="w-5 h-5" />
+                      ) : (
+                        <Upload className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[11px] font-black text-foreground">
+                        {uploading ? 'Subiendo a Azure...' : formData.Adjunto ? '¡Imagen Cargada con Éxito!' : 'Seleccionar Evidencia Fotográfica'}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground/60 font-bold mt-0.5">
+                        {formData.Adjunto ? 'Click para cambiar la imagen' : 'Azure Blob Storage habilitado'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-[11px] font-black text-foreground">Arrastre fotos aquí o haga clic</p>
-                    <p className="text-[9px] text-muted-foreground/60 font-bold mt-0.5">Sincronización Cloud habilitada (Microsoft 365)</p>
-                  </div>
-                </div>
+                </label>
               </div>
 
               {error && (

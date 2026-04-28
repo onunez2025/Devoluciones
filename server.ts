@@ -7,6 +7,9 @@ import axios from 'axios';
 import bcrypt from 'bcrypt';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { BlobServiceClient } from '@azure/storage-blob';
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +22,18 @@ app.use(express.json());
 
 const port = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev';
+
+// Configuración Azure Blob Storage
+const AZURE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
+const AZURE_CONTAINER = process.env.AZURE_STORAGE_CONTAINER || 'stecnico';
+
+const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_CONNECTION_STRING);
+const containerClient = blobServiceClient.getContainerClient(AZURE_CONTAINER);
+
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // Límite de 10MB
+});
 
 // Configuración SQL Server
 const sqlConfig = {
@@ -221,6 +236,39 @@ app.post('/api/devoluciones', authenticateToken, async (req: any, res) => {
   } catch (error: any) {
     console.error('Error al registrar devolución:', error);
     res.status(500).json({ message: 'Error al registrar devolución', error: error.message });
+  }
+});
+
+// Endpoint para subir imágenes a Azure Blob Storage
+app.post('/api/upload', authenticateToken, upload.single('image'), async (req: any, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se ha proporcionado ninguna imagen' });
+    }
+
+    // Generar un nombre único para el archivo
+    const blobName = `${uuidv4()}${path.extname(req.file.originalname)}`;
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+    console.log(`📤 Subiendo a Azure: ${blobName}...`);
+
+    // Subir el buffer directamente
+    await blockBlobClient.uploadData(req.file.buffer, {
+      blobHTTPHeaders: { blobContentType: req.file.mimetype }
+    });
+
+    console.log(`✅ Imagen subida con éxito: ${blockBlobClient.url}`);
+
+    res.json({ 
+      imageUrl: blockBlobClient.url,
+      blobName: blobName
+    });
+  } catch (error: any) {
+    console.error('❌ Error al subir a Azure:', error);
+    res.status(500).json({ 
+      message: 'Error al procesar la subida a Azure', 
+      error: error.message 
+    });
   }
 });
 
