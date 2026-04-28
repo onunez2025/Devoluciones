@@ -1,6 +1,7 @@
 // Build timestamp: 2026-04-28 11:54:00
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { utils, writeFile } from 'xlsx';
 import { 
   Plus, 
   Search, 
@@ -112,36 +113,25 @@ const DashboardPage = () => {
   };
 
   const exportToExcel = () => {
-    const selectedData = devoluciones.filter(dev => selectedTickets.has(String(dev.Ticket)));
+    const selectedData = devoluciones
+      .filter(dev => selectedTickets.has(String(dev.Ticket)))
+      .map(dev => ({
+        'Ticket': dev.Ticket,
+        'ID_Equipo': dev.IdEquipo,
+        'Serie': dev.N_Serie || 'N/A',
+        'Orden_Compra': dev.VC_oden_compra_numero || 'N/A',
+        'URL_Historial': `https://${window.location.host}/public/equipment/${dev.IdEquipo}`
+      }));
+
     if (selectedData.length === 0) return;
 
-    // Cabeceras
-    const headers = ['Ticket', 'ID_Equipo', 'Serie', 'Orden_Compra', 'URL_Historial'];
-    
-    // Filas
-    const rows = selectedData.map(dev => [
-      dev.Ticket,
-      dev.IdEquipo,
-      dev.N_Serie || '',
-      dev.VC_oden_compra_numero || '',
-      `https://${window.location.host}/public/equipment/${dev.IdEquipo}`
-    ]);
+    // Crear hoja de trabajo y libro
+    const worksheet = utils.json_to_sheet(selectedData);
+    const workbook = utils.book_new();
+    utils.book_append_sheet(workbook, worksheet, 'Devoluciones');
 
-    // Crear contenido CSV (con BOM para que Excel detecte acentos)
-    const csvContent = "\uFEFF" + [
-      headers.join(';'),
-      ...rows.map(r => r.join(';'))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `exportacion_zlabel_${new Date().getTime()}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Generar archivo y descargar
+    writeFile(workbook, `ZLabel_Export_${new Date().getTime()}.xlsx`);
   };
 
   const toggleSelectAll = () => {
