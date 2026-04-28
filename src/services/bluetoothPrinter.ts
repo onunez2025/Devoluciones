@@ -39,9 +39,21 @@ class BluetoothPrinterService {
       console.log('Conectando al servidor GATT...');
       let server;
       try {
+        // Forzar desconexión previa por si acaso
+        if (this.device.gatt?.connected) {
+          await this.device.gatt.disconnect();
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
         server = await this.device.gatt?.connect();
       } catch (e: any) {
-        throw new Error(`Fallo al conectar (GATT): ${e.message}`);
+        console.warn('Primer intento fallido, reintentando...', e);
+        // Reintento tras 1 segundo
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        try {
+          server = await this.device.gatt?.connect();
+        } catch (e2: any) {
+          throw new Error(`Fallo al conectar (GATT) tras reintento: ${e2.message}`);
+        }
       }
       
       // Pequeña pausa para estabilidad en Android
