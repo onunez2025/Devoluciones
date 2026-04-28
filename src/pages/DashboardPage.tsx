@@ -235,8 +235,8 @@ const DashboardPage = () => {
         </div>
 
         {/* Unified Filter Bar */}
-        <div className="glass-card p-2 flex flex-wrap gap-2 items-center bg-muted/10">
-          <div className="relative flex-1 min-w-[280px]">
+        <div className="glass-card p-2 flex flex-col md:flex-row gap-2 items-stretch md:items-center bg-muted/10">
+          <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
             <input 
               type="text"
@@ -247,26 +247,28 @@ const DashboardPage = () => {
             />
           </div>
           
-          <div className="flex items-center gap-2">
-            <div className="h-10 flex items-center px-3 bg-muted/40 rounded-xl border border-border/50">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="h-10 flex flex-1 md:flex-none items-center px-3 bg-muted/40 rounded-xl border border-border/50">
               <Calendar className="w-3.5 h-3.5 text-muted-foreground/60 mr-2" />
-              <span className="text-[10px] font-bold uppercase text-muted-foreground/80">Últimos 30 días</span>
+              <span className="text-[10px] font-bold uppercase text-muted-foreground/80 whitespace-nowrap">Últimos 30 días</span>
             </div>
             
-            <button className="h-10 w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all">
-              <Filter className="w-4 h-4 text-muted-foreground/60" />
-            </button>
+            <div className="flex gap-2">
+              <button className="h-10 w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all">
+                <Filter className="w-4 h-4 text-muted-foreground/60" />
+              </button>
 
-            <button 
-              onClick={() => {
-                fetchDevoluciones();
-                fetchStats();
-              }}
-              className="h-10 px-4 flex items-center gap-2 bg-primary/5 border border-primary/10 text-primary rounded-xl hover:bg-primary/10 transition-all"
-            >
-              <RefreshCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span className="text-[10px] font-black uppercase tracking-widest px-1">Actualizar</span>
-            </button>
+              <button 
+                onClick={() => {
+                  fetchDevoluciones();
+                  fetchStats();
+                }}
+                className="h-10 px-4 flex items-center gap-2 bg-primary/5 border border-primary/10 text-primary rounded-xl hover:bg-primary/10 transition-all"
+              >
+                <RefreshCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest px-1">Actualizar</span>
+              </button>
+            </div>
 
             <AnimatePresence>
               {selectedTickets.size > 0 && (
@@ -275,10 +277,10 @@ const DashboardPage = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   onClick={exportToExcel}
-                  className="h-10 px-6 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                  className="h-10 px-4 flex-1 md:flex-none bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" />
-                  Exportar {selectedTickets.size} para ZLabel
+                  <span>Excel ({selectedTickets.size})</span>
                 </motion.button>
               )}
             </AnimatePresence>
