@@ -46,15 +46,28 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
     setLoading(true);
     setError('');
     try {
-      const response = await apiClient.get(`/equipos/lookup/${formData.Ticket}`);
+      // 1. Buscar equipo en FSM (IdEquipo, Serie)
+      const fsmResponse = await apiClient.get(`/equipos/lookup/${formData.Ticket}`);
+      
+      // 2. Buscar datos de entrega en SAP (Folio/Referencia)
+      let sapFolio = '';
+      try {
+        const sapResponse = await apiClient.get(`/sap/lookup/${formData.Ticket}`);
+        sapFolio = sapResponse.data.Folio || '';
+      } catch (sapErr) {
+        console.warn('Ticket no encontrado en SAP para autocompletar Guía');
+      }
+
       setFormData(prev => ({ 
         ...prev, 
-        IdEquipo: response.data.IdEquipo,
-        N_Serie: response.data.N_Serie || prev.N_Serie 
+        IdEquipo: fsmResponse.data.IdEquipo,
+        N_Serie: fsmResponse.data.N_Serie || prev.N_Serie,
+        N_Guia: sapFolio || prev.N_Guia
       }));
+      
       setIdEquipoFound(true);
     } catch (err: any) {
-      setError('No se pudo encontrar un equipo para este ticket. Verifique el número.');
+      setError('No se pudo encontrar el equipo o el ticket. Verifique el número.');
       setIdEquipoFound(false);
     } finally {
       setLoading(false);
@@ -241,6 +254,9 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
                     value={formData.N_Guia}
                     onChange={(e) => setFormData({...formData, N_Guia: e.target.value})}
                   />
+                  <p className="text-[8px] font-bold text-primary/40 uppercase tracking-widest mt-1">
+                    {formData.N_Guia ? '✓ Sugerido por SAP (Validar con guía física)' : 'Ingrese el folio manualmente'}
+                  </p>
                 </div>
                 <div className="space-y-1.5">
                   <label className="form-label flex items-center gap-1.5">

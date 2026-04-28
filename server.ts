@@ -247,6 +247,30 @@ app.get('/api/equipos/lookup/:ticket', authenticateToken, async (req, res) => {
   }
 });
 
+// Búsqueda de datos SAP (Guía/Folio) por Ticket
+app.get('/api/sap/lookup/:ticket', authenticateToken, async (req, res) => {
+  const { ticket } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('ticket', sql.VarChar, ticket)
+      .query(`
+        SELECT TOP 1 VC_pedidocliente as Ticket, VC_referencia as Folio
+        FROM [dbo].[GAC_APP_SD_ENTREGAS]
+        WHERE VC_pedidocliente = @ticket OR VC_pedidocliente LIKE '%' + @ticket
+      `);
+    
+    if (result.recordset.length > 0) {
+      res.json(result.recordset[0]);
+    } else {
+      res.status(404).json({ message: 'Ticket no encontrado en SAP' });
+    }
+  } catch (error: any) {
+    console.error('Error en lookup de SAP:', error);
+    res.status(500).json({ message: 'Error interno al buscar en SAP' });
+  }
+});
+
 // Registro de nueva devolución
 app.post('/api/devoluciones', authenticateToken, async (req: any, res) => {
   const data = req.body;
