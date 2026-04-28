@@ -414,16 +414,27 @@ const DashboardPage = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(idx * 0.05, 0.3) }}
-                  className="glass-card p-4 space-y-4 active:scale-[0.98] transition-all"
-                  onClick={() => {
-                    setSelectedDevolucion(dev);
-                    setIsDetailModalOpen(true);
-                  }}
+                  className={`glass-card p-4 space-y-4 active:scale-[0.98] transition-all border-2 ${selectedTickets.has(String(dev.Ticket)) ? 'border-primary bg-primary/5' : 'border-white/5'}`}
+                  onClick={() => toggleSelect(String(dev.Ticket))}
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                      <span className="text-[14px] font-black text-foreground">Ticket #{dev.Ticket}</span>
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedTickets.has(String(dev.Ticket))}
+                        onChange={() => {}} // Handled by card click
+                        className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          <span className="text-[14px] font-black text-foreground tracking-tight">Ticket #{dev.Ticket}</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                          {dev.IdEquipo}
+                        </span>
+                      </div>
                     </div>
                     <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/10 text-[9px] font-black uppercase">
                       Validado
@@ -450,12 +461,22 @@ const DashboardPage = () => {
                       </span>
                     </div>
                     <div className="flex gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedDevolucion(dev);
+                          setIsDetailModalOpen(true);
+                        }}
+                        className="p-3 bg-primary/10 text-primary rounded-xl"
+                      >
+                        <Eye size={18} />
+                      </button>
                       <Link 
                         to={`/public/equipment/${dev.IdEquipo}`}
-                        className="p-2 bg-primary/5 text-primary rounded-lg"
+                        className="p-3 bg-primary/5 text-primary rounded-xl"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <History size={14} />
+                        <History size={18} />
                       </Link>
                       <button 
                         onClick={(e) => {
@@ -467,7 +488,7 @@ const DashboardPage = () => {
                         className="flex-1 flex items-center justify-center gap-2 py-3 bg-orange-500 text-white rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-orange-500/20 active:scale-95 transition-all uppercase"
                       >
                         <DownloadCloud size={16} />
-                        Descargar Etiqueta (ZLabel)
+                        ZLabel
                       </button>
                     </div>
                   </div>
