@@ -219,6 +219,34 @@ app.get('/api/devoluciones/stats', authenticateToken, async (_req, res) => {
   }
 });
 
+// Búsqueda de equipo por ticket para validación previa
+app.get('/api/equipos/lookup/:ticket', authenticateToken, async (req, res) => {
+  const { ticket } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('ticket', sql.VarChar, ticket)
+      .query(`
+        SELECT TOP 1 IdEquipo, CodigoExternoEquipo, N_Serie 
+        FROM [SIATC].[Dashboard_FSM] 
+        WHERE Ticket = @ticket OR LlamadaFSM = @ticket
+      `);
+    
+    if (result.recordset.length > 0) {
+      const equipo = result.recordset[0];
+      res.json({
+        IdEquipo: equipo.IdEquipo || equipo.CodigoExternoEquipo,
+        N_Serie: equipo.N_Serie
+      });
+    } else {
+      res.status(404).json({ message: 'Equipo no encontrado en la base de datos de FSM' });
+    }
+  } catch (error: any) {
+    console.error('Error en lookup de equipo:', error);
+    res.status(500).json({ message: 'Error interno al buscar el equipo' });
+  }
+});
+
 // Registro de nueva devolución
 app.post('/api/devoluciones', authenticateToken, async (req: any, res) => {
   const data = req.body;
@@ -234,7 +262,7 @@ app.post('/api/devoluciones', authenticateToken, async (req: any, res) => {
       .input('N_Serie', sql.VarChar, data.N_Serie)
       .input('Sticker', sql.VarChar, data.Sticker)
       .input('Comentario', sql.VarChar, data.Comentario)
-      .input('Adjunto', sql.VarChar, data.Adjunto) // El campo es XML pero acepta strings en la query
+      .input('Adjunto', sql.VarChar, data.Adjunto)
       .input('FechaRegistro', sql.DateTime, new Date())
       .query(`
         INSERT INTO [dbo].[GAC_APP_TB_DEVOLUCION] 
