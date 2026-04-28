@@ -21,7 +21,6 @@ import {
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import apiClient from '../services/apiClient';
 import { TechnicalReport } from '../types';
-import { bluetoothPrinter } from '../services/bluetoothPrinter';
 
 const PublicEquipmentPage = () => {
   const { idEquipo } = useParams();

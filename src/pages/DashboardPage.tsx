@@ -23,9 +23,7 @@ import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import Navbar from '../components/Navbar';
 import NewDevolucionModal from '../components/NewDevolucionModal';
 import DevolucionDetailModal from '../components/DevolucionDetailModal';
-import apiClient from '../services/apiClient';
 import { Devolucion } from '../types';
-import { bluetoothPrinter } from '../services/bluetoothPrinter';
 
 const DashboardPage = () => {
   const [devoluciones, setDevoluciones] = useState<Devolucion[]>([]);
@@ -110,14 +108,6 @@ const DashboardPage = () => {
     link.click();
   };
 
-  const copyToClipboardFallback = (zpl: string, error?: string) => {
-    navigator.clipboard.writeText(zpl).then(() => {
-      const message = error 
-        ? `Error de conexión Bluetooth: ${error}\n\nEl comando ZPL ha sido copiado al portapapeles.`
-        : 'Comando ZPL copiado al portapapeles.';
-      alert(message);
-    });
-  };
 
   const metrics = [
     { label: 'Total', value: stats.total, icon: Package, color: 'text-primary', bg: 'bg-primary/10' },
