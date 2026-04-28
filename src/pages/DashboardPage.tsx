@@ -116,20 +116,21 @@ const DashboardPage = () => {
     if (bluetoothPrinter.isSupported()) {
       try {
         await bluetoothPrinter.print(zpl);
-        // Opcional: Mostrar un toast de éxito en lugar de alert
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error al imprimir por Bluetooth:', error);
-        // Fallback al portapapeles si falla la conexión Bluetooth
-        copyToClipboardFallback(zpl);
+        copyToClipboardFallback(zpl, error.message || String(error));
       }
     } else {
       copyToClipboardFallback(zpl);
     }
   };
 
-  const copyToClipboardFallback = (zpl: string) => {
+  const copyToClipboardFallback = (zpl: string, error?: string) => {
     navigator.clipboard.writeText(zpl).then(() => {
-      alert('Bluetooth no disponible o cancelado.\n\nComando ZPL copiado al portapapeles para uso manual.');
+      const message = error 
+        ? `Error de conexión: ${error}\n\nEl comando ZPL ha sido copiado al portapapeles.`
+        : 'Bluetooth no disponible. El comando ZPL ha sido copiado al portapapeles.';
+      alert(message);
     });
   };
 

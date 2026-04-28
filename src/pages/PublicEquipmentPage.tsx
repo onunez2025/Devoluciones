@@ -81,16 +81,19 @@ const PublicEquipmentPage = () => {
       } catch (err: any) {
         console.error('❌ Error Bluetooth:', err);
         if (err.name === 'NotFoundError') return;
-        copyToClipboardFallback(zpl);
+        copyToClipboardFallback(zpl, err.message || String(err));
       }
     } else {
       copyToClipboardFallback(zpl);
     }
   };
 
-  const copyToClipboardFallback = (zpl: string) => {
+  const copyToClipboardFallback = (zpl: string, error?: string) => {
     navigator.clipboard.writeText(zpl).then(() => {
-      alert('Bluetooth no disponible.\n\nZPL copiado al portapapeles.');
+      const message = error 
+        ? `Error de conexión: ${error}\n\nEl comando ZPL ha sido copiado al portapapeles.`
+        : 'Bluetooth no disponible. El comando ZPL ha sido copiado al portapapeles.';
+      alert(message);
     });
   };
 
