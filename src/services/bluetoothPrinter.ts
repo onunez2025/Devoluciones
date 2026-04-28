@@ -8,9 +8,12 @@ export const ZebraPrinterUUIDs = {
   // Microchip/ISSC (common in ZQ220)
   service3: '49535343-fe7d-4ae5-8fa9-9fafd205e455',
   char3: '49535343-1e4d-4bd9-ba61-07c6435a7e56',
+  char3_alt: '49535343-8841-43f4-a8d4-ecbe34729bb3',
   // Generic BLE Print Service
   service4: '0000ff00-0000-1000-8000-00805f9b34fb',
-  char4: '0000ff01-0000-1000-8000-00805f9b34fb'
+  char4: '0000ff01-0000-1000-8000-00805f9b34fb',
+  // Standard Information
+  deviceInfo: '0000180a-0000-1000-8000-00805f9b34fb'
 };
 
 class BluetoothPrinterService {
@@ -32,7 +35,8 @@ class BluetoothPrinterService {
           ZebraPrinterUUIDs.service,
           ZebraPrinterUUIDs.service2,
           ZebraPrinterUUIDs.service3,
-          ZebraPrinterUUIDs.service4
+          ZebraPrinterUUIDs.service4,
+          ZebraPrinterUUIDs.deviceInfo
         ]
       });
 
@@ -71,13 +75,17 @@ class BluetoothPrinterService {
         } catch (e2) {
           try {
             service = await server?.getPrimaryService(ZebraPrinterUUIDs.service3);
-            this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char3)) || null;
+            try {
+              this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char3)) || null;
+            } catch (e3a) {
+              this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char3_alt)) || null;
+            }
           } catch (e3) {
             try {
               service = await server?.getPrimaryService(ZebraPrinterUUIDs.service4);
               this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char4)) || null;
             } catch (e4: any) {
-              throw new Error(`No se encontró canal de impresión compatible. Error: ${e4.message}`);
+              throw new Error(`No se encontró canal de impresión. Intentados: Zebra, ISSC, Generic. Error final: ${e4.message}`);
             }
           }
         }
