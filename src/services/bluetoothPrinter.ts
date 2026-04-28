@@ -1,7 +1,13 @@
 
 export const ZebraPrinterUUIDs = {
+  // Zebra Official
   service: '38510000-204c-4735-9103-24c13a20d402',
-  characteristic: '38510001-204c-4735-9103-24c13a20d402'
+  characteristic: '38510001-204c-4735-9103-24c13a20d402',
+  // Zebra Generic/Other
+  service2: '000018f0-0000-1000-8000-00805f9b34fb',
+  // Microchip/ISSC (common in ZQ220)
+  service3: '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+  char3: '49535343-1e4d-4bd9-ba61-07c6435a7e56'
 };
 
 class BluetoothPrinterService {
@@ -13,17 +19,32 @@ class BluetoothPrinterService {
       console.log('Solicitando dispositivo Bluetooth...');
       this.device = await (navigator as any).bluetooth.requestDevice({
         acceptAllDevices: true,
-        optionalServices: [ZebraPrinterUUIDs.service]
+        optionalServices: [
+          ZebraPrinterUUIDs.service,
+          ZebraPrinterUUIDs.service2,
+          ZebraPrinterUUIDs.service3
+        ]
       });
 
       console.log('Conectando al servidor GATT...');
       const server = await this.device.gatt?.connect();
       
       console.log('Obteniendo servicio primario...');
-      const service = await server?.getPrimaryService(ZebraPrinterUUIDs.service);
+      let service;
+      try {
+        service = await server?.getPrimaryService(ZebraPrinterUUIDs.service);
+        this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.characteristic)) || null;
+      } catch (e) {
+        try {
+          service = await server?.getPrimaryService(ZebraPrinterUUIDs.service2);
+          this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.characteristic)) || null;
+        } catch (e2) {
+          service = await server?.getPrimaryService(ZebraPrinterUUIDs.service3);
+          this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char3)) || null;
+        }
+      }
       
-      console.log('Obteniendo característica...');
-      this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.characteristic)) || null;
+      if (!this.characteristic) throw new Error('No se encontró una característica de escritura válida');
 
       console.log('Impresora conectada correctamente');
       return true;
