@@ -24,6 +24,7 @@ import NewDevolucionModal from '../components/NewDevolucionModal';
 import DevolucionDetailModal from '../components/DevolucionDetailModal';
 import apiClient from '../services/apiClient';
 import { Devolucion } from '../types';
+import { bluetoothPrinter } from '../services/bluetoothPrinter';
 
 const DashboardPage = () => {
   const [devoluciones, setDevoluciones] = useState<Devolucion[]>([]);
@@ -96,12 +97,12 @@ const DashboardPage = () => {
     fetchStats();
   }, []);
 
-  const printZebraLabel = (idEquipo: string) => {
+  const printZebraLabel = async (idEquipo: string) => {
     if (!idEquipo) {
       alert('Este registro no tiene un ID de equipo asociado.');
       return;
     }
-    const publicUrl = `${window.location.origin}/public/equipment/${idEquipo}`;
+    const publicUrl = `https://${window.location.host}/public/equipment/${idEquipo}`;
     const zpl = `
 ^XA
 ^CI28
@@ -112,10 +113,23 @@ const DashboardPage = () => {
 ^XZ
     `.trim();
 
-    // Opción A: Intentar enviar a Zebra Browser Print si existe
-    // Opción B: Copiar al portapapeles y avisar al usuario
+    if (bluetoothPrinter.isSupported()) {
+      try {
+        await bluetoothPrinter.print(zpl);
+        // Opcional: Mostrar un toast de éxito en lugar de alert
+      } catch (error) {
+        console.error('Error al imprimir por Bluetooth:', error);
+        // Fallback al portapapeles si falla la conexión Bluetooth
+        copyToClipboardFallback(zpl);
+      }
+    } else {
+      copyToClipboardFallback(zpl);
+    }
+  };
+
+  const copyToClipboardFallback = (zpl: string) => {
     navigator.clipboard.writeText(zpl).then(() => {
-      alert('Comando ZPL copiado al portapapeles.\n\nPuedes pegarlo en tu software de impresión Zebra o enviarlo directamente a la impresora.');
+      alert('Bluetooth no disponible o cancelado.\n\nComando ZPL copiado al portapapeles para uso manual.');
     });
   };
 
@@ -163,7 +177,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Metrics High-Density Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-7 gap-3">
           {metrics.map((stat, i) => (
             <motion.div 
               key={i}

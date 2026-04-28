@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import apiClient from '../services/apiClient';
+import { bluetoothPrinter } from '../services/bluetoothPrinter';
 
 interface Props {
   onClose: () => void;
@@ -108,10 +109,25 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const zpl = `^XA^FO50,50^BQN,2,10^FDQA,https://${window.location.host}/public/equipment/${formData.IdEquipo}^FS^FO250,70^A0N,30,30^FDTicket: ${formData.Ticket}^FS^FO250,110^A0N,25,25^FDEquipo: ${formData.IdEquipo}^FS^XZ`;
-    console.log('Imprimiendo ZPL:', zpl);
-    alert('Comando ZPL enviado. Configuración para Zebra ZQ220 Plus.');
+    
+    if (bluetoothPrinter.isSupported()) {
+      try {
+        await bluetoothPrinter.print(zpl);
+      } catch (error) {
+        console.error('Error al imprimir por Bluetooth:', error);
+        copyToClipboardFallback(zpl);
+      }
+    } else {
+      copyToClipboardFallback(zpl);
+    }
+  };
+
+  const copyToClipboardFallback = (zpl: string) => {
+    navigator.clipboard.writeText(zpl).then(() => {
+      alert('Bluetooth no disponible.\n\nZPL copiado al portapapeles.');
+    });
   };
 
   return (

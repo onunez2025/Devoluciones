@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { TechnicalReport } from '../types';
+import { bluetoothPrinter } from '../services/bluetoothPrinter';
 
 const PublicEquipmentPage = () => {
   const { idEquipo } = useParams();
@@ -63,46 +64,34 @@ const PublicEquipmentPage = () => {
   };
 
   const printZebraLabel = async () => {
-    try {
-      if (!idEquipo) return;
-      
-      // Contenido del QR: URL actual de historial
-      const qrUrl = window.location.href;
-      
-      // Comando ZPL para Zebra (QR central + texto ID)
-      // ^XA: Inicio, ^FO: Posición, ^BQN: QR Code, ^FD: Data, ^XZ: Fin
-      const zpl = `
+    if (!idEquipo) return;
+    const qrUrl = window.location.href;
+    const zpl = `
 ^XA
 ^CI28
 ^FO100,50^BQN,2,10^FDQA,${qrUrl}^FS
 ^FO100,260^A0N,30,30^FB300,1,0,C^FDID: ${idEquipo}^FS
 ^FO100,290^A0N,20,20^FB300,1,0,C^FDMT INDUSTRIAL - TRAZABILIDAD^FS
 ^XZ
-      `.trim();
+    `.trim();
 
-      console.log('📡 Iniciando conexión Bluetooth para Zebra...');
-      
-      // @ts-ignore - navigator.bluetooth no está en tipos base
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [{ namePrefix: 'Zebra' }, { services: ['00001101-0000-1000-8000-00805f9b34fb'] }],
-        optionalServices: ['00001101-0000-1000-8000-00805f9b34fb']
-      });
-
-      await device.gatt.connect();
-      // Zebra suele usar el puerto serie sobre BT (SPP)
-      // Esto es una implementación simplificada, el UUID puede variar según el modelo
-      console.log('✅ Conectado a:', device.name);
-      
-      // Nota: En una implementación real de producción se requeriría el SDK de Zebra 
-      // o mapear las características específicas. Para este entorno, mostramos el ZPL generado
-      // por si el usuario prefiere copiarlo a una app de impresión específica.
-      alert(`ZPL Generado para Zebra:\n\n${zpl}\n\nConectado a ${device.name}. Enviando...`);
-      
-    } catch (err: any) {
-      console.error('❌ Error Bluetooth:', err);
-      if (err.name === 'NotFoundError') return;
-      alert('Error: Asegúrate de que el Bluetooth esté activo y la impresora Zebra encendida.');
+    if (bluetoothPrinter.isSupported()) {
+      try {
+        await bluetoothPrinter.print(zpl);
+      } catch (err: any) {
+        console.error('❌ Error Bluetooth:', err);
+        if (err.name === 'NotFoundError') return;
+        copyToClipboardFallback(zpl);
+      }
+    } else {
+      copyToClipboardFallback(zpl);
     }
+  };
+
+  const copyToClipboardFallback = (zpl: string) => {
+    navigator.clipboard.writeText(zpl).then(() => {
+      alert('Bluetooth no disponible.\n\nZPL copiado al portapapeles.');
+    });
   };
 
   return (
