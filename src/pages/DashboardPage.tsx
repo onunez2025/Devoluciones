@@ -23,6 +23,7 @@ import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import Navbar from '../components/Navbar';
 import NewDevolucionModal from '../components/NewDevolucionModal';
 import DevolucionDetailModal from '../components/DevolucionDetailModal';
+import apiClient from '../services/apiClient';
 import { Devolucion } from '../types';
 
 const DashboardPage = () => {
