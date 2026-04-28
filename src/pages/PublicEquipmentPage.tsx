@@ -17,9 +17,10 @@ import {
   Info,
   Clock,
   Printer,
-  Smartphone
+  Smartphone,
+  DownloadCloud
 } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import apiClient from '../services/apiClient';
 import { TechnicalReport } from '../types';
 import { bluetoothPrinter } from '../services/bluetoothPrinter';
@@ -102,6 +103,16 @@ const PublicEquipmentPage = () => {
     }, 200);
   };
 
+  const downloadAsImage = () => {
+    const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    
+    const link = document.createElement('a');
+    link.download = `etiqueta-${idEquipo}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
   const copyToClipboardFallback = (zpl: string, error?: string) => {
     navigator.clipboard.writeText(zpl).then(() => {
       const message = error 
@@ -146,6 +157,17 @@ const PublicEquipmentPage = () => {
             >
               <Smartphone size={14} />
               Sistema
+            </button>
+            <button 
+              onClick={() => {
+                setPrintData({ id: idEquipo || '', url: window.location.href });
+                setTimeout(downloadAsImage, 500);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-orange-500/20 active:scale-95"
+              title="Descargar Imagen para ZLabel"
+            >
+              <DownloadCloud size={14} />
+              ZLabel
             </button>
             <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
               <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
@@ -461,6 +483,36 @@ const PublicEquipmentPage = () => {
           </div>
         </div>
       )}
+
+      {/* Canvas oculto para generación de imagen */}
+      <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
+        {printData && (
+          <div id="capture-area" style={{ 
+            width: '600px', 
+            height: '400px', 
+            background: 'white', 
+            display: 'flex', 
+            alignItems: 'center', 
+            padding: '40px',
+            color: 'black'
+          }}>
+            <QRCodeCanvas 
+              id="qr-canvas"
+              value={printData.url} 
+              size={320} 
+              level="H"
+              includeMargin={true}
+            />
+            <div style={{ marginLeft: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'Arial' }}>
+              <div style={{ fontSize: '60px', fontWeight: 'bold', borderBottom: '5px solid black', marginBottom: '20px' }}>
+                #{printData.id}
+              </div>
+              <div style={{ fontSize: '24px', fontWeight: 'bold' }}>Sole - MT Industrial</div>
+              <div style={{ fontSize: '20px', color: '#666' }}>HISTORIAL ONLINE</div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

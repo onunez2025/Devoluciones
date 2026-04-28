@@ -17,10 +17,11 @@ import {
   Download,
   Filter,
   Printer,
-  Smartphone
+  Smartphone,
+  DownloadCloud
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import Navbar from '../components/Navbar';
 import NewDevolucionModal from '../components/NewDevolucionModal';
 import DevolucionDetailModal from '../components/DevolucionDetailModal';
@@ -144,6 +145,16 @@ const DashboardPage = () => {
     setTimeout(() => {
       window.print();
     }, 300);
+  };
+
+  const downloadAsImage = (id: string, nSerie?: string) => {
+    const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    
+    const link = document.createElement('a');
+    link.download = `etiqueta-${id}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   };
 
   const copyToClipboardFallback = (zpl: string, error?: string) => {
@@ -355,6 +366,18 @@ const DashboardPage = () => {
                               <Smartphone size={14} strokeWidth={2.5} />
                             </button>
                             <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
+                                setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
+                                setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
+                              }}
+                              className="p-2 hover:bg-orange-500/10 text-muted-foreground/40 hover:text-orange-500 rounded-xl transition-all"
+                              title="Descargar Imagen para ZLabel"
+                            >
+                              <DownloadCloud size={14} strokeWidth={2.5} />
+                            </button>
+                            <button 
                               className="p-2 hover:bg-muted text-muted-foreground/40 hover:text-foreground rounded-xl transition-all"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -445,6 +468,18 @@ const DashboardPage = () => {
                         title="Sistema"
                       >
                         <Smartphone size={14} />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
+                          setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
+                          setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
+                        }}
+                        className="p-2 bg-orange-500/5 text-orange-600 rounded-lg"
+                        title="ZLabel"
+                      >
+                        <DownloadCloud size={14} />
                       </button>
                     </div>
                   </div>
@@ -542,6 +577,41 @@ const DashboardPage = () => {
           </div>
         </div>
       )}
+
+      {/* Canvas oculto para generación de imagen */}
+      <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
+        {printData && (
+          <div id="capture-area" style={{ 
+            width: '600px', 
+            height: '400px', 
+            background: 'white', 
+            display: 'flex', 
+            alignItems: 'center', 
+            padding: '40px',
+            color: 'black'
+          }}>
+            <QRCodeCanvas 
+              id="qr-canvas"
+              value={printData.url} 
+              size={320} 
+              level="H"
+              includeMargin={true}
+            />
+            <div style={{ marginLeft: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'Arial' }}>
+              <div style={{ fontSize: '60px', fontWeight: 'bold', borderBottom: '5px solid black', marginBottom: '20px' }}>
+                #{printData.id}
+              </div>
+              {printData.nSerie && (
+                <div style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '10px' }}>
+                  SERIE: {printData.nSerie}
+                </div>
+              )}
+              <div style={{ fontSize: '24px', fontWeight: 'bold' }}>Sole - MT Industrial</div>
+              <div style={{ fontSize: '20px', color: '#666' }}>HISTORIAL ONLINE</div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
