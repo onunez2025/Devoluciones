@@ -9,8 +9,10 @@ import {
   Loader2, 
   Package, 
   ClipboardList,
-  AlertCircle
+  AlertCircle,
+  DownloadCloud
 } from 'lucide-react';
+import { utils, writeFile } from 'xlsx';
 import apiClient from '../services/apiClient';
 
 interface Props {
@@ -77,6 +79,21 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
     }
   };
 
+  const exportToExcel = (selectedData: any[]) => {
+    const exportData = selectedData.map(dev => ({
+      'Ticket': dev.Ticket,
+      'ID_Equipo': dev.IdEquipo,
+      'Serie': dev.N_Serie || 'N/A',
+      'Guia': dev.N_Guia || 'N/A',
+      'URL_Historial': `https://${window.location.host}/public/equipment/${dev.IdEquipo}`
+    }));
+
+    const worksheet = utils.json_to_sheet(exportData);
+    const workbook = utils.book_new();
+    utils.book_append_sheet(workbook, worksheet, 'ZLabel');
+    writeFile(workbook, `ZLabel_Batch_${filters.tech}_${filters.date}.xlsx`);
+  };
+
   const handleBatchSubmit = async () => {
     if (selectedTicketIds.size === 0) return;
     
@@ -85,6 +102,10 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
     
     try {
       await apiClient.post('/devoluciones/batch', { tickets: selectedData });
+      
+      // Descarga automática del Excel para ZLabel
+      exportToExcel(selectedData);
+      
       setStep(2);
       onSuccess();
     } catch (err) {
@@ -222,18 +243,29 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
             </div>
           ) : (
             <div className="flex flex-col items-center text-center space-y-6 py-6 animate-in zoom-in-95 duration-500">
-              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-500">
-                <CheckCircle2 className="w-10 h-10" />
+              <div className="relative">
+                <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-500">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+                <div className="absolute -right-1 -bottom-1 w-8 h-8 bg-blue-500 border-4 border-background rounded-full flex items-center justify-center text-white shadow-lg">
+                  <DownloadCloud className="w-4 h-4" />
+                </div>
               </div>
               <div>
-                <h4 className="text-lg font-black uppercase text-foreground">Proceso Finalizado</h4>
-                <p className="text-[11px] font-bold text-muted-foreground mt-2">
-                  Se han registrado {selectedTicketIds.size} nuevas devoluciones exitosamente.
+                <h4 className="text-lg font-black uppercase text-foreground">¡Todo Listo!</h4>
+                <p className="text-[11px] font-bold text-muted-foreground mt-2 max-w-[300px]">
+                  Se registraron {selectedTicketIds.size} devoluciones y se descargó el archivo <span className="text-primary font-black">ZLabel.xlsx</span> automáticamente.
+                </p>
+              </div>
+              <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 flex items-center gap-3 max-w-[400px]">
+                <AlertCircle className="w-5 h-5 text-primary shrink-0" />
+                <p className="text-[10px] text-left font-bold text-muted-foreground/80 leading-relaxed">
+                  Ya puedes importar el archivo descargado en la aplicación <span className="text-foreground">ZLabel Designer</span> de tu celular para imprimir las etiquetas.
                 </p>
               </div>
               <button 
                 onClick={onClose}
-                className="w-full max-w-[200px] h-11 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20"
+                className="w-full max-w-[200px] h-11 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 active:scale-95 transition-all"
               >
                 Cerrar Ventana
               </button>
