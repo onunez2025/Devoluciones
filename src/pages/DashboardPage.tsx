@@ -16,9 +16,11 @@ import {
   TrendingUp,
   Download,
   Filter,
-  Printer
+  Printer,
+  Smartphone
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import Navbar from '../components/Navbar';
 import NewDevolucionModal from '../components/NewDevolucionModal';
 import DevolucionDetailModal from '../components/DevolucionDetailModal';
@@ -40,6 +42,7 @@ const DashboardPage = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [printData, setPrintData] = useState<{ id: string, url: string, nSerie?: string } | null>(null);
 
   // Stats state
   const [stats, setStats] = useState({
@@ -125,11 +128,25 @@ const DashboardPage = () => {
     }
   };
 
+  const printViaSystem = (idEquipo: string, nSerie?: string) => {
+    if (!idEquipo) {
+      alert('Este registro no tiene un ID de equipo asociado.');
+      return;
+    }
+    const publicUrl = `https://${window.location.host}/public/equipment/${idEquipo}`;
+    setPrintData({ id: idEquipo, url: publicUrl, nSerie });
+    
+    // Pequeño delay para asegurar que el QR se renderice antes de abrir el diálogo de impresión
+    setTimeout(() => {
+      window.print();
+    }, 200);
+  };
+
   const copyToClipboardFallback = (zpl: string, error?: string) => {
     navigator.clipboard.writeText(zpl).then(() => {
       const message = error 
-        ? `Error de conexión: ${error}\n\nEl comando ZPL ha sido copiado al portapapeles.`
-        : 'Bluetooth no disponible. El comando ZPL ha sido copiado al portapapeles.';
+        ? `Error de conexión Bluetooth: ${error}\n\nEl comando ZPL ha sido copiado al portapapeles.`
+        : 'Comando ZPL copiado al portapapeles.';
       alert(message);
     });
   };
@@ -313,15 +330,25 @@ const DashboardPage = () => {
                             >
                               <History size={14} strokeWidth={2.5} />
                             </Link>
-                            <button 
+                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 printZebraLabel(dev.IdEquipo || '');
                               }}
                               className="p-2 hover:bg-emerald-500/10 text-muted-foreground/40 hover:text-emerald-500 rounded-xl transition-all"
-                              title="Imprimir Etiqueta Zebra"
+                              title="Imprimir Bluetooth (ZPL)"
                             >
                               <Printer size={14} strokeWidth={2.5} />
+                            </button>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                printViaSystem(dev.IdEquipo || '', dev.N_Serie || '');
+                              }}
+                              className="p-2 hover:bg-blue-500/10 text-muted-foreground/40 hover:text-blue-500 rounded-xl transition-all"
+                              title="Imprimir Sistema (Zebra App)"
+                            >
+                              <Smartphone size={14} strokeWidth={2.5} />
                             </button>
                             <button 
                               className="p-2 hover:bg-muted text-muted-foreground/40 hover:text-foreground rounded-xl transition-all"
@@ -401,8 +428,19 @@ const DashboardPage = () => {
                           printZebraLabel(dev.IdEquipo || '');
                         }}
                         className="p-2 bg-emerald-500/5 text-emerald-600 rounded-lg"
+                        title="Bluetooth"
                       >
                         <Printer size={14} />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          printViaSystem(dev.IdEquipo || '', dev.N_Serie || '');
+                        }}
+                        className="p-2 bg-blue-500/5 text-blue-600 rounded-lg"
+                        title="Sistema"
+                      >
+                        <Smartphone size={14} />
                       </button>
                     </div>
                   </div>
@@ -475,6 +513,27 @@ const DashboardPage = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* Vista de Impresión Oculta */}
+      {printData && (
+        <div id="print-label" style={{ display: 'none' }}>
+          <div style={{ marginRight: '4mm' }}>
+            <QRCodeSVG value={printData.url} size={80} level="M" />
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'monospace' }}>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', borderBottom: '1px solid black', marginBottom: '4px' }}>
+              #{printData.id}
+            </div>
+            {printData.nSerie && (
+              <div style={{ fontSize: '9px', fontWeight: 'bold', marginBottom: '2px' }}>
+                S/N: {printData.nSerie}
+              </div>
+            )}
+            <div style={{ fontSize: '8px', color: '#333' }}>Sole - MT Industrial</div>
+            <div style={{ fontSize: '7px', color: '#666', marginTop: '2px' }}>HISTORIAL TÉCNICO ONLINE</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

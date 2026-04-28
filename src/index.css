@@ -202,3 +202,30 @@
   animation-fill-mode: forwards;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-label, #print-label * {
+    visibility: visible;
+  }
+  #print-label {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 50mm;
+    height: 25mm;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2mm;
+    background: white !important;
+    color: black !important;
+    border: none;
+  }
+  @page {
+    size: 50mm 25mm;
+    margin: 0;
+  }
+}

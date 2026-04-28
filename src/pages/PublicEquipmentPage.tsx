@@ -15,8 +15,11 @@ import {
   User,
   Wrench,
   Info,
-  Clock
+  Clock,
+  Printer,
+  Smartphone
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import apiClient from '../services/apiClient';
 import { TechnicalReport } from '../types';
 import { bluetoothPrinter } from '../services/bluetoothPrinter';
@@ -29,6 +32,7 @@ const PublicEquipmentPage = () => {
   const [selectedReport, setSelectedReport] = useState<TechnicalReport | null>(null);
 
   const [equipmentInfo, setEquipmentInfo] = useState({ id: '', nombre: 'Cargando...', codigo: '' });
+  const [printData, setPrintData] = useState<{ id: string, url: string } | null>(null);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -88,6 +92,16 @@ const PublicEquipmentPage = () => {
     }
   };
 
+  const printViaSystem = () => {
+    if (!idEquipo) return;
+    const publicUrl = window.location.href;
+    setPrintData({ id: idEquipo, url: publicUrl });
+    
+    setTimeout(() => {
+      window.print();
+    }, 200);
+  };
+
   const copyToClipboardFallback = (zpl: string, error?: string) => {
     navigator.clipboard.writeText(zpl).then(() => {
       const message = error 
@@ -119,10 +133,19 @@ const PublicEquipmentPage = () => {
           <div className="flex items-center gap-4">
             <button 
               onClick={printZebraLabel}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+              title="Imprimir vía Bluetooth"
             >
-              <History size={14} className="rotate-180" />
-              Imprimir QR Zebra
+              <Printer size={14} />
+              Bluetooth
+            </button>
+            <button 
+              onClick={printViaSystem}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+              title="Imprimir vía Sistema (Zebra App)"
+            >
+              <Smartphone size={14} />
+              Sistema
             </button>
             <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
               <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
@@ -418,6 +441,22 @@ const PublicEquipmentPage = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Vista de Impresión Oculta */}
+      {printData && (
+        <div id="print-label" style={{ display: 'none' }}>
+          <div style={{ marginRight: '4mm' }}>
+            <QRCodeSVG value={printData.url} size={80} level="M" />
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'monospace' }}>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', borderBottom: '1px solid black', marginBottom: '4px' }}>
+              #{printData.id}
+            </div>
+            <div style={{ fontSize: '8px', color: '#333' }}>Sole - MT Industrial</div>
+            <div style={{ fontSize: '7px', color: '#666', marginTop: '2px' }}>HISTORIAL TÉCNICO ONLINE</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
