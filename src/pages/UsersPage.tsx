@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { 
   Users, 
   Search, 
@@ -9,7 +8,8 @@ import {
   Trash2,
   Edit2,
   Loader2,
-  Filter
+  Filter,
+  MoreHorizontal
 } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { User } from '../types';
