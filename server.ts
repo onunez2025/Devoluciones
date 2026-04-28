@@ -271,6 +271,91 @@ app.get('/api/sap/lookup/:ticket', authenticateToken, async (req, res) => {
   }
 });
 
+// Listado de técnicos únicos para carga masiva
+app.get('/api/lookups/technicians', authenticateToken, async (_req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT DISTINCT TRIM(NombreTecnico + ' ' + ApellidoTecnico) as Tecnico 
+      FROM [SIATC].[Dashboard_FSM] 
+      WHERE NombreTecnico IS NOT NULL AND NombreTecnico <> ''
+      ORDER BY Tecnico
+    `);
+    res.json(result.recordset.map(r => r.Tecnico));
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener técnicos' });
+  }
+});
+
+// Buscar tickets candidatos para carga masiva
+app.get('/api/lookups/tickets-by-period', authenticateToken, async (req, res) => {
+  const { date, tech } = req.query;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('date', sql.Date, date)
+      .input('tech', sql.VarChar, tech)
+      .query(`
+        SELECT 
+          f.Ticket, 
+          f.IdEquipo, 
+          f.N_Serie, 
+          s.VC_referencia as N_Guia,
+          f.TrabajoRealizado as Comentario
+        FROM [SIATC].[Dashboard_FSM] f
+        LEFT JOIN [dbo].[GAC_APP_SD_ENTREGAS] s ON f.Ticket = s.VC_pedidocliente
+        WHERE CAST(f.FechaVisita AS DATE) = @date
+          AND TRIM(f.NombreTecnico + ' ' + f.ApellidoTecnico) = @tech
+          AND NOT EXISTS (SELECT 1 FROM [dbo].[GAC_APP_TB_DEVOLUCION] d WHERE d.Ticket = f.Ticket)
+      `);
+    res.json(result.recordset);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al buscar tickets' });
+  }
+});
+
+// Registro masivo de devoluciones
+app.post('/api/devoluciones/batch', authenticateToken, async (req: any, res) => {
+  const { tickets } = req.body;
+  const username = req.user?.username || 'unknown';
+  
+  if (!Array.isArray(tickets) || tickets.length === 0) {
+    return res.status(400).json({ message: 'No se enviaron tickets' });
+  }
+
+  try {
+    const pool = await poolPromise;
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+
+    try {
+      for (const dev of tickets) {
+        await transaction.request()
+          .input('Ticket', sql.VarChar, dev.Ticket)
+          .input('Personal_ST', sql.VarChar, username)
+          .input('Personal_Ope', sql.VarChar, username)
+          .input('N_Guia', sql.VarChar, dev.N_Guia || '')
+          .input('N_Serie', sql.VarChar, dev.N_Serie || '')
+          .input('Comentario', sql.VarChar, dev.Comentario || 'Carga Masiva')
+          .input('FechaRegistro', sql.DateTime, new Date())
+          .query(`
+            INSERT INTO [dbo].[GAC_APP_TB_DEVOLUCION] 
+            (Ticket, Personal_ST, Personal_Ope, N_Guia, N_Serie, Creado_el, Comentario)
+            VALUES (@Ticket, @Personal_ST, @Personal_Ope, @N_Guia, @N_Serie, @FechaRegistro, @Comentario)
+          `);
+      }
+      await transaction.commit();
+      res.status(201).json({ message: `${tickets.length} devoluciones registradas correctamente` });
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Error en registro masivo:', error);
+    res.status(500).json({ message: 'Error al procesar el registro masivo' });
+  }
+});
+
 // Registro de nueva devolución
 app.post('/api/devoluciones', authenticateToken, async (req: any, res) => {
   const data = req.body;

@@ -18,12 +18,14 @@ import {
   Download,
   Filter,
   Eye,
-  DownloadCloud
+  DownloadCloud,
+  ClipboardList
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import Navbar from '../components/Navbar';
 import NewDevolucionModal from '../components/NewDevolucionModal';
+import BatchDevolucionModal from '../components/BatchDevolucionModal';
 import DevolucionDetailModal from '../components/DevolucionDetailModal';
 import apiClient from '../services/apiClient';
 import { Devolucion } from '../types';
@@ -33,6 +35,7 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
   const [selectedDevolucion, setSelectedDevolucion] = useState<Devolucion | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set<string>());
@@ -181,10 +184,12 @@ const DashboardPage = () => {
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
-            <button className="h-10 px-4 bg-muted/50 border border-border/50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2">
-              <Download className="w-3.5 h-3.5" />
-              Exportar Reporte
+            <button 
+              onClick={() => setIsBatchModalOpen(true)}
+              className="h-10 px-4 bg-muted/50 border border-border/50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2"
+            >
+              <ClipboardList className="w-3.5 h-3.5" />
+              Carga Masiva
             </button>
             <button 
               onClick={() => setIsModalOpen(true)}
@@ -193,7 +198,6 @@ const DashboardPage = () => {
               <Plus className="w-4 h-4" />
               Nueva Devolución
             </button>
-          </div>
         </div>
 
         {/* Metrics High-Density Grid */}
@@ -532,6 +536,18 @@ const DashboardPage = () => {
           </div>
         )}
       </main>
+
+      <AnimatePresence>
+        {isBatchModalOpen && (
+          <BatchDevolucionModal 
+            onClose={() => setIsBatchModalOpen(false)} 
+            onSuccess={() => {
+              fetchDevoluciones();
+              fetchStats();
+            }} 
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isModalOpen && (
