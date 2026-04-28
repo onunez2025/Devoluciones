@@ -13,7 +13,10 @@ export const ZebraPrinterUUIDs = {
   service4: '0000ff00-0000-1000-8000-00805f9b34fb',
   char4: '0000ff01-0000-1000-8000-00805f9b34fb',
   // Standard Information
-  deviceInfo: '0000180a-0000-1000-8000-00805f9b34fb'
+  deviceInfo: '0000180a-0000-1000-8000-00805f9b34fb',
+  // Generic Services for stability
+  genericAccess: '00001800-0000-1000-8000-00805f9b34fb',
+  genericAttribute: '00001801-0000-1000-8000-00805f9b34fb'
 };
 
 class BluetoothPrinterService {
@@ -25,10 +28,10 @@ class BluetoothPrinterService {
       console.log('Solicitando dispositivo Bluetooth...');
       this.device = await (navigator as any).bluetooth.requestDevice({
         filters: [
+          { name: 'XXZSV231200858' },
           { namePrefix: 'XXZSV' },
           { namePrefix: 'ZQ' },
           { namePrefix: 'ZR' },
-          { namePrefix: 'iMZ' },
           { namePrefix: 'Zebra' }
         ],
         optionalServices: [
@@ -36,7 +39,9 @@ class BluetoothPrinterService {
           ZebraPrinterUUIDs.service2,
           ZebraPrinterUUIDs.service3,
           ZebraPrinterUUIDs.service4,
-          ZebraPrinterUUIDs.deviceInfo
+          ZebraPrinterUUIDs.deviceInfo,
+          ZebraPrinterUUIDs.genericAccess,
+          ZebraPrinterUUIDs.genericAttribute
         ]
       });
 
@@ -61,7 +66,15 @@ class BluetoothPrinterService {
       }
       
       // Pequeña pausa para estabilidad en Android
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Intento de "Keep-Alive" leyendo el nombre del dispositivo si es posible
+      try {
+        const genericService = await server?.getPrimaryService(ZebraPrinterUUIDs.genericAccess);
+        await genericService?.getCharacteristic('00002a00-0000-1000-8000-00805f9b34fb');
+      } catch (e) {
+        console.log('No se pudo leer nombre del dispositivo, continuando...');
+      }
 
       console.log('Obteniendo servicio primario...');
       let service;
