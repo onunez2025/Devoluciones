@@ -16,8 +16,6 @@ import {
   Wrench,
   Info,
   Clock,
-  Printer,
-  Smartphone,
   DownloadCloud
 } from 'lucide-react';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
@@ -68,40 +66,6 @@ const PublicEquipmentPage = () => {
     window.open(`/api/c4c/pdf/${ticket}`, '_blank');
   };
 
-  const printZebraLabel = async () => {
-    if (!idEquipo) return;
-    const qrUrl = window.location.href;
-    const zpl = `
-^XA
-^CI28
-^FO100,50^BQN,2,10^FDQA,${qrUrl}^FS
-^FO100,260^A0N,30,30^FB300,1,0,C^FDID: ${idEquipo}^FS
-^FO100,290^A0N,20,20^FB300,1,0,C^FDMT INDUSTRIAL - TRAZABILIDAD^FS
-^XZ
-    `.trim();
-
-    if (bluetoothPrinter.isSupported()) {
-      try {
-        await bluetoothPrinter.print(zpl);
-      } catch (err: any) {
-        console.error('❌ Error Bluetooth:', err);
-        if (err.name === 'NotFoundError') return;
-        copyToClipboardFallback(zpl, err.message || String(err));
-      }
-    } else {
-      copyToClipboardFallback(zpl);
-    }
-  };
-
-  const printViaSystem = () => {
-    if (!idEquipo) return;
-    const publicUrl = window.location.href;
-    setPrintData({ id: idEquipo, url: publicUrl });
-    
-    setTimeout(() => {
-      window.print();
-    }, 200);
-  };
 
   const downloadAsImage = () => {
     const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
@@ -113,14 +77,6 @@ const PublicEquipmentPage = () => {
     link.click();
   };
 
-  const copyToClipboardFallback = (zpl: string, error?: string) => {
-    navigator.clipboard.writeText(zpl).then(() => {
-      const message = error 
-        ? `Error de conexión: ${error}\n\nEl comando ZPL ha sido copiado al portapapeles.`
-        : 'Bluetooth no disponible. El comando ZPL ha sido copiado al portapapeles.';
-      alert(message);
-    });
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans transition-colors duration-300">
@@ -143,31 +99,15 @@ const PublicEquipmentPage = () => {
           </button>
           <div className="flex items-center gap-4">
             <button 
-              onClick={printZebraLabel}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-              title="Imprimir vía Bluetooth"
-            >
-              <Printer size={14} />
-              Bluetooth
-            </button>
-            <button 
-              onClick={printViaSystem}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-95"
-              title="Imprimir vía Sistema (Zebra App)"
-            >
-              <Smartphone size={14} />
-              Sistema
-            </button>
-            <button 
               onClick={() => {
                 setPrintData({ id: idEquipo || '', url: window.location.href });
                 setTimeout(downloadAsImage, 500);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-orange-500/20 active:scale-95"
-              title="Descargar Imagen para ZLabel"
+              className="flex items-center gap-2 px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-full text-[11px] font-black uppercase tracking-widest transition-all shadow-lg shadow-orange-500/30 active:scale-95"
+              title="Descargar Imagen para ZLabel Designer"
             >
-              <DownloadCloud size={14} />
-              ZLabel
+              <DownloadCloud size={16} />
+              Imprimir Etiqueta (ZLabel)
             </button>
             <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
               <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />

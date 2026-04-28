@@ -16,8 +16,6 @@ import {
   TrendingUp,
   Download,
   Filter,
-  Printer,
-  Smartphone,
   DownloadCloud
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -101,51 +99,6 @@ const DashboardPage = () => {
     fetchStats();
   }, []);
 
-  const printZebraLabel = async (idEquipo: string) => {
-    if (!idEquipo) {
-      alert('Este registro no tiene un ID de equipo asociado.');
-      return;
-    }
-    const publicUrl = `https://${window.location.host}/public/equipment/${idEquipo}`;
-    const zpl = `
-^XA
-^CI28
-^FO50,50^BQN,2,10^FDMM,A${publicUrl}^FS
-^FO260,60^A0N,40,40^FDEquipo: ${idEquipo}^FS
-^FO260,110^A0N,25,25^FDSole - MT Industrial^FS
-^FO260,150^A0N,20,20^FDHistorial Tecnico^FS
-^XZ
-    `.trim();
-
-    if (bluetoothPrinter.isSupported()) {
-      try {
-        await bluetoothPrinter.print(zpl);
-      } catch (error: any) {
-        console.error('Error al imprimir por Bluetooth:', error);
-        copyToClipboardFallback(zpl, error.message || String(error));
-      }
-    } else {
-      copyToClipboardFallback(zpl);
-    }
-  };
-
-  const printViaSystem = (dev: Devolucion) => {
-    if (!dev.IdEquipo) {
-      alert('Este registro no tiene un ID de equipo asociado.');
-      return;
-    }
-    const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
-    setPrintData({ 
-      id: dev.IdEquipo, 
-      url: publicUrl, 
-      nSerie: dev.N_Serie,
-      nombre: dev.VC_oden_compra_numero // Usamos este campo como referencia si no hay nombre específico
-    });
-    
-    setTimeout(() => {
-      window.print();
-    }, 300);
-  };
 
   const downloadAsImage = (id: string) => {
     const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
@@ -348,34 +301,15 @@ const DashboardPage = () => {
                              <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                printZebraLabel(dev.IdEquipo || '');
-                              }}
-                              className="p-2 hover:bg-emerald-500/10 text-muted-foreground/40 hover:text-emerald-500 rounded-xl transition-all"
-                              title="Imprimir Bluetooth (ZPL)"
-                            >
-                              <Printer size={14} strokeWidth={2.5} />
-                            </button>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                printViaSystem(dev);
-                              }}
-                              className="p-2 hover:bg-blue-500/10 text-muted-foreground/40 hover:text-blue-500 rounded-xl transition-all"
-                              title="Imprimir Sistema (Zebra App)"
-                            >
-                              <Smartphone size={14} strokeWidth={2.5} />
-                            </button>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
                                 const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
                                 setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
                                 setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                               }}
-                              className="p-2 hover:bg-orange-500/10 text-muted-foreground/40 hover:text-orange-500 rounded-xl transition-all"
-                              title="Descargar Imagen para ZLabel"
+                              className="px-3 py-1.5 bg-orange-500/10 text-orange-600 hover:bg-orange-500 hover:text-white rounded-lg transition-all flex items-center gap-2 border border-orange-500/20 shadow-sm"
+                              title="Descargar para ZLabel Designer"
                             >
-                              <DownloadCloud size={14} strokeWidth={2.5} />
+                              <DownloadCloud size={13} strokeWidth={2.5} />
+                              <span className="text-[10px] font-black uppercase tracking-tighter">ZLabel</span>
                             </button>
                             <button 
                               className="p-2 hover:bg-muted text-muted-foreground/40 hover:text-foreground rounded-xl transition-all"
@@ -452,34 +386,14 @@ const DashboardPage = () => {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          printZebraLabel(dev.IdEquipo || '');
-                        }}
-                        className="p-2 bg-emerald-500/5 text-emerald-600 rounded-lg"
-                        title="Bluetooth"
-                      >
-                        <Printer size={14} />
-                      </button>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          printViaSystem(dev);
-                        }}
-                        className="p-2 bg-blue-500/5 text-blue-600 rounded-lg"
-                        title="Sistema"
-                      >
-                        <Smartphone size={14} />
-                      </button>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
                           const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
                           setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
                           setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                         }}
-                        className="p-2 bg-orange-500/5 text-orange-600 rounded-lg"
-                        title="ZLabel"
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-orange-500 text-white rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-orange-500/20 active:scale-95 transition-all uppercase"
                       >
-                        <DownloadCloud size={14} />
+                        <DownloadCloud size={16} />
+                        Descargar Etiqueta (ZLabel)
                       </button>
                     </div>
                   </div>
