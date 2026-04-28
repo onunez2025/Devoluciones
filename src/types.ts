@@ -16,6 +16,8 @@ export interface Devolucion {
   Adjunto: string;
   FechaRegistro: string;
   IdEquipo?: string;
+  VC_oden_compra_numero?: string;
+  VC_nombre_equipo?: string;
 }
 
 export interface TechnicalReport {
