@@ -147,7 +147,7 @@ const DashboardPage = () => {
     }, 300);
   };
 
-  const downloadAsImage = (id: string, nSerie?: string) => {
+  const downloadAsImage = (id: string) => {
     const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
     if (!canvas) return;
     
