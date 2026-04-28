@@ -12,12 +12,7 @@ class BluetoothPrinterService {
     try {
       console.log('Solicitando dispositivo Bluetooth...');
       this.device = await (navigator as any).bluetooth.requestDevice({
-        filters: [
-          { namePrefix: 'ZQ' },
-          { namePrefix: 'ZR' },
-          { namePrefix: 'iMZ' },
-          { services: [ZebraPrinterUUIDs.service] }
-        ],
+        acceptAllDevices: true,
         optionalServices: [ZebraPrinterUUIDs.service]
       });
 
