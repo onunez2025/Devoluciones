@@ -37,8 +37,16 @@ class BluetoothPrinterService {
       });
 
       console.log('Conectando al servidor GATT...');
-      const server = await this.device.gatt?.connect();
+      let server;
+      try {
+        server = await this.device.gatt?.connect();
+      } catch (e: any) {
+        throw new Error(`Fallo al conectar (GATT): ${e.message}`);
+      }
       
+      // Pequeña pausa para estabilidad en Android
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       console.log('Obteniendo servicio primario...');
       let service;
       try {
@@ -53,8 +61,12 @@ class BluetoothPrinterService {
             service = await server?.getPrimaryService(ZebraPrinterUUIDs.service3);
             this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char3)) || null;
           } catch (e3) {
-            service = await server?.getPrimaryService(ZebraPrinterUUIDs.service4);
-            this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char4)) || null;
+            try {
+              service = await server?.getPrimaryService(ZebraPrinterUUIDs.service4);
+              this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char4)) || null;
+            } catch (e4: any) {
+              throw new Error(`No se encontró canal de impresión compatible. Error: ${e4.message}`);
+            }
           }
         }
       }
