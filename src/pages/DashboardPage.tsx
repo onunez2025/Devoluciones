@@ -17,6 +17,7 @@ import {
   TrendingUp,
   Download,
   Filter,
+  Eye,
   DownloadCloud
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -34,6 +35,7 @@ const DashboardPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDevolucion, setSelectedDevolucion] = useState<Devolucion | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedTickets, setSelectedTickets] = useState<Set<number>>(new Set());
   
   // Pagination & Search state
   const [page, setPage] = useState(1);
@@ -108,6 +110,57 @@ const DashboardPage = () => {
     link.download = `etiqueta-${id}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
+  };
+
+  const exportToExcel = () => {
+    const selectedData = devoluciones.filter(dev => selectedTickets.has(dev.Ticket));
+    if (selectedData.length === 0) return;
+
+    // Cabeceras
+    const headers = ['Ticket', 'ID_Equipo', 'Serie', 'Orden_Compra', 'URL_Historial'];
+    
+    // Filas
+    const rows = selectedData.map(dev => [
+      dev.Ticket,
+      dev.IdEquipo,
+      dev.N_Serie || '',
+      dev.VC_oden_compra_numero || '',
+      `https://${window.location.host}/public/equipment/${dev.IdEquipo}`
+    ]);
+
+    // Crear contenido CSV (con BOM para que Excel detecte acentos)
+    const csvContent = "\uFEFF" + [
+      headers.join(';'),
+      ...rows.map(r => r.join(';'))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `exportacion_zlabel_${new Date().getTime()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedTickets.size === devoluciones.length) {
+      setSelectedTickets(new Set());
+    } else {
+      setSelectedTickets(new Set(devoluciones.map(d => d.Ticket)));
+    }
+  };
+
+  const toggleSelect = (ticket: number) => {
+    const newSelected = new Set(selectedTickets);
+    if (newSelected.has(ticket)) {
+      newSelected.delete(ticket);
+    } else {
+      newSelected.add(ticket);
+    }
+    setSelectedTickets(newSelected);
   };
 
 
@@ -215,6 +268,21 @@ const DashboardPage = () => {
               <RefreshCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               <span className="text-[10px] font-black uppercase tracking-widest px-1">Actualizar</span>
             </button>
+
+            <AnimatePresence>
+              {selectedTickets.size > 0 && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  onClick={exportToExcel}
+                  className="h-10 px-6 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Exportar {selectedTickets.size} para ZLabel
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -226,6 +294,14 @@ const DashboardPage = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-primary/[0.02] border-b border-border/50">
+                    <th className="px-6 py-4 w-10">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedTickets.size === devoluciones.length && devoluciones.length > 0}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all"
+                      />
+                    </th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">ID TICKET</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">EQUIPO / SERIE</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">GUÍA REMISIÓN</th>
@@ -243,12 +319,18 @@ const DashboardPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, x: -10 }}
                         transition={{ delay: Math.min(idx * 0.01, 0.3) }}
-                        className="group hover:bg-primary/[0.02] transition-all cursor-pointer"
-                        onClick={() => {
-                          setSelectedDevolucion(dev);
-                          setIsDetailModalOpen(true);
-                        }}
+                        className={`group hover:bg-primary/[0.02] transition-all cursor-pointer ${selectedTickets.has(dev.Ticket) ? 'bg-primary/[0.03]' : ''}`}
+                        onClick={() => toggleSelect(dev.Ticket)}
                       >
+                        <td className="px-6 py-3">
+                          <input 
+                            type="checkbox" 
+                            checked={selectedTickets.has(dev.Ticket)}
+                            onChange={() => {}} // Handle via row click
+                            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </td>
                         <td className="px-6 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
@@ -304,14 +386,15 @@ const DashboardPage = () => {
                               <span className="text-[10px] font-black uppercase tracking-tighter">ZLabel</span>
                             </button>
                             <button 
-                              className="p-2 hover:bg-muted text-muted-foreground/40 hover:text-foreground rounded-xl transition-all"
+                              className="p-2 hover:bg-primary/10 text-muted-foreground/40 hover:text-primary rounded-xl transition-all"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedDevolucion(dev);
                                 setIsDetailModalOpen(true);
                               }}
+                              title="Ver Detalles"
                             >
-                              <ChevronRight size={16} strokeWidth={2.5} />
+                              <Eye size={15} strokeWidth={2.5} />
                             </button>
                           </div>
                         </td>
