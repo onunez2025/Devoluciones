@@ -253,44 +253,78 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
               </div>
 
               {/* Upload Zone */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <label className="form-label flex items-center gap-1.5">
                   <Camera className="w-3 h-3 text-primary/60" /> Evidencia Fotográfica
                 </label>
-                <label className="relative group cursor-pointer block">
+                
+                <div className="relative group">
                   <input 
+                    id="file-upload"
                     type="file" 
                     className="hidden" 
                     accept="image/*"
                     onChange={handleFileUpload}
                     disabled={uploading}
                   />
-                  <div className={`drop-zone border-dashed transition-all ${
-                    formData.Adjunto 
-                      ? 'border-emerald-500/40 bg-emerald-500/5' 
-                      : 'border-primary/20 hover:border-primary/40 bg-primary/5'
-                  }`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
-                      formData.Adjunto ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'
-                    }`}>
-                      {uploading ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : formData.Adjunto ? (
-                        <CheckCircle2 className="w-5 h-5" />
-                      ) : (
-                        <Upload className="w-5 h-5" />
-                      )}
+                  
+                  {formData.Adjunto ? (
+                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-emerald-500/30 bg-emerald-500/5 group/preview">
+                      <img 
+                        src={formData.Adjunto} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <label 
+                          htmlFor="file-upload"
+                          className="p-3 bg-white text-black rounded-full cursor-pointer hover:scale-110 transition-transform"
+                        >
+                          <Camera className="w-5 h-5" />
+                        </label>
+                        <button 
+                          onClick={() => setFormData(prev => ({ ...prev, Adjunto: '' }))}
+                          className="p-3 bg-white text-destructive rounded-full hover:scale-110 transition-transform"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <div className="absolute bottom-3 left-3 right-3 p-2 bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest text-center shadow-lg">
+                        Evidencia Cargada Correctamente
+                      </div>
                     </div>
-                    <div className="text-center">
-                      <p className="text-[11px] font-black text-foreground">
-                        {uploading ? 'Subiendo a Azure...' : formData.Adjunto ? '¡Imagen Cargada con Éxito!' : 'Seleccionar Evidencia Fotográfica'}
-                      </p>
-                      <p className="text-[9px] text-muted-foreground/60 font-bold mt-0.5">
-                        {formData.Adjunto ? 'Click para cambiar la imagen' : 'Azure Blob Storage habilitado'}
-                      </p>
-                    </div>
-                  </div>
-                </label>
+                  ) : (
+                    <label 
+                      htmlFor="file-upload"
+                      className={`relative flex flex-col items-center justify-center gap-4 p-8 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
+                        uploading 
+                          ? 'border-primary/20 bg-primary/5 cursor-wait' 
+                          : 'border-primary/20 hover:border-primary/40 hover:bg-primary/5'
+                      }`}
+                    >
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
+                        uploading ? 'bg-primary/10 text-primary' : 'bg-primary/10 text-primary'
+                      }`}>
+                        {uploading ? (
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                        ) : (
+                          <div className="relative">
+                            <Upload className="w-6 h-6" />
+                            <Camera className="w-4 h-4 absolute -bottom-1 -right-1 bg-background rounded-full p-0.5 text-primary" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs font-black text-foreground">
+                          {uploading ? 'Subiendo Evidencia...' : 'Subir Foto de Evidencia'}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground/60 font-bold mt-1">
+                          Haz clic para usar la cámara o elegir de tu galería
+                        </p>
+                      </div>
+                    </label>
+                  )}
+                </div>
               </div>
 
               {error && (
