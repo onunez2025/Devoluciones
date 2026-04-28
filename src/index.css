@@ -214,18 +214,18 @@
     position: fixed;
     left: 0;
     top: 0;
-    width: 50mm;
-    height: 25mm;
+    width: 76mm;
+    height: 51mm;
     display: flex !important;
     align-items: center;
     justify-content: space-between;
-    padding: 2mm;
+    padding: 5mm;
     background: white !important;
     color: black !important;
     border: none;
   }
   @page {
-    size: 50mm 25mm;
+    size: 76mm 51mm;
     margin: 0;
   }
 }

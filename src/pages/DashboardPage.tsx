@@ -42,7 +42,7 @@ const DashboardPage = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [printData, setPrintData] = useState<{ id: string, url: string, nSerie?: string } | null>(null);
+  const [printData, setPrintData] = useState<{ id: string, url: string, nSerie?: string, nombre?: string } | null>(null);
 
   // Stats state
   const [stats, setStats] = useState({
@@ -128,18 +128,22 @@ const DashboardPage = () => {
     }
   };
 
-  const printViaSystem = (idEquipo: string, nSerie?: string) => {
-    if (!idEquipo) {
+  const printViaSystem = (dev: Devolucion) => {
+    if (!dev.IdEquipo) {
       alert('Este registro no tiene un ID de equipo asociado.');
       return;
     }
-    const publicUrl = `https://${window.location.host}/public/equipment/${idEquipo}`;
-    setPrintData({ id: idEquipo, url: publicUrl, nSerie });
+    const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
+    setPrintData({ 
+      id: dev.IdEquipo, 
+      url: publicUrl, 
+      nSerie: dev.N_Serie,
+      nombre: dev.VC_oden_compra_numero // Usamos este campo como referencia si no hay nombre específico
+    });
     
-    // Pequeño delay para asegurar que el QR se renderice antes de abrir el diálogo de impresión
     setTimeout(() => {
       window.print();
-    }, 200);
+    }, 300);
   };
 
   const copyToClipboardFallback = (zpl: string, error?: string) => {
@@ -343,7 +347,7 @@ const DashboardPage = () => {
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                printViaSystem(dev.IdEquipo || '', dev.N_Serie || '');
+                                printViaSystem(dev);
                               }}
                               className="p-2 hover:bg-blue-500/10 text-muted-foreground/40 hover:text-blue-500 rounded-xl transition-all"
                               title="Imprimir Sistema (Zebra App)"
@@ -435,7 +439,7 @@ const DashboardPage = () => {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          printViaSystem(dev.IdEquipo || '', dev.N_Serie || '');
+                          printViaSystem(dev);
                         }}
                         className="p-2 bg-blue-500/5 text-blue-600 rounded-lg"
                         title="Sistema"
@@ -514,23 +518,27 @@ const DashboardPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Vista de Impresión Oculta */}
+      {/* Vista de Impresión Oculta (3x2 pulgadas) */}
       {printData && (
         <div id="print-label" style={{ display: 'none' }}>
-          <div style={{ marginRight: '4mm' }}>
-            <QRCodeSVG value={printData.url} size={80} level="M" />
+          <div style={{ marginRight: '6mm' }}>
+            <QRCodeSVG value={printData.url} size={140} level="H" />
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'monospace' }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', borderBottom: '1px solid black', marginBottom: '4px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>
+            <div style={{ fontSize: '24px', fontWeight: '900', borderBottom: '2px solid black', marginBottom: '6px', paddingBottom: '2px' }}>
               #{printData.id}
             </div>
             {printData.nSerie && (
-              <div style={{ fontSize: '9px', fontWeight: 'bold', marginBottom: '2px' }}>
-                S/N: {printData.nSerie}
+              <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
+                SERIE: {printData.nSerie}
               </div>
             )}
-            <div style={{ fontSize: '8px', color: '#333' }}>Sole - MT Industrial</div>
-            <div style={{ fontSize: '7px', color: '#666', marginTop: '2px' }}>HISTORIAL TÉCNICO ONLINE</div>
+            <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#000', marginTop: '4px', textTransform: 'uppercase' }}>
+              Sole - MT Industrial
+            </div>
+            <div style={{ fontSize: '8px', color: '#444', marginTop: '2px', fontWeight: 'bold' }}>
+              HISTORIAL TÉCNICO ONLINE
+            </div>
           </div>
         </div>
       )}

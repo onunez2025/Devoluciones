@@ -442,18 +442,22 @@ const PublicEquipmentPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Vista de Impresión Oculta */}
+      {/* Vista de Impresión Oculta (3x2 pulgadas) */}
       {printData && (
         <div id="print-label" style={{ display: 'none' }}>
-          <div style={{ marginRight: '4mm' }}>
-            <QRCodeSVG value={printData.url} size={80} level="M" />
+          <div style={{ marginRight: '6mm' }}>
+            <QRCodeSVG value={printData.url} size={140} level="H" />
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'monospace' }}>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', borderBottom: '1px solid black', marginBottom: '4px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>
+            <div style={{ fontSize: '24px', fontWeight: '900', borderBottom: '2px solid black', marginBottom: '6px', paddingBottom: '2px' }}>
               #{printData.id}
             </div>
-            <div style={{ fontSize: '8px', color: '#333' }}>Sole - MT Industrial</div>
-            <div style={{ fontSize: '7px', color: '#666', marginTop: '2px' }}>HISTORIAL TÉCNICO ONLINE</div>
+            <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#000', marginTop: '4px', textTransform: 'uppercase' }}>
+              Sole - MT Industrial
+            </div>
+            <div style={{ fontSize: '8px', color: '#444', marginTop: '2px', fontWeight: 'bold' }}>
+              HISTORIAL TÉCNICO ONLINE
+            </div>
           </div>
         </div>
       )}
