@@ -259,8 +259,18 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
                 </label>
                 
                 <div className="relative group">
+                  {/* Hidden Inputs */}
                   <input 
-                    id="file-upload"
+                    id="camera-upload"
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                  />
+                  <input 
+                    id="gallery-upload"
                     type="file" 
                     className="hidden" 
                     accept="image/*"
@@ -277,7 +287,7 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center gap-3">
                         <label 
-                          htmlFor="file-upload"
+                          htmlFor="camera-upload"
                           className="p-3 bg-white text-black rounded-full cursor-pointer hover:scale-110 transition-transform"
                         >
                           <Camera className="w-5 h-5" />
@@ -294,35 +304,41 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
                       </div>
                     </div>
                   ) : (
-                    <label 
-                      htmlFor="file-upload"
-                      className={`relative flex flex-col items-center justify-center gap-4 p-8 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
-                        uploading 
-                          ? 'border-primary/20 bg-primary/5 cursor-wait' 
-                          : 'border-primary/20 hover:border-primary/40 hover:bg-primary/5'
-                      }`}
-                    >
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
-                        uploading ? 'bg-primary/10 text-primary' : 'bg-primary/10 text-primary'
-                      }`}>
-                        {uploading ? (
-                          <Loader2 className="w-6 h-6 animate-spin" />
-                        ) : (
-                          <div className="relative">
-                            <Upload className="w-6 h-6" />
-                            <Camera className="w-4 h-4 absolute -bottom-1 -right-1 bg-background rounded-full p-0.5 text-primary" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs font-black text-foreground">
-                          {uploading ? 'Subiendo Evidencia...' : 'Subir Foto de Evidencia'}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground/60 font-bold mt-1">
-                          Haz clic para usar la cámara o elegir de tu galería
-                        </p>
-                      </div>
-                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label 
+                        htmlFor="camera-upload"
+                        className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
+                          uploading 
+                            ? 'border-primary/20 bg-primary/5 cursor-wait' 
+                            : 'border-primary/20 hover:border-primary/40 hover:bg-primary/5'
+                        }`}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                          {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Camera className="w-6 h-6" />}
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Usar Cámara</p>
+                          <p className="text-[8px] text-muted-foreground/60 font-bold mt-1">Tomar foto ahora</p>
+                        </div>
+                      </label>
+
+                      <label 
+                        htmlFor="gallery-upload"
+                        className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
+                          uploading 
+                            ? 'border-primary/20 bg-primary/5 cursor-wait' 
+                            : 'border-primary/20 hover:border-primary/40 hover:bg-primary/5'
+                        }`}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                          {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Abrir Galería</p>
+                          <p className="text-[8px] text-muted-foreground/60 font-bold mt-1">Elegir archivo</p>
+                        </div>
+                      </label>
+                    </div>
                   )}
                 </div>
               </div>
