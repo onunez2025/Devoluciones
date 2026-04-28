@@ -5,7 +5,6 @@ import {
   Plus, 
   Search, 
   RefreshCcw, 
-  ChevronRight, 
   Calendar, 
   SearchX,
   History,
@@ -35,7 +34,7 @@ const DashboardPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDevolucion, setSelectedDevolucion] = useState<Devolucion | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedTickets, setSelectedTickets] = useState<Set<number>>(new Set());
+  const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set<string>());
   
   // Pagination & Search state
   const [page, setPage] = useState(1);
@@ -113,7 +112,7 @@ const DashboardPage = () => {
   };
 
   const exportToExcel = () => {
-    const selectedData = devoluciones.filter(dev => selectedTickets.has(dev.Ticket));
+    const selectedData = devoluciones.filter(dev => selectedTickets.has(String(dev.Ticket)));
     if (selectedData.length === 0) return;
 
     // Cabeceras
@@ -149,11 +148,11 @@ const DashboardPage = () => {
     if (selectedTickets.size === devoluciones.length) {
       setSelectedTickets(new Set());
     } else {
-      setSelectedTickets(new Set(devoluciones.map(d => d.Ticket)));
+      setSelectedTickets(new Set(devoluciones.map(d => String(d.Ticket))));
     }
   };
 
-  const toggleSelect = (ticket: number) => {
+  const toggleSelect = (ticket: string) => {
     const newSelected = new Set(selectedTickets);
     if (newSelected.has(ticket)) {
       newSelected.delete(ticket);
@@ -319,13 +318,13 @@ const DashboardPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, x: -10 }}
                         transition={{ delay: Math.min(idx * 0.01, 0.3) }}
-                        className={`group hover:bg-primary/[0.02] transition-all cursor-pointer ${selectedTickets.has(dev.Ticket) ? 'bg-primary/[0.03]' : ''}`}
-                        onClick={() => toggleSelect(dev.Ticket)}
+                        className={`group hover:bg-primary/[0.02] transition-all cursor-pointer ${selectedTickets.has(String(dev.Ticket)) ? 'bg-primary/[0.03]' : ''}`}
+                        onClick={() => toggleSelect(String(dev.Ticket))}
                       >
                         <td className="px-6 py-3">
                           <input 
                             type="checkbox" 
-                            checked={selectedTickets.has(dev.Ticket)}
+                            checked={selectedTickets.has(String(dev.Ticket))}
                             onChange={() => {}} // Handle via row click
                             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all"
                             onClick={(e) => e.stopPropagation()}
