@@ -46,23 +46,14 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
     setLoading(true);
     setError('');
     try {
-      // 1. Buscar equipo en FSM (IdEquipo, Serie)
-      const fsmResponse = await apiClient.get(`/equipos/lookup/${formData.Ticket}`);
+      // Buscar equipo en FSM y datos de SAP integrados
+      const response = await apiClient.get(`/equipos/lookup/${formData.Ticket}`);
       
-      // 2. Buscar datos de entrega en SAP (Folio/Referencia)
-      let sapFolio = '';
-      try {
-        const sapResponse = await apiClient.get(`/sap/lookup/${formData.Ticket}`);
-        sapFolio = sapResponse.data.Folio || '';
-      } catch (sapErr) {
-        console.warn('Ticket no encontrado en SAP para autocompletar Guía');
-      }
-
       setFormData(prev => ({ 
         ...prev, 
-        IdEquipo: fsmResponse.data.IdEquipo,
-        N_Serie: fsmResponse.data.N_Serie || prev.N_Serie,
-        N_Guia: sapFolio || prev.N_Guia
+        IdEquipo: response.data.IdEquipo,
+        N_Guia: response.data.N_Guia || prev.N_Guia,
+        N_Serie: response.data.N_Serie || prev.N_Serie // Mantener el anterior si viene vacío
       }));
       
       setIdEquipoFound(true);

@@ -227,16 +227,21 @@ app.get('/api/equipos/lookup/:ticket', authenticateToken, async (req, res) => {
     const result = await pool.request()
       .input('ticket', sql.VarChar, ticket)
       .query(`
-        SELECT TOP 1 IdEquipo, CodigoExternoEquipo, N_Serie 
-        FROM [SIATC].[Dashboard_FSM] 
-        WHERE Ticket = @ticket OR LlamadaFSM = @ticket
+        SELECT TOP 1 
+          f.IdEquipo, 
+          f.CodigoExternoEquipo,
+          s.VC_referencia as N_Guia
+        FROM [SIATC].[Dashboard_FSM] f
+        LEFT JOIN [dbo].[GAC_APP_SD_ENTREGAS] s ON f.Ticket = s.VC_pedidocliente
+        WHERE f.Ticket = @ticket OR f.LlamadaFSM = @ticket
       `);
     
     if (result.recordset.length > 0) {
       const equipo = result.recordset[0];
       res.json({
         IdEquipo: equipo.IdEquipo || equipo.CodigoExternoEquipo,
-        N_Serie: equipo.N_Serie
+        N_Serie: '',
+        N_Guia: equipo.N_Guia || ''
       });
     } else {
       res.status(404).json({ message: 'Equipo no encontrado en la base de datos de FSM' });
@@ -299,7 +304,8 @@ app.get('/api/lookups/tickets-by-period', authenticateToken, async (req, res) =>
         SELECT 
           f.Ticket, 
           f.IdEquipo, 
-          f.N_Serie, 
+          f.CodigoExternoEquipo, 
+          f.NombreEquipo,
           s.VC_referencia as N_Guia,
           f.TrabajoRealizado as Comentario
         FROM [SIATC].[Dashboard_FSM] f
