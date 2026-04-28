@@ -1,17 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { 
   Users, 
   Search, 
   UserPlus, 
-  Shield, 
   Mail, 
   User as UserIcon,
   Trash2,
   Edit2,
   Loader2,
-  Filter,
-  MoreHorizontal
+  Filter
 } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { User } from '../types';
@@ -20,7 +18,7 @@ const UsersPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showModal, setShowModal] = useState(false);
+  const [, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -40,7 +38,7 @@ const UsersPage = () => {
 
   const filteredUsers = users.filter(user => 
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    user.fullName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -120,7 +118,7 @@ const UsersPage = () => {
                           <UserIcon size={16} className="text-primary" />
                         </div>
                         <div>
-                          <p className="text-[12px] font-black text-foreground uppercase tracking-tight">{user.name}</p>
+                          <p className="text-[12px] font-black text-foreground uppercase tracking-tight">{user.fullName}</p>
                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">ID: #{user.id.toString().padStart(4, '0')}</p>
                         </div>
                       </div>

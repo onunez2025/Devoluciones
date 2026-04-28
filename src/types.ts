@@ -3,6 +3,7 @@ export interface User {
   username: string;
   fullName: string;
   role: string;
+  roleId?: number;
   permissions?: string[];
 }
 

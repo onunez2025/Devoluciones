@@ -11,7 +11,6 @@ import {
   Calendar,
   Cpu,
   ArrowLeft,
-  CheckCircle2,
   X,
   User,
   Wrench,
@@ -89,7 +88,7 @@ const PublicEquipmentPage = () => {
         optionalServices: ['00001101-0000-1000-8000-00805f9b34fb']
       });
 
-      const server = await device.gatt.connect();
+      await device.gatt.connect();
       // Zebra suele usar el puerto serie sobre BT (SPP)
       // Esto es una implementación simplificada, el UUID puede variar según el modelo
       console.log('✅ Conectado a:', device.name);

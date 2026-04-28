@@ -175,7 +175,7 @@ app.get('/api/devoluciones', authenticateToken, async (req, res) => {
 });
 
 // Estadísticas del dashboard
-app.get('/api/devoluciones/stats', authenticateToken, async (req, res) => {
+app.get('/api/devoluciones/stats', authenticateToken, async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
@@ -360,7 +360,7 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Manejar rutas de React (SPA)
-app.get('*', (req, res) => {
+app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 

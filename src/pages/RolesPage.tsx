@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Shield, 
   Plus, 
@@ -8,9 +8,7 @@ import {
   Trash2, 
   SearchX,
   ChevronRight,
-  Settings,
-  Lock,
-  Unlock
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
