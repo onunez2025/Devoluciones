@@ -226,120 +226,189 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* High-Density Table */}
-        <div className="glass-card overflow-hidden shadow-premium border-white/5">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-primary/[0.02] border-b border-border/50">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">ID TICKET</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">EQUIPO / SERIE</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">GUÍA REMISIÓN</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">FECHA INGRESO</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">ESTADO SAP</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right text-muted-foreground opacity-60">ACCIONES</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/30">
-                <AnimatePresence mode="popLayout">
-                  {devoluciones.map((dev, idx) => (
-                    <motion.tr 
-                      key={`${dev.Ticket}-${idx}`}
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ delay: Math.min(idx * 0.01, 0.3) }}
-                      className="group hover:bg-primary/[0.02] transition-all cursor-pointer"
-                      onClick={() => {
-                        setSelectedDevolucion(dev);
-                        setIsDetailModalOpen(true);
-                      }}
-                    >
-                      <td className="px-6 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                          <span className="text-[12px] font-black text-foreground tracking-tight">#{dev.Ticket}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3">
-                        <div className="flex flex-col">
-                          <span className="text-[11px] font-black text-foreground uppercase">{dev.IdEquipo}</span>
-                          <span className="text-[9px] font-bold text-muted-foreground/60 font-mono">{dev.N_Serie || 'S/N Registrada'}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3">
-                        <span className="text-[10px] font-bold text-muted-foreground/80 px-2 py-1 bg-muted/50 rounded-lg border border-border/30">
-                          {dev.N_Guia || 'SIN GUÍA'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3">
-                        <div className="flex items-center gap-2 text-muted-foreground/70">
-                          <Calendar className="w-3 h-3" />
-                          <span className="text-[10px] font-bold uppercase transition-colors group-hover:text-foreground">
-                            {new Date(dev.FechaRegistro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3">
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/10">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span className="text-[9px] font-black uppercase tracking-tighter">Validado</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <Link 
-                            to={`/public/equipment/${dev.IdEquipo}`}
-                            className="p-2 hover:bg-primary/10 text-muted-foreground/40 hover:text-primary rounded-xl transition-all"
-                            title="Historial"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <History size={14} strokeWidth={2.5} />
-                          </Link>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              printZebraLabel(dev.IdEquipo || '');
-                            }}
-                            className="p-2 hover:bg-emerald-500/10 text-muted-foreground/40 hover:text-emerald-500 rounded-xl transition-all"
-                            title="Imprimir Etiqueta Zebra"
-                          >
-                            <Printer size={14} strokeWidth={2.5} />
-                          </button>
-                          <button 
-                            className="p-2 hover:bg-muted text-muted-foreground/40 hover:text-foreground rounded-xl transition-all"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedDevolucion(dev);
-                              setIsDetailModalOpen(true);
-                            }}
-                          >
-                            <ChevronRight size={16} strokeWidth={2.5} />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-                
-                {devoluciones.length === 0 && !loading && (
-                  <tr>
-                    <td colSpan={6} className="py-24">
-                      <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-500">
-                        <div className="p-6 bg-muted/20 rounded-full">
-                          <SearchX size={40} className="text-muted-foreground/20" />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-[13px] font-black uppercase tracking-widest text-muted-foreground/40">Sin resultados</p>
-                          <p className="text-[10px] font-bold text-muted-foreground/20 mt-1 italic">Intente cambiar los filtros de búsqueda</p>
-                        </div>
-                      </div>
-                    </td>
+        {/* High-Density Table / Mobile Cards */}
+        <div className="space-y-4">
+          {/* Desktop Table View */}
+          <div className="hidden md:block glass-card overflow-hidden shadow-premium border-white/5">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-primary/[0.02] border-b border-border/50">
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">ID TICKET</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">EQUIPO / SERIE</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">GUÍA REMISIÓN</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">FECHA INGRESO</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">ESTADO SAP</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right text-muted-foreground opacity-60">ACCIONES</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  <AnimatePresence mode="popLayout">
+                    {devoluciones.map((dev, idx) => (
+                      <motion.tr 
+                        key={`${dev.Ticket}-${idx}`}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ delay: Math.min(idx * 0.01, 0.3) }}
+                        className="group hover:bg-primary/[0.02] transition-all cursor-pointer"
+                        onClick={() => {
+                          setSelectedDevolucion(dev);
+                          setIsDetailModalOpen(true);
+                        }}
+                      >
+                        <td className="px-6 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                            <span className="text-[12px] font-black text-foreground tracking-tight">#{dev.Ticket}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-3">
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-black text-foreground uppercase">{dev.IdEquipo}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground/60 font-mono">{dev.N_Serie || 'S/N Registrada'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-3">
+                          <span className="text-[10px] font-bold text-muted-foreground/80 px-2 py-1 bg-muted/50 rounded-lg border border-border/30">
+                            {dev.N_Guia || 'SIN GUÍA'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3">
+                          <div className="flex items-center gap-2 text-muted-foreground/70">
+                            <Calendar className="w-3 h-3" />
+                            <span className="text-[10px] font-bold uppercase transition-colors group-hover:text-foreground">
+                              {new Date(dev.FechaRegistro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-3">
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/10">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span className="text-[9px] font-black uppercase tracking-tighter">Validado</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <Link 
+                              to={`/public/equipment/${dev.IdEquipo}`}
+                              className="p-2 hover:bg-primary/10 text-muted-foreground/40 hover:text-primary rounded-xl transition-all"
+                              title="Historial"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <History size={14} strokeWidth={2.5} />
+                            </Link>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                printZebraLabel(dev.IdEquipo || '');
+                              }}
+                              className="p-2 hover:bg-emerald-500/10 text-muted-foreground/40 hover:text-emerald-500 rounded-xl transition-all"
+                              title="Imprimir Etiqueta Zebra"
+                            >
+                              <Printer size={14} strokeWidth={2.5} />
+                            </button>
+                            <button 
+                              className="p-2 hover:bg-muted text-muted-foreground/40 hover:text-foreground rounded-xl transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedDevolucion(dev);
+                                setIsDetailModalOpen(true);
+                              }}
+                            >
+                              <ChevronRight size={16} strokeWidth={2.5} />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-3">
+            <AnimatePresence mode="popLayout">
+              {devoluciones.map((dev, idx) => (
+                <motion.div
+                  key={`${dev.Ticket}-card-${idx}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(idx * 0.05, 0.3) }}
+                  className="glass-card p-4 space-y-4 active:scale-[0.98] transition-all"
+                  onClick={() => {
+                    setSelectedDevolucion(dev);
+                    setIsDetailModalOpen(true);
+                  }}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                      <span className="text-[14px] font-black text-foreground">Ticket #{dev.Ticket}</span>
+                    </div>
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/10 text-[9px] font-black uppercase">
+                      Validado
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">Equipo / Serie</p>
+                      <p className="text-[11px] font-bold text-foreground uppercase">{dev.IdEquipo}</p>
+                      <p className="text-[9px] font-bold text-muted-foreground/60 font-mono truncate">{dev.N_Serie || 'S/N Registrada'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">Guía Remisión</p>
+                      <p className="text-[11px] font-bold text-foreground">{dev.N_Guia || 'SIN GUÍA'}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-border/30 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-muted-foreground/60">
+                      <Calendar className="w-3 h-3" />
+                      <span className="text-[10px] font-bold uppercase">
+                        {new Date(dev.FechaRegistro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link 
+                        to={`/public/equipment/${dev.IdEquipo}`}
+                        className="p-2 bg-primary/5 text-primary rounded-lg"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <History size={14} />
+                      </Link>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          printZebraLabel(dev.IdEquipo || '');
+                        }}
+                        className="p-2 bg-emerald-500/5 text-emerald-600 rounded-lg"
+                      >
+                        <Printer size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {devoluciones.length === 0 && !loading && (
+            <div className="py-24 glass-card border-white/5">
+              <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-500">
+                <div className="p-6 bg-muted/20 rounded-full">
+                  <SearchX size={40} className="text-muted-foreground/20" />
+                </div>
+                <div className="text-center">
+                  <p className="text-[13px] font-black uppercase tracking-widest text-muted-foreground/40">Sin resultados</p>
+                  <p className="text-[10px] font-bold text-muted-foreground/20 mt-1 italic">Intente cambiar los filtros de búsqueda</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Pagination Professional */}

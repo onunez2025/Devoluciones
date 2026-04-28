@@ -39,30 +39,30 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
           </button>
         </div>
 
-        <div className="p-8 overflow-y-auto space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="p-4 md:p-8 overflow-y-auto space-y-6 md:space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {/* Info Section */}
             <div className="space-y-6">
               <div className="space-y-4">
                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Información General</h4>
                 
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
+                  <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
+                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
                       <Calendar size={18} />
                     </div>
                     <div>
                       <p className="text-[9px] font-black uppercase text-muted-foreground/40">Fecha de Registro</p>
                       <p className="text-xs font-bold text-foreground">
                         {new Date(devolucion.FechaRegistro).toLocaleDateString('es-PE', { 
-                          day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+                          day: '2-digit', month: 'long', year: 'numeric'
                         })}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40">
+                  <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
+                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
                       <Package size={18} />
                     </div>
                     <div>
@@ -71,8 +71,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40">
+                  <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
+                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
                       <Tag size={18} />
                     </div>
                     <div>
@@ -81,8 +81,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40">
+                  <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
+                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
                       <ClipboardList size={18} />
                     </div>
                     <div>
@@ -109,7 +109,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                 <Camera size={12} className="text-primary" /> Evidencia Fotográfica
               </h4>
               
-              <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted/50 border border-border/50 group">
+              <div className="relative aspect-video md:aspect-square rounded-3xl overflow-hidden bg-muted/50 border border-border/50 group">
                 {devolucion.Adjunto && (devolucion.Adjunto.startsWith('http') || devolucion.Adjunto.startsWith('blob')) ? (
                   <img 
                     src={devolucion.Adjunto} 
@@ -124,18 +124,15 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Sin evidencia visual</p>
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                  <p className="text-[9px] font-black text-white uppercase tracking-widest">Azure Cloud Storage</p>
-                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-5 bg-muted/20 border-t border-border flex justify-end">
+        <div className="p-4 md:p-5 bg-muted/20 border-t border-border flex justify-stretch md:justify-end">
           <button 
             onClick={onClose} 
-            className="px-8 h-10 bg-foreground text-background rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg"
+            className="flex-1 md:flex-none px-8 h-12 md:h-10 bg-foreground text-background rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg"
           >
             Cerrar Detalle
           </button>
