@@ -13,12 +13,10 @@ COPY package*.json ./
 RUN npm install --production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.ts ./
-COPY --from=builder /app/.env ./ 
-# Nota: En Easypanel las variables de entorno se suelen manejar desde el panel, 
-# pero copiamos el archivo por si acaso o usamos variables de entorno reales.
 
-# Instalar tsx para ejecutar el servidor
-RUN npm install -g tsx
+# Variables de entorno
+ENV NODE_ENV=production
+ENV PORT=3000
 
 EXPOSE 3000
-CMD ["tsx", "server.ts"]
+CMD ["npx", "tsx", "server.ts"]

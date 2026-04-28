@@ -5,6 +5,11 @@ import sql from 'mssql';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import bcrypt from 'bcrypt';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -349,6 +354,14 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
                    error.message;
     res.status(500).json({ message: `Error al comunicarse con SAP C4C: ${detail}` });
   }
+});
+
+// --- Servir Frontend Estático ---
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Manejar rutas de React (SPA)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(port, () => {
