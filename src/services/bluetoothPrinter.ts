@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 // @ts-ignore
-import { ZebraBluetooth } from 'capacitor-zebra-bluetooth';
+import { CapacitorZebraBluetooth } from 'capacitor-zebra-bluetooth';
+const ZebraBluetooth = CapacitorZebraBluetooth;
 
 export const ZebraPrinterUUIDs = {
 // ... [Existing UUIDs kept for Web fallback]
