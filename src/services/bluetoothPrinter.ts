@@ -68,6 +68,11 @@ class BluetoothPrinterService {
       await ZebraBluetooth.connectToPrinter({ friendlyName: target.friendlyName });
       this.device = target;
       console.log('Conexión nativa exitosa');
+      
+      // ESPERAR 1 SEGUNDO: Importante para que la Zebra estabilice la conexión
+      alert('Debug: Conexión establecida. Estabilizando (1s)...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       return true;
     } catch (error: any) {
       console.error('Error en conexión nativa:', error);
@@ -165,10 +170,13 @@ class BluetoothPrinterService {
 
   private async printNative(zpl: string) {
     try {
+      // Asegurar que el ZPL termine correctamente para la Zebra
+      const formattedZpl = zpl.trim() + "\n";
+      
       alert('Debug: Enviando ZPL a la impresora...');
       console.log('Enviando impresión vía Bluetooth Clásico...');
       // @ts-ignore
-      await ZebraBluetooth.sendZPL({ zpl });
+      await ZebraBluetooth.sendZPL({ zpl: formattedZpl });
       alert('Debug: ¡ZPL enviado con éxito!');
       console.log('Impresión nativa enviada');
       return true;
