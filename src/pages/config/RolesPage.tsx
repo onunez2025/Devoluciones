@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Shield, Key, Check, Search, Plus, Trash2, 
+  Shield, Key, Check, 
   ChevronRight, AlertCircle, Save
 } from 'lucide-react';
 import { rolesService, Role } from '../../services/rolesService';
@@ -17,7 +17,7 @@ const RolesPage: React.FC = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [rolePerms, setRolePerms] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {

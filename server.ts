@@ -84,16 +84,10 @@ const authenticateToken = (req: any, res: any, next: any) => {
 
 const APP_IDENTIFIER = 'DEV';
 
-// Helper to handle app filtering consistency
-const cleanApps = (appsString: string | null) => {
-  if (!appsString) return [];
-  return appsString.split(',').map(a => a.trim().toUpperCase()).filter(a => a !== '');
-};
-
 // --- Middleware de Permisos ---
 const checkPermission = (requiredPermission: string) => {
-  return (req: any, res: any, next: any) => {
-    const { perms } = req.user;
+  return (_req: any, res: any, next: any) => {
+    const { perms } = _req.user;
     if (perms && (perms.includes(requiredPermission) || perms.includes('ADMIN'))) {
       return next();
     }
@@ -489,7 +483,7 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
 // --- Gestión de Usuarios, Roles y Permisos ---
 
 // Listado de usuarios
-app.get('/api/users', authenticateToken, checkPermission('USERS_VIEW'), async (req, res) => {
+app.get('/api/users', authenticateToken, checkPermission('USERS_VIEW'), async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
@@ -571,7 +565,7 @@ app.put('/api/users/:id', authenticateToken, checkPermission('USERS_EDIT'), asyn
 });
 
 // Listado de roles
-app.get('/api/roles', authenticateToken, async (req, res) => {
+app.get('/api/roles', authenticateToken, async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
@@ -632,7 +626,7 @@ app.post('/api/roles/:id/permissions', authenticateToken, checkPermission('ROLES
 });
 
 // Listado de gerencias
-app.get('/api/managements', authenticateToken, async (req, res) => {
+app.get('/api/managements', authenticateToken, async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query("SELECT * FROM [EBM].[Managements] ORDER BY Name ASC");

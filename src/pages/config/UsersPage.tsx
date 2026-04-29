@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, UserPlus, Search, Edit2, Shield, Trash2, 
-  CheckCircle, XCircle, Mail, Briefcase, Filter
+  Users, UserPlus, Search, Edit2, Shield, 
+  CheckCircle, XCircle, Briefcase, Filter
 } from 'lucide-react';
 import { usersService, User } from '../../services/usersService';
 import { rolesService, Role } from '../../services/rolesService';
