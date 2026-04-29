@@ -12,6 +12,9 @@ export const ZebraPrinterUUIDs = {
   // Generic BLE Print Service
   service4: '0000ff00-0000-1000-8000-00805f9b34fb',
   char4: '0000ff01-0000-1000-8000-00805f9b34fb',
+  // ZQ220 specific (ST Micro)
+  service5: '0000fee7-0000-1000-8000-00805f9b34fb',
+  char5: '0000fec7-0000-1000-8000-00805f9b34fb',
   // Standard Information
   deviceInfo: '0000180a-0000-1000-8000-00805f9b34fb',
   // Generic Services for stability
@@ -39,6 +42,7 @@ class BluetoothPrinterService {
           ZebraPrinterUUIDs.service2,
           ZebraPrinterUUIDs.service3,
           ZebraPrinterUUIDs.service4,
+          ZebraPrinterUUIDs.service5,
           ZebraPrinterUUIDs.deviceInfo,
           ZebraPrinterUUIDs.genericAccess,
           ZebraPrinterUUIDs.genericAttribute
@@ -104,7 +108,17 @@ class BluetoothPrinterService {
         }
       }
       
-      if (!this.characteristic) throw new Error('No se encontró una característica de escritura válida');
+      if (!this.characteristic) {
+        try {
+          console.log('Intentando con servicio ZQ220 (fee7)...');
+          service = await server?.getPrimaryService(ZebraPrinterUUIDs.service5);
+          this.characteristic = await service?.getCharacteristic(ZebraPrinterUUIDs.char5);
+        } catch (e) {
+          console.log('Servicio ZQ220 no encontrado');
+        }
+      }
+
+      if (!this.characteristic) throw new Error('No se encontró una característica de escritura válida. Verifique que la impresora esté en modo ZPL.');
 
       // Verificar propiedades para depuración
       const props = this.characteristic.properties;
@@ -135,10 +149,13 @@ class BluetoothPrinterService {
 
     try {
       const encoder = new TextEncoder();
-      const data = encoder.encode(zpl);
+      // Aseguramos que el ZPL sea ASCII limpio para evitar problemas de bytes inesperados
+      const sanitizedZpl = zpl.replace(/[^\x00-\x7F]/g, "");
+      const data = encoder.encode(sanitizedZpl);
       
-      // Enviamos en bloques pequeños. 20 bytes es el estándar BLE MTU seguro.
-      const chunkSize = 20; 
+      // Enviamos en bloques extremadamente pequeños. 
+      // 10 bytes es muy conservador pero ayuda en impresoras económicas (ZQ220).
+      const chunkSize = 10; 
       
       const props = this.characteristic.properties;
       const canWriteWithoutResponse = props.writeWithoutResponse;
@@ -148,7 +165,6 @@ class BluetoothPrinterService {
       for (let i = 0; i < data.length; i += chunkSize) {
         const chunk = data.slice(i, i + chunkSize);
         
-        // Verificación de conexión a mitad de envío
         if (!this.device?.gatt?.connected) {
           throw new Error('Conexión perdida durante el envío de datos');
         }
@@ -159,8 +175,9 @@ class BluetoothPrinterService {
           await this.characteristic.writeValue(chunk);
         }
         
-        // Aumentamos el retardo a 50ms para máxima compatibilidad con modelos antiguos (como ZQ220/ZQ320)
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Aumentamos el retardo a 100ms. Es lento pero es la única forma de asegurar 
+        // que el buffer de una ZQ220 no se desborde vía BLE.
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       console.log('ZPL enviado correctamente');
