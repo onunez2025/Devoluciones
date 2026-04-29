@@ -1,8 +1,11 @@
+import { Capacitor } from '@capacitor/core';
 import axios from 'axios';
 import { storageService } from './storageService';
 
+const PROD_URL = 'https://gac-sole-devoluciones.jppsfv.easypanel.host';
+
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: Capacitor.isNativePlatform() ? `${PROD_URL}/api` : '/api',
   headers: {
     'Content-Type': 'application/json',
   },
