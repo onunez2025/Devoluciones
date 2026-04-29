@@ -1,5 +1,8 @@
+import { Capacitor } from '@capacitor/core';
+import { ZebraBluetooth } from 'capacitor-zebra-bluetooth';
 
 export const ZebraPrinterUUIDs = {
+// ... [Existing UUIDs kept for Web fallback]
   // Zebra Official
   service: '38510000-204c-4735-9103-24c13a20d402',
   characteristic: '38510001-204c-4735-9103-24c13a20d402',
@@ -27,8 +30,45 @@ class BluetoothPrinterService {
   private characteristic: any = null;
 
   async connect() {
+    if (Capacitor.isNativePlatform()) {
+      return this.connectNative();
+    }
+    return this.connectWeb();
+  }
+
+  private async connectNative() {
     try {
-      console.log('Solicitando dispositivo Bluetooth...');
+      console.log('Listando impresoras Zebra vinculadas...');
+      // @ts-ignore
+      const { printers } = await ZebraBluetooth.listPrinters();
+      
+      if (!printers || printers.length === 0) {
+        throw new Error('No se encontraron impresoras vinculadas. Vincule la impresora en los ajustes de Android primero.');
+      }
+      
+      // Filtrar por nombres comunes de Zebra o tomar la primera si no hay coincidencia clara
+      const target = printers.find((p: any) => 
+        p.name.toUpperCase().includes('ZEBRA') || 
+        p.name.toUpperCase().startsWith('ZQ') || 
+        p.name.toUpperCase().startsWith('ZR')
+      ) || printers[0];
+      
+      console.log(`Conectando a impresora nativa: ${target.name} (${target.address || target.macAddress})...`);
+      
+      // @ts-ignore
+      await ZebraBluetooth.connect({ address: target.address || target.macAddress });
+      this.device = target;
+      console.log('Conexión nativa exitosa');
+      return true;
+    } catch (error: any) {
+      console.error('Error en conexión nativa:', error);
+      throw new Error(`Error Bluetooth Nativo: ${error.message || 'Fallo de conexión'}`);
+    }
+  }
+
+  private async connectWeb() {
+    try {
+      console.log('Solicitando dispositivo Bluetooth (Web)...');
       this.device = await (navigator as any).bluetooth.requestDevice({
         filters: [
           { name: 'XXZSV231200858' },
@@ -52,7 +92,6 @@ class BluetoothPrinterService {
       console.log('Conectando al servidor GATT...');
       let server;
       try {
-        // Forzar desconexión previa por si acaso
         if (this.device.gatt?.connected) {
           await this.device.gatt.disconnect();
           await new Promise(resolve => setTimeout(resolve, 500));
@@ -60,27 +99,12 @@ class BluetoothPrinterService {
         server = await this.device.gatt?.connect();
       } catch (e: any) {
         console.warn('Primer intento fallido, reintentando...', e);
-        // Reintento tras 1 segundo
         await new Promise(resolve => setTimeout(resolve, 1500));
-        try {
-          server = await this.device.gatt?.connect();
-        } catch (e2: any) {
-          throw new Error(`Fallo al conectar (GATT) tras reintento: ${e2.message}`);
-        }
+        server = await this.device.gatt?.connect();
       }
       
-      // Pequeña pausa para estabilidad en Android
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Intento de "Keep-Alive" leyendo el nombre del dispositivo si es posible
-      try {
-        const genericService = await server?.getPrimaryService(ZebraPrinterUUIDs.genericAccess);
-        await genericService?.getCharacteristic('00002a00-0000-1000-8000-00805f9b34fb');
-      } catch (e) {
-        console.log('No se pudo leer nombre del dispositivo, continuando...');
-      }
-
-      console.log('Obteniendo servicio primario...');
       let service;
       try {
         service = await server?.getPrimaryService(ZebraPrinterUUIDs.service);
@@ -102,95 +126,82 @@ class BluetoothPrinterService {
               service = await server?.getPrimaryService(ZebraPrinterUUIDs.service4);
               this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char4)) || null;
             } catch (e4: any) {
-              throw new Error(`No se encontró canal de impresión. Intentados: Zebra, ISSC, Generic. Error final: ${e4.message}`);
+              try {
+                service = await server?.getPrimaryService(ZebraPrinterUUIDs.service5);
+                this.characteristic = await service?.getCharacteristic(ZebraPrinterUUIDs.char5);
+              } catch (e5) {
+                throw new Error('No se encontró canal de impresión BLE compatible.');
+              }
             }
           }
         }
       }
       
-      if (!this.characteristic) {
-        try {
-          console.log('Intentando con servicio ZQ220 (fee7)...');
-          service = await server?.getPrimaryService(ZebraPrinterUUIDs.service5);
-          this.characteristic = await service?.getCharacteristic(ZebraPrinterUUIDs.char5);
-        } catch (e) {
-          console.log('Servicio ZQ220 no encontrado');
-        }
-      }
+      if (!this.characteristic) throw new Error('No se encontró característica de escritura válida.');
 
-      if (!this.characteristic) throw new Error('No se encontró una característica de escritura válida. Verifique que la impresora esté en modo ZPL.');
-
-      // Verificar propiedades para depuración
-      const props = this.characteristic.properties;
-      console.log('Propiedades de la característica:', {
-        write: props.write,
-        writeWithoutResponse: props.writeWithoutResponse,
-        notify: props.notify,
-        indicate: props.indicate
-      });
-
-      console.log('Impresora conectada correctamente');
+      console.log('Impresora Web conectada');
       return true;
     } catch (error: any) {
-      console.error('Error al conectar con la impresora:', error);
+      console.error('Error al conectar Web Bluetooth:', error);
       throw error;
     }
   }
 
   async print(zpl: string) {
-    // Verificar si el dispositivo sigue conectado antes de intentar escribir
+    if (Capacitor.isNativePlatform()) {
+      return this.printNative(zpl);
+    }
+    return this.printWeb(zpl);
+  }
+
+  private async printNative(zpl: string) {
+    try {
+      console.log('Enviando impresión vía Bluetooth Clásico...');
+      // @ts-ignore
+      await ZebraBluetooth.print({ zpl });
+      console.log('Impresión nativa enviada');
+      return true;
+    } catch (error: any) {
+      console.error('Error en impresión nativa:', error);
+      throw new Error(`Fallo en impresión nativa: ${error.message}`);
+    }
+  }
+
+  private async printWeb(zpl: string) {
     const isConnected = this.device?.gatt?.connected && this.characteristic;
     
     if (!isConnected) {
-      console.log('Dispositivo desconectado o sin característica, reconectando...');
-      const connected = await this.connect();
+      const connected = await this.connectWeb();
       if (!connected) throw new Error('No se pudo conectar a la impresora');
     }
 
     try {
       const encoder = new TextEncoder();
-      // Aseguramos que el ZPL sea ASCII limpio para evitar problemas de bytes inesperados
       const sanitizedZpl = zpl.replace(/[^\x00-\x7F]/g, "");
       const data = encoder.encode(sanitizedZpl);
-      
-      // Enviamos en bloques extremadamente pequeños. 
-      // 10 bytes es muy conservador pero ayuda en impresoras económicas (ZQ220).
       const chunkSize = 10; 
       
-      const props = this.characteristic.properties;
-      const canWriteWithoutResponse = props.writeWithoutResponse;
-      
-      console.log(`Iniciando envío de ${data.length} bytes. Modo: ${canWriteWithoutResponse ? 'Sin respuesta' : 'Con respuesta'}`);
-
       for (let i = 0; i < data.length; i += chunkSize) {
         const chunk = data.slice(i, i + chunkSize);
-        
-        if (!this.device?.gatt?.connected) {
-          throw new Error('Conexión perdida durante el envío de datos');
-        }
+        if (!this.device?.gatt?.connected) throw new Error('Conexión perdida');
 
-        if (canWriteWithoutResponse) {
+        if (this.characteristic.properties.writeWithoutResponse) {
           await this.characteristic.writeValueWithoutResponse(chunk);
         } else {
           await this.characteristic.writeValue(chunk);
         }
-        
-        // Aumentamos el retardo a 100ms. Es lento pero es la única forma de asegurar 
-        // que el buffer de una ZQ220 no se desborde vía BLE.
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-      
-      console.log('ZPL enviado correctamente');
+      return true;
     } catch (error: any) {
-      console.error('Error al imprimir:', error);
       this.characteristic = null; 
-      // Si falló por operación GATT, intentamos desconectar para limpiar el estado
       try { await this.device?.gatt?.disconnect(); } catch(e) {}
       throw error;
     }
   }
 
   isSupported() {
+    if (Capacitor.isNativePlatform()) return true;
     return !!((navigator as any).bluetooth && (navigator as any).bluetooth.requestDevice);
   }
 }
