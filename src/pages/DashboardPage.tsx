@@ -29,6 +29,8 @@ import BatchDevolucionModal from '../components/BatchDevolucionModal';
 import DevolucionDetailModal from '../components/DevolucionDetailModal';
 import apiClient from '../services/apiClient';
 import { Devolucion } from '../types';
+import { bluetoothPrinter } from '../services/bluetoothPrinter';
+import { generateZPL } from '../services/zplService';
 
 const DashboardPage = () => {
   const [devoluciones, setDevoluciones] = useState<Devolucion[]>([]);
@@ -39,6 +41,7 @@ const DashboardPage = () => {
   const [selectedDevolucion, setSelectedDevolucion] = useState<Devolucion | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set<string>());
+  const [isPrinting, setIsPrinting] = useState(false);
   
   // Pagination & Search state
   const [page, setPage] = useState(1);
@@ -113,6 +116,25 @@ const DashboardPage = () => {
     link.download = `etiqueta-${id}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
+  };
+
+  const handleBluetoothPrint = async (dev: Devolucion) => {
+    if (!bluetoothPrinter.isSupported()) {
+      alert('Tu navegador no soporta impresión Bluetooth. Intenta con Chrome.');
+      return;
+    }
+
+    setIsPrinting(true);
+    try {
+      const zpl = generateZPL(dev);
+      await bluetoothPrinter.print(zpl);
+      // Opcional: Feedback de éxito
+    } catch (error: any) {
+      console.error('Error al imprimir:', error);
+      alert(`Error al imprimir: ${error.message}`);
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   const exportToExcel = () => {
@@ -368,18 +390,30 @@ const DashboardPage = () => {
                               <History size={14} strokeWidth={2.5} />
                             </Link>
                              <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
-                                setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
-                                setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
-                              }}
-                              className="px-3 py-1.5 bg-orange-500/10 text-orange-600 hover:bg-orange-500 hover:text-white rounded-lg transition-all flex items-center gap-2 border border-orange-500/20 shadow-sm"
-                              title="Descargar para ZLabel Designer"
-                            >
-                              <DownloadCloud size={13} strokeWidth={2.5} />
-                              <span className="text-[10px] font-black uppercase tracking-tighter">ZLabel</span>
-                            </button>
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
+                                 setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
+                                 setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
+                               }}
+                               className="px-3 py-1.5 bg-orange-500/10 text-orange-600 hover:bg-orange-500 hover:text-white rounded-lg transition-all flex items-center gap-2 border border-orange-500/20 shadow-sm"
+                               title="Descargar para ZLabel Designer"
+                             >
+                               <DownloadCloud size={13} strokeWidth={2.5} />
+                               <span className="text-[10px] font-black uppercase tracking-tighter">ZLabel</span>
+                             </button>
+                             <button 
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleBluetoothPrint(dev);
+                               }}
+                               disabled={isPrinting}
+                               className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-all flex items-center gap-2 border border-primary/20 shadow-sm disabled:opacity-50"
+                               title="Imprimir vía Bluetooth"
+                             >
+                               <RefreshCcw size={13} strokeWidth={2.5} className={isPrinting ? 'animate-spin' : ''} />
+                               <span className="text-[10px] font-black uppercase tracking-tighter">Imprimir</span>
+                             </button>
                             <button 
                               className="p-2 hover:bg-primary/10 text-muted-foreground/40 hover:text-primary rounded-xl transition-all"
                               onClick={(e) => {
@@ -482,9 +516,21 @@ const DashboardPage = () => {
                           setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                         }}
                         className="flex-1 flex items-center justify-center gap-2 py-3 bg-orange-500 text-white rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-orange-500/20 active:scale-95 transition-all uppercase"
+                        title="Descargar Imagen"
                       >
                         <DownloadCloud size={16} />
                         ZLabel
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleBluetoothPrint(dev);
+                        }}
+                        disabled={isPrinting}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary text-primary-foreground rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all uppercase disabled:opacity-50"
+                      >
+                        <RefreshCcw size={16} className={isPrinting ? 'animate-spin' : ''} />
+                        Print
                       </button>
                     </div>
                   </div>

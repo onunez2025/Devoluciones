@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, User, Package, Users } from 'lucide-react';
+import { LogOut, User, Package, Users, Shield } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -28,13 +28,23 @@ const Navbar = () => {
           <div className="h-8 w-[1px] bg-border hidden md:block" />
         )}
         
-        {user?.roleId === 1 && (
+        {(user?.permissions?.includes('USERS_VIEW') || user?.permissions?.includes('ADMIN')) && (
           <Link 
             to="/users" 
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all text-sm font-medium"
           >
             <Users className="w-4 h-4" />
             <span>Usuarios</span>
+          </Link>
+        )}
+
+        {(user?.permissions?.includes('ROLES_VIEW') || user?.permissions?.includes('ADMIN')) && (
+          <Link 
+            to="/roles" 
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all text-sm font-medium"
+          >
+            <Shield className="w-4 h-4" />
+            <span>Roles</span>
           </Link>
         )}
       </div>

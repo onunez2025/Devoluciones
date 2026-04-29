@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import UsersPage from './pages/UsersPage';
+import UsersPage from './pages/config/UsersPage';
+import RolesPage from './pages/config/RolesPage';
 import PublicEquipmentPage from './pages/PublicEquipmentPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -16,9 +17,13 @@ function App() {
           <Route path="/" element={<DashboardPage />} />
         </Route>
 
-        {/* Rutas Administrativas (Solo Administrador: rol 1) */}
-        <Route element={<ProtectedRoute allowedRoles={[1]} />}>
+        {/* Rutas de Configuración / RBAC */}
+        <Route element={<ProtectedRoute requiredPermission="USERS_VIEW" />}>
           <Route path="/users" element={<UsersPage />} />
+        </Route>
+        
+        <Route element={<ProtectedRoute requiredPermission="ROLES_VIEW" />}>
+          <Route path="/roles" element={<RolesPage />} />
         </Route>
 
         {/* Vista Pública (Escaneo QR) */}

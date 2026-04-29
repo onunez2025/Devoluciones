@@ -84,6 +84,24 @@ const authenticateToken = (req: any, res: any, next: any) => {
 
 const APP_IDENTIFIER = 'DEV';
 
+// Helper to handle app filtering consistency
+const cleanApps = (appsString: string | null) => {
+  if (!appsString) return [];
+  return appsString.split(',').map(a => a.trim().toUpperCase()).filter(a => a !== '');
+};
+
+// --- Middleware de Permisos ---
+const checkPermission = (requiredPermission: string) => {
+  return (req: any, res: any, next: any) => {
+    const { perms } = req.user;
+    if (perms && (perms.includes(requiredPermission) || perms.includes('ADMIN'))) {
+      return next();
+    }
+    return res.status(403).json({ message: 'No tiene permisos para realizar esta acción' });
+  };
+};
+
+
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -468,6 +486,163 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
   }
 });
 
+// --- Gestión de Usuarios, Roles y Permisos ---
+
+// Listado de usuarios
+app.get('/api/users', authenticateToken, checkPermission('USERS_VIEW'), async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('app', sql.VarChar, APP_IDENTIFIER)
+      .query(`
+        SELECT u.Id, u.Username, u.Email, u.FullName, u.RoleId, u.ManagementId, u.IsActive, u.Apps, r.Name as RoleName, m.Name as ManagementName
+        FROM [EBM].[Users] u
+        LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id
+        LEFT JOIN [EBM].[Managements] m ON u.ManagementId = m.Id
+        WHERE u.Apps LIKE '%' + @app + '%' OR u.Apps LIKE '%ADMIN%'
+        ORDER BY u.FullName ASC
+      `);
+    res.json(result.recordset);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error al obtener usuarios', error: error.message });
+  }
+});
+
+// Crear usuario
+app.post('/api/users', authenticateToken, checkPermission('USERS_EDIT'), async (req, res) => {
+  const { username, email, fullName, password, roleId, managementId, apps } = req.body;
+  try {
+    const pool = await poolPromise;
+    const passwordHash = await bcrypt.hash(password, 10);
+    const userId = uuidv4();
+    
+    await pool.request()
+      .input('id', sql.UniqueIdentifier, userId)
+      .input('u', sql.NVarChar, username)
+      .input('e', sql.NVarChar, email)
+      .input('fn', sql.NVarChar, fullName)
+      .input('ph', sql.NVarChar, passwordHash)
+      .input('rid', sql.UniqueIdentifier, roleId)
+      .input('mid', sql.UniqueIdentifier, managementId)
+      .input('apps', sql.NVarChar, apps || APP_IDENTIFIER)
+      .query(`
+        INSERT INTO [EBM].[Users] (Id, Username, Email, FullName, PasswordHash, RoleId, ManagementId, IsActive, Apps, CreatedAt)
+        VALUES (@id, @u, @e, @fn, @ph, @rid, @mid, 1, @apps, GETDATE())
+      `);
+    res.status(201).json({ message: 'Usuario creado correctamente' });
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error al crear usuario', error: error.message });
+  }
+});
+
+// Actualizar usuario
+app.put('/api/users/:id', authenticateToken, checkPermission('USERS_EDIT'), async (req, res) => {
+  const { id } = req.params;
+  const { username, email, fullName, password, roleId, managementId, isActive, apps } = req.body;
+  try {
+    const pool = await poolPromise;
+    let query = `
+      UPDATE [EBM].[Users] 
+      SET Username = @u, Email = @e, FullName = @fn, RoleId = @rid, ManagementId = @mid, IsActive = @active, Apps = @apps
+    `;
+    
+    const request = pool.request()
+      .input('id', sql.UniqueIdentifier, id)
+      .input('u', sql.NVarChar, username)
+      .input('e', sql.NVarChar, email)
+      .input('fn', sql.NVarChar, fullName)
+      .input('rid', sql.UniqueIdentifier, roleId)
+      .input('mid', sql.UniqueIdentifier, managementId)
+      .input('active', sql.Bit, isActive)
+      .input('apps', sql.NVarChar, apps);
+
+    if (password) {
+      const passwordHash = await bcrypt.hash(password, 10);
+      query += `, PasswordHash = @ph`;
+      request.input('ph', sql.NVarChar, passwordHash);
+    }
+
+    query += ` WHERE Id = @id`;
+    await request.query(query);
+    res.json({ message: 'Usuario actualizado correctamente' });
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error al actualizar usuario', error: error.message });
+  }
+});
+
+// Listado de roles
+app.get('/api/roles', authenticateToken, async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('app', sql.VarChar, APP_IDENTIFIER)
+      .query(`
+        SELECT * FROM [EBM].[Roles] 
+        WHERE Apps LIKE '%' + @app + '%' OR Apps LIKE '%ADMIN%'
+        ORDER BY Name ASC
+      `);
+    res.json(result.recordset);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error al obtener roles', error: error.message });
+  }
+});
+
+// Obtener permisos de un rol
+app.get('/api/roles/:id/permissions', authenticateToken, checkPermission('ROLES_VIEW'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('rid', sql.UniqueIdentifier, id)
+      .query("SELECT Permission FROM [EBM].[RolePermissions] WHERE RoleId = @rid");
+    res.json(result.recordset.map(p => p.Permission));
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error al obtener permisos', error: error.message });
+  }
+});
+
+// Actualizar permisos de un rol
+app.post('/api/roles/:id/permissions', authenticateToken, checkPermission('ROLES_EDIT'), async (req, res) => {
+  const { id } = req.params;
+  const { permissions } = req.body;
+  try {
+    const pool = await poolPromise;
+    const transaction = new sql.Transaction(pool);
+    await transaction.begin();
+    try {
+      await transaction.request()
+        .input('rid', sql.UniqueIdentifier, id)
+        .query("DELETE FROM [EBM].[RolePermissions] WHERE RoleId = @rid");
+
+      for (const perm of permissions) {
+        await transaction.request()
+          .input('rid', sql.UniqueIdentifier, id)
+          .input('p', sql.NVarChar, perm)
+          .query("INSERT INTO [EBM].[RolePermissions] (RoleId, Permission) VALUES (@rid, @p)");
+      }
+      await transaction.commit();
+      res.json({ message: 'Permisos actualizados correctamente' });
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error al actualizar permisos', error: error.message });
+  }
+});
+
+// Listado de gerencias
+app.get('/api/managements', authenticateToken, async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query("SELECT * FROM [EBM].[Managements] ORDER BY Name ASC");
+    res.json(result.recordset);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error al obtener gerencias', error: error.message });
+  }
+});
+
+
 // --- Integración SAP C4C (OData para PDF) ---
 app.get('/api/c4c/pdf/:ticket', async (req, res) => {
   const { ticket } = req.params;
@@ -476,7 +651,6 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
   const baseUrl = process.env.C4C_BASE_URL;
 
   try {
-    // 1. Obtener datos adicionales del ticket desde nuestra DB para tener más criterios de búsqueda
     const pool = await poolPromise;
     const dbTicket = await pool.request()
       .input('ticket', sql.VarChar, ticket)
@@ -486,33 +660,25 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
     const normalizedTicket = ticket.padStart(10, '0');
     console.log(`📡 Consultando C4C (ID=${ticket} o ${normalizedTicket}, FSM=${llamadaFSM})`);
 
-    // 2. Consulta robusta (expandiendo adjuntos de cabecera e ítems)
     const filter = `ID eq '${ticket}' or ID eq '${normalizedTicket}'`;
     const query = `${baseUrl}/ServiceRequestCollection?$filter=${encodeURIComponent(filter)}&$expand=ServiceRequestAttachmentFolder,ServiceRequestItem/ServiceRequestItemAttachmentFolder`;
     
-    console.log(`📡 Query OData: ${query}`);
-
     const response = await axios.get(query, {
       auth: { username: username || '', password: password || '' },
       headers: { 'Accept': 'application/json' }
     });
 
     if (!response.data?.d?.results?.length) {
-      console.warn(`❌ Ticket ${ticket} no encontrado en C4C`);
       return res.status(404).json({ message: 'No se encontró el ticket en SAP C4C' });
     }
 
     const serviceRequest = response.data.d.results[0];
-    
-    // 3. Recolectar TODOS los posibles adjuntos
     let allAttachments: any[] = [];
     
-    // Adjuntos del nivel superior (ServiceRequestAttachmentFolder)
     if (serviceRequest.ServiceRequestAttachmentFolder?.results) {
       allAttachments = [...allAttachments, ...serviceRequest.ServiceRequestAttachmentFolder.results];
     }
     
-    // Adjuntos de los ítems (ServiceRequestItem/ServiceRequestItemAttachmentFolder)
     if (serviceRequest.ServiceRequestItem?.results) {
       serviceRequest.ServiceRequestItem.results.forEach((item: any) => {
         if (item.ServiceRequestItemAttachmentFolder?.results) {
@@ -521,16 +687,6 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
       });
     }
 
-    console.log(`📎 Total adjuntos encontrados para ticket ${ticket}: ${allAttachments.length}`);
-    if (allAttachments.length > 0) {
-      console.log('Detalle de adjuntos:', allAttachments.map(a => ({ 
-        Name: a.Name || a.Name_Text, 
-        Type: a.MimeType || a.TypeCode,
-        Category: a.CategoryCode
-      })));
-    }
-
-    // 4. Buscar el PDF (preferiblemente que diga "Informe" o "Technical" o simplemente sea el primer PDF)
     const pdf = allAttachments.find((a: any) => 
       (a.MimeType && a.MimeType.includes('pdf')) || 
       (a.Name && a.Name.toLowerCase().endsWith('.pdf'))
@@ -540,9 +696,6 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
       return res.status(404).json({ message: 'El ticket existe pero no tiene un Informe Técnico (PDF) adjunto en SAP' });
     }
 
-    console.log(`✅ PDF encontrado: ${pdf.Name}. Descargando...`);
-
-    // 5. Proxy el PDF
     const pdfResponse = await axios.get(pdf.__metadata.media_src, {
       auth: { username: username || '', password: password || '' },
       responseType: 'stream'
@@ -553,15 +706,13 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
     pdfResponse.data.pipe(res);
 
   } catch (error: any) {
-    console.error('❌ Error en C4C OData:', error.response?.status, error.response?.data || error.message);
-    const detail = error.response?.status === 401 ? 'Error de autenticación (usuario/password)' : 
-                   error.response?.status === 404 ? 'Ticket no encontrado' :
-                   error.message;
-    res.status(500).json({ message: `Error al comunicarse con SAP C4C: ${detail}` });
+    res.status(500).json({ message: `Error al comunicarse con SAP C4C: ${error.message}` });
   }
 });
 
+
 // --- Servir Frontend Estático ---
+
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Manejar rutas de React (SPA)

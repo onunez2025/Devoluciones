@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
-import { X, Calendar, Package, ClipboardList, Tag, FileText, Camera } from 'lucide-react';
+import { X, Calendar, Package, ClipboardList, Tag, FileText, Camera, Printer, RefreshCcw } from 'lucide-react';
 import { Devolucion } from '../types';
+import { bluetoothPrinter } from '../services/bluetoothPrinter';
+import { generateZPL } from '../services/zplService';
+import { useState } from 'react';
 
 interface Props {
   devolucion: Devolucion;
@@ -8,6 +11,26 @@ interface Props {
 }
 
 const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const handlePrint = async () => {
+    if (!bluetoothPrinter.isSupported()) {
+      alert('Tu navegador no soporta impresión Bluetooth. Intenta con Chrome.');
+      return;
+    }
+
+    setIsPrinting(true);
+    try {
+      const zpl = generateZPL(devolucion);
+      await bluetoothPrinter.print(zpl);
+    } catch (error: any) {
+      console.error('Error al imprimir:', error);
+      alert(`Error al imprimir: ${error.message}`);
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
       <motion.div 
@@ -129,7 +152,20 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
           </div>
         </div>
 
-        <div className="p-4 md:p-5 bg-muted/20 border-t border-border flex justify-stretch md:justify-end">
+        <div className="p-4 md:p-5 bg-muted/20 border-t border-border flex flex-col md:flex-row gap-3 justify-stretch md:justify-end">
+          <button 
+            onClick={handlePrint}
+            disabled={isPrinting}
+            className="flex-1 md:flex-none px-6 h-12 md:h-10 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {isPrinting ? (
+              <RefreshCcw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Printer className="w-4 h-4" />
+            )}
+            {isPrinting ? 'Imprimiendo...' : 'Imprimir Etiqueta'}
+          </button>
+          
           <button 
             onClick={onClose} 
             className="flex-1 md:flex-none px-8 h-12 md:h-10 bg-foreground text-background rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg"
