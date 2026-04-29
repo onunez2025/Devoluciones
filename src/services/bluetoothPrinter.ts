@@ -40,25 +40,25 @@ class BluetoothPrinterService {
 
   private async connectNative() {
     try {
-      console.log('Listando impresoras Zebra vinculadas...');
+      console.log('Buscando impresoras Zebra...');
       // @ts-ignore
-      const { printers } = await ZebraBluetooth.listPrinters();
+      const { printers } = await ZebraBluetooth.discoverPrinters();
       
       if (!printers || printers.length === 0) {
-        throw new Error('No se encontraron impresoras vinculadas. Vincule la impresora en los ajustes de Android primero.');
+        throw new Error('No se encontraron impresoras Zebra vinculadas. Asegúrate de vincularla en los ajustes de Android.');
       }
       
-      // Filtrar por nombres comunes de Zebra o tomar la primera si no hay coincidencia clara
+      // Filtrar por nombres comunes de Zebra
       const target = printers.find((p: any) => 
-        p.name.toUpperCase().includes('ZEBRA') || 
-        p.name.toUpperCase().startsWith('ZQ') || 
-        p.name.toUpperCase().startsWith('ZR')
+        p.friendlyName.toUpperCase().includes('ZEBRA') || 
+        p.friendlyName.toUpperCase().startsWith('ZQ') || 
+        p.friendlyName.toUpperCase().startsWith('ZR')
       ) || printers[0];
       
-      console.log(`Conectando a impresora nativa: ${target.name} (${target.address || target.macAddress})...`);
+      console.log(`Conectando a impresora nativa: ${target.friendlyName}...`);
       
       // @ts-ignore
-      await ZebraBluetooth.connect({ address: target.address || target.macAddress });
+      await ZebraBluetooth.connectToPrinter({ friendlyName: target.friendlyName });
       this.device = target;
       console.log('Conexión nativa exitosa');
       return true;
@@ -160,7 +160,7 @@ class BluetoothPrinterService {
     try {
       console.log('Enviando impresión vía Bluetooth Clásico...');
       // @ts-ignore
-      await ZebraBluetooth.print({ zpl });
+      await ZebraBluetooth.sendZPL({ zpl });
       console.log('Impresión nativa enviada');
       return true;
     } catch (error: any) {
