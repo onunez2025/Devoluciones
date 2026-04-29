@@ -40,12 +40,18 @@ class BluetoothPrinterService {
 
   private async connectNative() {
     try {
+      if (!ZebraBluetooth) {
+        throw new Error('El plugin ZebraBluetooth no está disponible. ¿Reconstruiste la APK?');
+      }
+
+      alert('Debug: Buscando impresoras Zebra vinculadas...');
       console.log('Buscando impresoras Zebra...');
       // @ts-ignore
-      const { printers } = await ZebraBluetooth.discoverPrinters();
+      const result = await ZebraBluetooth.discoverPrinters();
+      const printers = result.printers;
       
       if (!printers || printers.length === 0) {
-        throw new Error('No se encontraron impresoras Zebra vinculadas. Asegúrate de vincularla en los ajustes de Android.');
+        throw new Error('No se encontraron impresoras Zebra vinculadas. Asegúrate de vincularla en los ajustes de Android primero.');
       }
       
       // Filtrar por nombres comunes de Zebra
@@ -55,6 +61,7 @@ class BluetoothPrinterService {
         p.friendlyName.toUpperCase().startsWith('ZR')
       ) || printers[0];
       
+      alert(`Debug: Conectando a ${target.friendlyName}...`);
       console.log(`Conectando a impresora nativa: ${target.friendlyName}...`);
       
       // @ts-ignore
@@ -158,9 +165,11 @@ class BluetoothPrinterService {
 
   private async printNative(zpl: string) {
     try {
+      alert('Debug: Enviando ZPL a la impresora...');
       console.log('Enviando impresión vía Bluetooth Clásico...');
       // @ts-ignore
       await ZebraBluetooth.sendZPL({ zpl });
+      alert('Debug: ¡ZPL enviado con éxito!');
       console.log('Impresión nativa enviada');
       return true;
     } catch (error: any) {
