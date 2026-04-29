@@ -106,9 +106,18 @@ class BluetoothPrinterService {
       
       if (!this.characteristic) throw new Error('No se encontró una característica de escritura válida');
 
+      // Verificar propiedades para depuración
+      const props = this.characteristic.properties;
+      console.log('Propiedades de la característica:', {
+        write: props.write,
+        writeWithoutResponse: props.writeWithoutResponse,
+        notify: props.notify,
+        indicate: props.indicate
+      });
+
       console.log('Impresora conectada correctamente');
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al conectar con la impresora:', error);
       throw error;
     }
@@ -126,9 +135,23 @@ class BluetoothPrinterService {
       
       // Enviamos en bloques si el ZPL es largo (MTU usualmente es ~20-512 bytes)
       const chunkSize = 20; 
+      
+      // Intentar usar writeValueWithoutResponse si está disponible para mayor velocidad y menor probabilidad de errores GATT concurrentes
+      const writeMethod = this.characteristic.writeValueWithoutResponse ? 'writeValueWithoutResponse' : 'writeValue';
+      
+      console.log(`Iniciando envío de ${data.length} bytes usando ${writeMethod}...`);
+
       for (let i = 0; i < data.length; i += chunkSize) {
         const chunk = data.slice(i, i + chunkSize);
-        await this.characteristic?.writeValue(chunk);
+        if (writeMethod === 'writeValueWithoutResponse') {
+          await this.characteristic.writeValueWithoutResponse(chunk);
+        } else {
+          await this.characteristic.writeValue(chunk);
+        }
+        
+        // Pequeño retardo entre bloques para evitar saturar el búfer de la impresora/Bluetooth
+        // 20ms es suficiente para que el stack de Bluetooth procese el paquete anterior
+        await new Promise(resolve => setTimeout(resolve, 25));
       }
       
       console.log('ZPL enviado correctamente');
