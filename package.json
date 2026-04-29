@@ -20,6 +20,7 @@
     "@types/uuid": "^10.0.0",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
+    "capacitor-zebra-bluetooth": "^1.0.0",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
