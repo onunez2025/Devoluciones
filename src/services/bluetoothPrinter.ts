@@ -124,7 +124,11 @@ class BluetoothPrinterService {
   }
 
   async print(zpl: string) {
-    if (!this.characteristic) {
+    // Verificar si el dispositivo sigue conectado antes de intentar escribir
+    const isConnected = this.device?.gatt?.connected && this.characteristic;
+    
+    if (!isConnected) {
+      console.log('Dispositivo desconectado o sin característica, reconectando...');
       const connected = await this.connect();
       if (!connected) throw new Error('No se pudo conectar a la impresora');
     }
@@ -133,31 +137,38 @@ class BluetoothPrinterService {
       const encoder = new TextEncoder();
       const data = encoder.encode(zpl);
       
-      // Enviamos en bloques si el ZPL es largo (MTU usualmente es ~20-512 bytes)
+      // Enviamos en bloques pequeños. 20 bytes es el estándar BLE MTU seguro.
       const chunkSize = 20; 
       
-      // Intentar usar writeValueWithoutResponse si está disponible para mayor velocidad y menor probabilidad de errores GATT concurrentes
-      const writeMethod = this.characteristic.writeValueWithoutResponse ? 'writeValueWithoutResponse' : 'writeValue';
+      const props = this.characteristic.properties;
+      const canWriteWithoutResponse = props.writeWithoutResponse;
       
-      console.log(`Iniciando envío de ${data.length} bytes usando ${writeMethod}...`);
+      console.log(`Iniciando envío de ${data.length} bytes. Modo: ${canWriteWithoutResponse ? 'Sin respuesta' : 'Con respuesta'}`);
 
       for (let i = 0; i < data.length; i += chunkSize) {
         const chunk = data.slice(i, i + chunkSize);
-        if (writeMethod === 'writeValueWithoutResponse') {
+        
+        // Verificación de conexión a mitad de envío
+        if (!this.device?.gatt?.connected) {
+          throw new Error('Conexión perdida durante el envío de datos');
+        }
+
+        if (canWriteWithoutResponse) {
           await this.characteristic.writeValueWithoutResponse(chunk);
         } else {
           await this.characteristic.writeValue(chunk);
         }
         
-        // Pequeño retardo entre bloques para evitar saturar el búfer de la impresora/Bluetooth
-        // 20ms es suficiente para que el stack de Bluetooth procese el paquete anterior
-        await new Promise(resolve => setTimeout(resolve, 25));
+        // Aumentamos el retardo a 50ms para máxima compatibilidad con modelos antiguos (como ZQ220/ZQ320)
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
       
       console.log('ZPL enviado correctamente');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al imprimir:', error);
-      this.characteristic = null; // Reset characteristic on error
+      this.characteristic = null; 
+      // Si falló por operación GATT, intentamos desconectar para limpiar el estado
+      try { await this.device?.gatt?.disconnect(); } catch(e) {}
       throw error;
     }
   }
