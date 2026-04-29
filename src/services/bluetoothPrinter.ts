@@ -44,6 +44,7 @@ class BluetoothPrinterService {
         throw new Error('El plugin ZebraBluetooth no está disponible.');
       }
 
+      alert('Buscando impresoras Zebra...');
       console.log('Buscando impresoras Zebra...');
       // @ts-ignore
       const result = await ZebraBluetooth.discoverPrinters();
@@ -59,6 +60,7 @@ class BluetoothPrinterService {
         p.friendlyName.toUpperCase().startsWith('ZR')
       ) || printers[0];
       
+      alert(`Conectando a ${target.friendlyName}...`);
       console.log(`Conectando a impresora nativa: ${target.friendlyName}...`);
       
       // @ts-ignore
@@ -157,6 +159,9 @@ class BluetoothPrinterService {
   }
 
   async print(zpl: string) {
+    if (!this.device) {
+      await this.connect();
+    }
     if (Capacitor.isNativePlatform()) {
       return this.printNative(zpl);
     }
@@ -165,10 +170,12 @@ class BluetoothPrinterService {
 
   private async printNative(zpl: string) {
     try {
+      alert('Enviando etiqueta...');
       const formattedZpl = zpl.trim() + "\n";
       console.log('Enviando impresión via CPCL...');
       // @ts-ignore
       await ZebraBluetooth.sendZPL({ zpl: formattedZpl });
+      alert('¡Impresión enviada!');
       return true;
     } catch (error: any) {
       console.error('Error en impresión nativa:', error);
