@@ -41,36 +41,31 @@ class BluetoothPrinterService {
   private async connectNative() {
     try {
       if (!ZebraBluetooth) {
-        throw new Error('El plugin ZebraBluetooth no está disponible. ¿Reconstruiste la APK?');
+        throw new Error('El plugin ZebraBluetooth no está disponible.');
       }
 
-      alert('Debug: Buscando impresoras Zebra vinculadas...');
       console.log('Buscando impresoras Zebra...');
       // @ts-ignore
       const result = await ZebraBluetooth.discoverPrinters();
       const printers = result.printers;
       
       if (!printers || printers.length === 0) {
-        throw new Error('No se encontraron impresoras Zebra vinculadas. Asegúrate de vincularla en los ajustes de Android primero.');
+        throw new Error('No se encontraron impresoras Zebra vinculadas.');
       }
       
-      // Filtrar por nombres comunes de Zebra
       const target = printers.find((p: any) => 
         p.friendlyName.toUpperCase().includes('ZEBRA') || 
         p.friendlyName.toUpperCase().startsWith('ZQ') || 
         p.friendlyName.toUpperCase().startsWith('ZR')
       ) || printers[0];
       
-      alert(`Debug: Conectando a ${target.friendlyName}...`);
       console.log(`Conectando a impresora nativa: ${target.friendlyName}...`);
       
       // @ts-ignore
       await ZebraBluetooth.connectToPrinter({ friendlyName: target.friendlyName });
       this.device = target;
-      console.log('Conexión nativa exitosa');
       
-      // ESPERAR 1 SEGUNDO: Importante para que la Zebra estabilice la conexión
-      alert('Debug: Conexión establecida. Estabilizando (1s)...');
+      // Esperar estabilidad
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       return true;
@@ -170,15 +165,10 @@ class BluetoothPrinterService {
 
   private async printNative(zpl: string) {
     try {
-      // Asegurar que el ZPL termine correctamente para la Zebra
       const formattedZpl = zpl.trim() + "\n";
-      
-      alert('Debug: Enviando ZPL a la impresora...');
-      console.log('Enviando impresión vía Bluetooth Clásico...');
+      console.log('Enviando impresión via CPCL...');
       // @ts-ignore
       await ZebraBluetooth.sendZPL({ zpl: formattedZpl });
-      alert('Debug: ¡ZPL enviado con éxito!');
-      console.log('Impresión nativa enviada');
       return true;
     } catch (error: any) {
       console.error('Error en impresión nativa:', error);

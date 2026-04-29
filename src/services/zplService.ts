@@ -1,35 +1,36 @@
 import { Devolucion } from '../types';
 
 /**
- * Servicio para generar comandos ZPL (Zebra Programming Language)
+ * Servicio para generar comandos CPCL (Compaq Printer Control Language)
  * Basado en el diseño analizado en app_imprimir_zebra (MainActivity.kt)
  * y el diseño visual de la plataforma Devoluciones.
  */
 export const generateZPL = (devolucion: Devolucion): string => {
-  const publicUrl = `https://${window.location.host}/public/equipment/${devolucion.IdEquipo}`;
+  const publicUrl = `https://gac-sole-devoluciones.jppsfv.easypanel.host/public/equipment/${devolucion.IdEquipo}`;
   
-  // Limpiar datos para evitar errores en ZPL
   const id = (devolucion.IdEquipo || 'S/ID').substring(0, 20);
   const serie = (devolucion.N_Serie || 'S/N').substring(0, 30);
-  const ticket = devolucion.Ticket || '';
+  const ticket = String(devolucion.Ticket || '');
 
+  // Comandos CPCL para Zebra ZQ220 Plus
   return `
-^XA
-^CI28
-^PW609
-^LL406
-
-^FO20,20^GB569,366,4^FS
-
-^FO60,60^BQN,2,8^FDQA,${publicUrl}^FS
-
-^FO320,80^A0N,50,50^FD#${id}^FS
-^FO320,140^A0N,25,25^FDSERIE:^FS
-^FO320,170^A0N,25,25^FD${serie}^FS
-^FO320,230^A0N,24,24^FDSole - MT Industrial^FS
-^FO320,270^A0N,20,20^FDHISTORIAL ONLINE^FS
-^FO320,310^A0N,18,18^FDTICKET: ${ticket}^FS
-
-^XZ
-  `.trim();
+! 0 200 200 450 1
+CENTER
+TEXT 4 0 0 20 DEVOLUCION REGISTRADA
+LEFT
+BARCODE QR 30 80 M 2 U 8
+${publicUrl}
+ENDQR
+TEXT 7 0 320 80 ID:
+TEXT 7 1 320 110 ${id}
+TEXT 7 0 320 160 SERIE:
+TEXT 7 0 320 190 ${serie}
+TEXT 7 0 320 240 TICKET:
+TEXT 7 1 320 270 #${ticket}
+CENTER
+TEXT 7 0 0 360 Sole - MT Industrial
+TEXT 5 0 0 390 ESCANEA PARA VER HISTORIAL
+FORM
+PRINT
+`.trim();
 };
