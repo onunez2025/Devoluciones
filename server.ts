@@ -690,80 +690,75 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
     const llamadaFSM = dbTicket.recordset[0]?.LlamadaFSM;
     const normalizedTicket = ticket.padStart(10, '0');
     
-    console.log(`📡 Consultando C4C - Ticket Local: ${ticket}, Padded: ${normalizedTicket}, FSM: ${llamadaFSM}`);
+    console.log(`📡 [C4C] Iniciando búsqueda para Ticket: ${ticket}, FSM: ${llamadaFSM}`);
 
-    // Construir filtro para maximizar posibilidades de encuentro (solo usando ID que es estándar)
-    let filterParts = [
-      `ID eq '${ticket}'`,
-      `ID eq '${normalizedTicket}'`
-    ];
-    
+    // Paso 1: Buscar el ticket para obtener su ObjectID único en SAP
+    let filterParts = [`ID eq '${ticket}'`, `ID eq '${normalizedTicket}'` ];
     if (llamadaFSM) {
       filterParts.push(`ID eq '${llamadaFSM}'`);
       filterParts.push(`ID eq '${llamadaFSM.toString().padStart(10, '0')}'`);
     }
 
     const filter = filterParts.join(' or ');
-    const query = `${baseUrl}/ServiceRequestCollection?$filter=${encodeURIComponent(filter)}&$expand=ServiceRequestAttachmentFolder,ServiceRequestItem/ServiceRequestItemAttachmentFolder`;
+    const findUrl = `${baseUrl}/ServiceRequestCollection?$filter=${encodeURIComponent(filter)}&$select=ObjectID,ID,UUID&$format=json`;
     
-    console.log(`🔗 Query OData: ${query}`);
-
-    const response = await axios.get(query, {
+    const authConfig = {
       auth: { username: username || '', password: password || '' },
-      headers: { 'Accept': 'application/json' },
-      timeout: 15000 // 15 segundos de timeout
-    });
+      headers: { 'Accept': 'application/json' }
+    };
 
-    if (!response.data?.d?.results?.length) {
-      console.warn(`⚠️ No se encontró el ticket en C4C con el filtro: ${filter}`);
-      return res.status(404).json({ 
-        message: 'No se encontró el ticket en SAP C4C',
-        details: `Se buscó por Ticket ${ticket} y FSM ${llamadaFSM}`
-      });
+    const findResponse = await axios.get(findUrl, authConfig);
+    const ticketsFound = findResponse.data?.d?.results || [];
+
+    if (ticketsFound.length === 0) {
+      console.warn(`⚠️ [C4C] No se encontró el ticket en SAP con el filtro: ${filter}`);
+      return res.status(404).json({ message: 'No se encontró el ticket en SAP C4C' });
     }
 
-    const serviceRequest = response.data.d.results[0];
-    console.log(`✅ Ticket encontrado en C4C. UUID: ${serviceRequest.UUID}`);
+    const sapTicket = ticketsFound[0];
+    const objectId = sapTicket.ObjectID;
+    console.log(`✅ [C4C] Ticket encontrado. ObjectID: ${objectId}`);
 
-    let allAttachments: any[] = [];
+    // Paso 2: Navegar directamente a la carpeta de adjuntos usando el ObjectID (Lógica SIATC_Tecnical)
+    const attachmentsUrl = `${baseUrl}/ServiceRequestCollection('${objectId}')/ServiceRequestAttachmentFolder?$format=json`;
+    console.log(`📂 [C4C] Consultando adjuntos: ${attachmentsUrl}`);
+
+    const attResponse = await axios.get(attachmentsUrl, authConfig);
     
-    // Adjuntos a nivel de cabecera
-    if (serviceRequest.ServiceRequestAttachmentFolder?.results) {
-      allAttachments = [...allAttachments, ...serviceRequest.ServiceRequestAttachmentFolder.results];
-    }
-    
-    // Adjuntos a nivel de posición (Items)
-    if (serviceRequest.ServiceRequestItem?.results) {
-      serviceRequest.ServiceRequestItem.results.forEach((item: any) => {
-        if (item.ServiceRequestItemAttachmentFolder?.results) {
-          allAttachments = [...allAttachments, ...item.ServiceRequestItemAttachmentFolder.results];
-        }
-      });
-    }
+    // La respuesta puede venir como d.results (colección) o d (objeto único)
+    const attData = attResponse.data?.d;
+    let attachments = attData?.results || (Array.isArray(attData) ? attData : (attData ? [attData] : []));
 
-    console.log(`📂 Total de adjuntos encontrados: ${allAttachments.length}`);
+    console.log(`📂 [C4C] Total de adjuntos encontrados: ${attachments.length}`);
 
-    // Buscar el PDF (Informe Técnico)
-    // Priorizamos archivos que contengan "Informe" o "Technical" en el nombre si hay varios PDFs
-    const pdf = allAttachments.find((a: any) => {
+    // Paso 3: Filtrar para buscar el PDF (Priorizando Informe Técnico)
+    const pdf = attachments.find((a: any) => {
       const name = (a.Name || '').toLowerCase();
       const mime = (a.MimeType || '').toLowerCase();
-      return (mime.includes('pdf') || name.endsWith('.pdf')) && (name.includes('informe') || name.includes('technical'));
-    }) || allAttachments.find((a: any) => {
+      return (mime.includes('pdf') || name.endsWith('.pdf')) && 
+             (name.includes('informe') || name.includes('technical') || name.includes('fsm'));
+    }) || attachments.find((a: any) => {
       const name = (a.Name || '').toLowerCase();
       const mime = (a.MimeType || '').toLowerCase();
-      return (mime.includes('pdf') || name.endsWith('.pdf'));
+      return mime.includes('pdf') || name.endsWith('.pdf');
     });
 
     if (!pdf) {
-      console.warn(`⚠️ Ticket ${ticket} encontrado pero sin PDF.`);
+      console.warn(`⚠️ [C4C] Ticket ${ticket} encontrado pero sin PDF adjunto.`);
       return res.status(404).json({ message: 'El ticket existe en C4C pero no tiene un Informe Técnico (PDF) adjunto.' });
     }
 
-    console.log(`📄 Descargando PDF: ${pdf.Name} desde ${pdf.__metadata.media_src}`);
+    // Usamos DocumentLink o __metadata.media_src como fallback
+    const downloadUrl = pdf.DocumentLink || pdf.__metadata?.media_src;
+    
+    if (!downloadUrl) {
+      return res.status(404).json({ message: 'No se pudo obtener la URL de descarga del PDF.' });
+    }
 
-    const pdfResponse = await axios.get(pdf.__metadata.media_src, {
-      auth: { username: username || '', password: password || '' },
+    console.log(`📄 [C4C] Descargando PDF: ${pdf.Name} desde ${downloadUrl}`);
+
+    const pdfResponse = await axios.get(downloadUrl, {
+      ...authConfig,
       responseType: 'stream'
     });
 
@@ -772,13 +767,9 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
     pdfResponse.data.pipe(res);
 
   } catch (error: any) {
-    console.error(`❌ Error en integración C4C:`, error.message);
-    if (error.response) {
-      console.error(`Status: ${error.response.status}`);
-      console.error(`Data:`, JSON.stringify(error.response.data));
-    }
+    console.error(`❌ [C4C] Error crítico:`, error.message);
     res.status(500).json({ 
-      message: `Error al comunicarse con SAP C4C`, 
+      message: `Error de integración con SAP C4C`, 
       error: error.message 
     });
   }
