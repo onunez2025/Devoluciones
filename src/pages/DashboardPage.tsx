@@ -499,41 +499,49 @@ const DashboardPage = () => {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-border/30 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-muted-foreground/60">
-                      <Calendar className="w-3 h-3" />
-                      <span className="text-[10px] font-bold uppercase">
-                        {new Date(dev.FechaRegistro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}
-                      </span>
+                  <div className="pt-3 border-t border-border/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-muted-foreground/60">
+                        <Calendar className="w-3 h-3" />
+                        <span className="text-[10px] font-bold uppercase">
+                          {new Date(dev.FechaRegistro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDevolucion(dev);
+                            setIsDetailModalOpen(true);
+                          }}
+                          className="w-9 h-9 flex items-center justify-center bg-primary/10 text-primary rounded-xl"
+                          title="Ver Detalles"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDevolucionToEdit(dev);
+                            setIsModalOpen(true);
+                          }}
+                          className="w-9 h-9 flex items-center justify-center bg-amber-500/10 text-amber-500 rounded-xl"
+                          title="Editar"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <Link 
+                          to={`/public/equipment/${dev.IdEquipo}`}
+                          className="w-9 h-9 flex items-center justify-center bg-primary/5 text-primary rounded-xl"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Historial"
+                        >
+                          <History size={16} />
+                        </Link>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedDevolucion(dev);
-                          setIsDetailModalOpen(true);
-                        }}
-                        className="p-3 bg-primary/10 text-primary rounded-xl"
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDevolucionToEdit(dev);
-                          setIsModalOpen(true);
-                        }}
-                        className="p-3 bg-amber-500/10 text-amber-500 rounded-xl"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <Link 
-                        to={`/public/equipment/${dev.IdEquipo}`}
-                        className="p-3 bg-primary/5 text-primary rounded-xl"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <History size={18} />
-                      </Link>
+
+                    <div className="grid grid-cols-2 gap-2">
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
@@ -541,10 +549,10 @@ const DashboardPage = () => {
                           setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
                           setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                         }}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-orange-500 text-white rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-orange-500/20 active:scale-95 transition-all uppercase"
+                        className="flex items-center justify-center gap-2 py-2.5 bg-orange-500 text-white rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-orange-500/20 active:scale-95 transition-all uppercase"
                         title="Descargar Imagen"
                       >
-                        <DownloadCloud size={16} />
+                        <DownloadCloud size={14} />
                         ZLabel
                       </button>
                       <button 
@@ -553,9 +561,9 @@ const DashboardPage = () => {
                           handleBluetoothPrint(dev);
                         }}
                         disabled={isPrinting}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary text-primary-foreground rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all uppercase disabled:opacity-50"
+                        className="flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all uppercase disabled:opacity-50"
                       >
-                        <RefreshCcw size={16} className={isPrinting ? 'animate-spin' : ''} />
+                        <RefreshCcw size={14} className={isPrinting ? 'animate-spin' : ''} />
                         Print
                       </button>
                     </div>
