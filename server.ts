@@ -484,27 +484,28 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
     const pool = await poolPromise;
     console.log(`🔍 Buscando historial para equipo: ${idEquipo}...`);
     const result = await pool.request()
-      .input('idEquipo', sql.NVarChar, idEquipo)
       .input('id', sql.NVarChar, idEquipo)
       .query(`
         SELECT 
-          Ticket, 
-          Estado, 
-          FechaVisita as FechaCierre, 
-          IdEquipo, 
-          CodigoExternoEquipo, 
-          NombreEquipo,
-          TrabajoRealizado,
-          ComentarioTecnico,
-          NombreTecnico + ' ' + ApellidoTecnico as Tecnico,
-          Asunto,
-          SolicitaNuevaVisita,
-          MotivoNuevaVisita,
-          LlamadaFSM
-        FROM [SIATC].[Dashboard_FSM] 
-        WHERE (IdEquipo = @id OR CodigoExternoEquipo = @id) 
-        AND Estado = 'Closed'
-        ORDER BY FechaVisita DESC
+          f.Ticket, 
+          f.Estado, 
+          f.FechaVisita as FechaCierre, 
+          f.IdEquipo, 
+          f.CodigoExternoEquipo, 
+          f.NombreEquipo,
+          f.TrabajoRealizado,
+          f.ComentarioTecnico,
+          f.NombreTecnico + ' ' + f.ApellidoTecnico as Tecnico,
+          f.Asunto,
+          f.SolicitaNuevaVisita,
+          f.MotivoNuevaVisita,
+          f.LlamadaFSM,
+          t.Descripcion as TipoServicio
+        FROM [SIATC].[Dashboard_FSM] f
+        LEFT JOIN [SIATC].[FSM_TipoServicio] t ON f.IdServicio = t.Id
+        WHERE (f.IdEquipo = @id OR f.CodigoExternoEquipo = @id) 
+        AND f.Estado = 'Closed'
+        ORDER BY f.FechaVisita DESC
       `);
     
     console.log(`✅ Se encontraron ${result.recordset.length} registros para ${idEquipo}`);

@@ -227,6 +227,11 @@ const PublicEquipmentPage = () => {
                             <div className="px-2 py-0.5 bg-green-500/10 rounded text-[9px] text-green-500 font-black uppercase tracking-tighter">
                               Cerrado
                             </div>
+                            {report.TipoServicio && (
+                              <div className="px-2 py-0.5 bg-blue-500/10 rounded text-[9px] text-blue-500 font-black uppercase tracking-tighter">
+                                {report.TipoServicio}
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-4 text-[11px] text-muted-foreground font-medium uppercase tracking-tighter">
                             <span className="flex items-center gap-1.5 translate-y-[-1px]">
@@ -338,6 +343,15 @@ const PublicEquipmentPage = () => {
                     </div>
                     <p className="text-sm font-bold text-foreground">{selectedReport.Tecnico || 'No especificado'}</p>
                   </div>
+                  {selectedReport.TipoServicio && (
+                    <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 sm:col-span-2">
+                      <div className="flex items-center gap-2 mb-2 opacity-50 text-blue-500">
+                        <Wrench size={14} />
+                        <span className="text-[10px] font-bold uppercase tracking-tighter">Tipo de Servicio</span>
+                      </div>
+                      <p className="text-sm font-black text-blue-600 uppercase tracking-tight">{selectedReport.TipoServicio}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Trabajo Realizado Section */}
