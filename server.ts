@@ -689,27 +689,52 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
     
     const llamadaFSM = dbTicket.recordset[0]?.LlamadaFSM;
     const normalizedTicket = ticket.padStart(10, '0');
-    console.log(`📡 Consultando C4C (ID=${ticket} o ${normalizedTicket}, FSM=${llamadaFSM})`);
+    
+    console.log(`📡 Consultando C4C - Ticket Local: ${ticket}, Padded: ${normalizedTicket}, FSM: ${llamadaFSM}`);
 
-    const filter = `ID eq '${ticket}' or ID eq '${normalizedTicket}'`;
+    // Construir filtro extendido para maximizar posibilidades de encuentro
+    let filterParts = [
+      `ID eq '${ticket}'`,
+      `ID eq '${normalizedTicket}'`
+    ];
+    
+    if (llamadaFSM) {
+      filterParts.push(`ID eq '${llamadaFSM}'`);
+      filterParts.push(`ID eq '${llamadaFSM.toString().padStart(10, '0')}'`);
+      // También buscamos por el ID de FSM en el campo ExternalID por si acaso
+      filterParts.push(`ExternalID eq '${llamadaFSM}'`);
+    }
+
+    const filter = filterParts.join(' or ');
     const query = `${baseUrl}/ServiceRequestCollection?$filter=${encodeURIComponent(filter)}&$expand=ServiceRequestAttachmentFolder,ServiceRequestItem/ServiceRequestItemAttachmentFolder`;
     
+    console.log(`🔗 Query OData: ${query}`);
+
     const response = await axios.get(query, {
       auth: { username: username || '', password: password || '' },
-      headers: { 'Accept': 'application/json' }
+      headers: { 'Accept': 'application/json' },
+      timeout: 15000 // 15 segundos de timeout
     });
 
     if (!response.data?.d?.results?.length) {
-      return res.status(404).json({ message: 'No se encontró el ticket en SAP C4C' });
+      console.warn(`⚠️ No se encontró el ticket en C4C con el filtro: ${filter}`);
+      return res.status(404).json({ 
+        message: 'No se encontró el ticket en SAP C4C',
+        details: `Se buscó por Ticket ${ticket} y FSM ${llamadaFSM}`
+      });
     }
 
     const serviceRequest = response.data.d.results[0];
+    console.log(`✅ Ticket encontrado en C4C. UUID: ${serviceRequest.UUID}`);
+
     let allAttachments: any[] = [];
     
+    // Adjuntos a nivel de cabecera
     if (serviceRequest.ServiceRequestAttachmentFolder?.results) {
       allAttachments = [...allAttachments, ...serviceRequest.ServiceRequestAttachmentFolder.results];
     }
     
+    // Adjuntos a nivel de posición (Items)
     if (serviceRequest.ServiceRequestItem?.results) {
       serviceRequest.ServiceRequestItem.results.forEach((item: any) => {
         if (item.ServiceRequestItemAttachmentFolder?.results) {
@@ -718,14 +743,26 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
       });
     }
 
-    const pdf = allAttachments.find((a: any) => 
-      (a.MimeType && a.MimeType.includes('pdf')) || 
-      (a.Name && a.Name.toLowerCase().endsWith('.pdf'))
-    );
+    console.log(`📂 Total de adjuntos encontrados: ${allAttachments.length}`);
+
+    // Buscar el PDF (Informe Técnico)
+    // Priorizamos archivos que contengan "Informe" o "Technical" en el nombre si hay varios PDFs
+    const pdf = allAttachments.find((a: any) => {
+      const name = (a.Name || '').toLowerCase();
+      const mime = (a.MimeType || '').toLowerCase();
+      return (mime.includes('pdf') || name.endsWith('.pdf')) && (name.includes('informe') || name.includes('technical'));
+    }) || allAttachments.find((a: any) => {
+      const name = (a.Name || '').toLowerCase();
+      const mime = (a.MimeType || '').toLowerCase();
+      return (mime.includes('pdf') || name.endsWith('.pdf'));
+    });
 
     if (!pdf) {
-      return res.status(404).json({ message: 'El ticket existe pero no tiene un Informe Técnico (PDF) adjunto en SAP' });
+      console.warn(`⚠️ Ticket ${ticket} encontrado pero sin PDF.`);
+      return res.status(404).json({ message: 'El ticket existe en C4C pero no tiene un Informe Técnico (PDF) adjunto.' });
     }
+
+    console.log(`📄 Descargando PDF: ${pdf.Name} desde ${pdf.__metadata.media_src}`);
 
     const pdfResponse = await axios.get(pdf.__metadata.media_src, {
       auth: { username: username || '', password: password || '' },
@@ -737,7 +774,15 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
     pdfResponse.data.pipe(res);
 
   } catch (error: any) {
-    res.status(500).json({ message: `Error al comunicarse con SAP C4C: ${error.message}` });
+    console.error(`❌ Error en integración C4C:`, error.message);
+    if (error.response) {
+      console.error(`Status: ${error.response.status}`);
+      console.error(`Data:`, JSON.stringify(error.response.data));
+    }
+    res.status(500).json({ 
+      message: `Error al comunicarse con SAP C4C`, 
+      error: error.message 
+    });
   }
 });
 
