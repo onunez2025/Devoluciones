@@ -343,25 +343,57 @@ const PublicEquipmentPage = () => {
                     </div>
                     <p className="text-sm font-bold text-foreground">{selectedReport.Tecnico || 'No especificado'}</p>
                   </div>
-                  {selectedReport.TipoServicio && (
-                    <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 sm:col-span-2">
-                      <div className="flex items-center gap-2 mb-2 opacity-50 text-blue-500">
-                        <Wrench size={14} />
-                        <span className="text-[10px] font-bold uppercase tracking-tighter">Tipo de Servicio</span>
-                      </div>
-                      <p className="text-sm font-black text-blue-600 uppercase tracking-tight">{selectedReport.TipoServicio}</p>
-                    </div>
-                  )}
                 </div>
+
+                {/* Cliente y Producto */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                    <div className="flex items-center gap-2 mb-2 opacity-50 text-primary">
+                      <User size={14} />
+                      <span className="text-[10px] font-bold uppercase tracking-tighter">Cliente</span>
+                    </div>
+                    <p className="text-sm font-bold text-foreground">{selectedReport.NombreCliente || 'No especificado'}</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                    <div className="flex items-center gap-2 mb-2 opacity-50 text-blue-500">
+                      <Package size={14} />
+                      <span className="text-[10px] font-bold uppercase tracking-tighter">Producto / Equipo</span>
+                    </div>
+                    <p className="text-sm font-bold text-foreground">{selectedReport.NombreEquipo || 'No especificado'}</p>
+                  </div>
+                </div>
+
+                {/* Tipo de Servicio (Si existe) */}
+                {selectedReport.TipoServicio && (
+                  <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
+                    <div className="flex items-center gap-2 mb-2 opacity-50 text-blue-500">
+                      <Wrench size={14} />
+                      <span className="text-[10px] font-bold uppercase tracking-tighter">Tipo de Servicio</span>
+                    </div>
+                    <p className="text-sm font-black text-blue-600 uppercase tracking-tight">{selectedReport.TipoServicio}</p>
+                  </div>
+                )}
 
                 {/* Trabajo Realizado Section */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-primary">
-                    <Wrench size={16} />
-                    <h3 className="text-xs font-black uppercase tracking-widest">Trabajo Realizado</h3>
+                    <Info size={16} />
+                    <h3 className="text-xs font-black uppercase tracking-widest">Estado de la Visita</h3>
                   </div>
-                  <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 leading-relaxed text-sm text-foreground/90 font-medium">
-                    {selectedReport.TrabajoRealizado || 'No se registraron detalles del trabajo realizado.'}
+                  <div className="p-5 rounded-2xl bg-primary/5 border border-primary/10 leading-relaxed text-sm text-foreground/90 font-medium flex items-center gap-3">
+                    {selectedReport.TrabajoRealizado === 'true' || selectedReport.TrabajoRealizado === 'Yes' ? (
+                      <>
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span>Trabajo Realizado con Éxito</span>
+                      </>
+                    ) : selectedReport.TrabajoRealizado === 'false' || selectedReport.TrabajoRealizado === 'No' ? (
+                      <>
+                        <div className="w-2 h-2 bg-red-500 rounded-full" />
+                        <span>Visita Realizada (Sin intervención técnica)</span>
+                      </>
+                    ) : (
+                      <span>{selectedReport.TrabajoRealizado || 'Sin detalles registrados'}</span>
+                    )}
                   </div>
                 </div>
 

@@ -36,6 +36,7 @@ export interface TechnicalReport {
   MotivoNuevaVisita?: string;
   LlamadaFSM?: string;
   TipoServicio?: string;
+  NombreCliente?: string;
 }
 
 export interface AuthResponse {

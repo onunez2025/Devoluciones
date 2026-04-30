@@ -500,6 +500,7 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
           f.SolicitaNuevaVisita,
           f.MotivoNuevaVisita,
           f.LlamadaFSM,
+          f.NombreCliente,
           t.Descripcion as TipoServicio
         FROM [SIATC].[Dashboard_FSM] f
         LEFT JOIN [SIATC].[FSM_TipoServicio] t ON f.IdServicio = t.Id
