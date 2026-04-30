@@ -30,9 +30,6 @@ export const ZebraPrinterUUIDs = {
 class BluetoothPrinterService {
   private device: any = null;
   private characteristic: any = null;
-  private selectedPrinter: any = null;
-  private isConnected: boolean = false;
-
   async connect() {
     if (Capacitor.isNativePlatform()) {
       return this.connectNative();
@@ -71,7 +68,6 @@ class BluetoothPrinterService {
         p.friendlyName.toUpperCase().startsWith('XXZ')
       ) || printers[0];
       
-      this.selectedPrinter = target;
       alert(`Conectando a ${target.friendlyName}...`);
       console.log(`Conectando a impresora nativa: ${target.friendlyName}...`);
       
@@ -80,7 +76,6 @@ class BluetoothPrinterService {
       
       // Aumentamos a 2 segundos para asegurar que el canal esté abierto
       await new Promise(resolve => setTimeout(resolve, 2000));
-      this.isConnected = true;
       this.device = target;
       
       return true;
