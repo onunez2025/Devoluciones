@@ -48,27 +48,38 @@ class BluetoothPrinterService {
       console.log('Buscando impresoras Zebra...');
       // @ts-ignore
       const result = await ZebraBluetooth.discoverPrinters();
-      const printers = result.printers;
       
-      if (!printers || printers.length === 0) {
-        throw new Error('No se encontraron impresoras Zebra vinculadas.');
+      // DEPURACIÓN: Mostrar qué encontró exactamente
+      if (result && result.printers) {
+        console.log('Impresoras encontradas:', result.printers);
+      } else {
+        alert('El plugin no devolvió ninguna lista de impresoras.');
+      }
+
+      const printers = result.printers || [];
+      
+      if (printers.length === 0) {
+        throw new Error('No se encontraron impresoras Zebra vinculadas. Por favor, verifica que el dispositivo XXZ esté emparejado en el sistema.');
       }
       
       const target = printers.find((p: any) => 
         p.friendlyName.toUpperCase().includes('ZEBRA') || 
         p.friendlyName.toUpperCase().startsWith('ZQ') || 
-        p.friendlyName.toUpperCase().startsWith('ZR')
+        p.friendlyName.toUpperCase().startsWith('ZR') ||
+        p.friendlyName.toUpperCase().startsWith('XXZ')
       ) || printers[0];
       
+      this.selectedPrinter = target;
       alert(`Conectando a ${target.friendlyName}...`);
       console.log(`Conectando a impresora nativa: ${target.friendlyName}...`);
       
       // @ts-ignore
       await ZebraBluetooth.connectToPrinter({ friendlyName: target.friendlyName });
-      this.device = target;
       
-      // Esperar estabilidad
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Aumentamos a 2 segundos para asegurar que el canal esté abierto
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      this.isConnected = true;
+      this.device = target;
       
       return true;
     } catch (error: any) {
@@ -171,8 +182,9 @@ class BluetoothPrinterService {
   private async printNative(zpl: string) {
     try {
       alert('Enviando etiqueta...');
-      const formattedZpl = zpl.trim() + "\n";
-      console.log('Enviando impresión via CPCL...');
+      // Añadimos \r\n al inicio y al final para asegurar que el buffer se limpie y ejecute
+      const formattedZpl = "\r\n" + zpl.trim() + "\r\n";
+      console.log('Enviando impresión via CPCL (CRLF)...');
       // @ts-ignore
       await ZebraBluetooth.sendZPL({ zpl: formattedZpl });
       alert('¡Impresión enviada!');

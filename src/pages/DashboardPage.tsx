@@ -145,6 +145,8 @@ const DashboardPage = () => {
       .map(dev => ({
         'Ticket': dev.Ticket,
         'ID_Equipo': dev.IdEquipo,
+        'Cliente': dev.NombreCliente || 'N/A',
+        'Producto': dev.NombreEquipo || 'N/A',
         'Serie': dev.N_Serie || 'N/A',
         'Orden_Compra': dev.VC_oden_compra_numero || 'N/A',
         'URL_Historial': `https://${window.location.host}/public/equipment/${dev.IdEquipo}`

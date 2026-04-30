@@ -18,6 +18,8 @@ export interface Devolucion {
   IdEquipo?: string;
   VC_oden_compra_numero?: string;
   VC_nombre_equipo?: string;
+  NombreCliente?: string;
+  NombreEquipo?: string;
 }
 
 export interface TechnicalReport {

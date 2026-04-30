@@ -185,6 +185,8 @@ app.get('/api/devoluciones', authenticateToken, async (req, res) => {
           CAST(d.Adjunto AS NVARCHAR(MAX)) as Adjunto, 
           d.Creado_el as FechaRegistro, 
           f.IdEquipo,
+          f.NombreCliente,
+          f.NombreEquipo,
           COUNT(*) OVER() as TotalCount
         FROM [dbo].[GAC_APP_TB_DEVOLUCION] d
         LEFT JOIN [SIATC].[Dashboard_FSM] f ON d.Ticket = f.Ticket
