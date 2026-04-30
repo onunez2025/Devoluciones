@@ -18,28 +18,32 @@ import { QRCodeSVG } from 'qrcode.react';
 import apiClient from '../services/apiClient';
 import { bluetoothPrinter } from '../services/bluetoothPrinter';
 
+import { Devolucion } from '../types';
+
 interface Props {
   onClose: () => void;
   onSuccess: () => void;
+  devolucion?: Devolucion | null;
 }
 
-const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
+const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
+  const isEditing = !!devolucion;
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
-    Ticket: '',
-    N_Guia: '',
-    N_Serie: '',
-    Sticker: '',
-    Comentario: '',
-    IdEquipo: '',
-    Adjunto: ''
+    Ticket: devolucion?.Ticket || '',
+    N_Guia: devolucion?.N_Guia || '',
+    N_Serie: devolucion?.N_Serie || '',
+    Sticker: devolucion?.Sticker || '',
+    Comentario: devolucion?.Comentario || '',
+    IdEquipo: devolucion?.IdEquipo || '',
+    Adjunto: devolucion?.Adjunto || ''
   });
 
-  const [idEquipoFound, setIdEquipoFound] = useState(false);
+  const [idEquipoFound, setIdEquipoFound] = useState(isEditing);
 
   const lookupEquipment = async () => {
     if (!formData.Ticket) return;
@@ -103,11 +107,15 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
     }
     setLoading(true);
     try {
-      await apiClient.post('/devoluciones', formData);
+      if (isEditing) {
+        await apiClient.put(`/devoluciones/${formData.Ticket}`, formData);
+      } else {
+        await apiClient.post('/devoluciones', formData);
+      }
       setStep(2);
       onSuccess();
     } catch (err) {
-      setError('Error al registrar la devolución.');
+      setError(`Error al ${isEditing ? 'actualizar' : 'registrar'} la devolución.`);
     } finally {
       setLoading(false);
     }
@@ -150,10 +158,14 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
             </div>
             <div>
               <h3 className="text-sm font-black uppercase tracking-tighter text-foreground">
-                {step === 1 ? 'Registrar Nueva Devolución' : '¡Ingreso Completado!'}
+                {step === 1 
+                  ? (isEditing ? 'Editar Devolución' : 'Registrar Nueva Devolución') 
+                  : '¡Acción Completada!'}
               </h3>
               <p className="text-[10px] font-bold text-muted-foreground/60">
-                {step === 1 ? 'Sistema de Control de Equipos Retornados' : 'El registro se ha sincronizado correctamente'}
+                {step === 1 
+                  ? 'Sistema de Control de Equipos Retornados' 
+                  : `El registro se ha ${isEditing ? 'actualizado' : 'sincronizado'} correctamente`}
               </p>
             </div>
           </div>
@@ -169,42 +181,44 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
           {step === 1 ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
               {/* Buscador de Ticket */}
-              <div className="relative group">
-                <label className="form-label">Identificación de Ticket (FSM)</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${loading ? 'text-primary animate-pulse' : 'text-muted-foreground/40'}`} />
-                    <input 
-                      type="text"
-                      className="glass-input w-full pl-11 h-11 text-xs"
-                      placeholder="Ingrese número de ticket sap..."
-                      disabled={idEquipoFound || loading}
-                      value={formData.Ticket}
-                      onChange={(e) => setFormData({...formData, Ticket: e.target.value.replace(/\D/g, '')})}
-                      onKeyDown={(e) => e.key === 'Enter' && lookupEquipment()}
-                    />
+              {!isEditing && (
+                <div className="relative group">
+                  <label className="form-label">Identificación de Ticket (FSM)</label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${loading ? 'text-primary animate-pulse' : 'text-muted-foreground/40'}`} />
+                      <input 
+                        type="text"
+                        className="glass-input w-full pl-11 h-11 text-xs"
+                        placeholder="Ingrese número de ticket sap..."
+                        disabled={idEquipoFound || loading}
+                        value={formData.Ticket}
+                        onChange={(e) => setFormData({...formData, Ticket: e.target.value.replace(/\D/g, '')})}
+                        onKeyDown={(e) => e.key === 'Enter' && lookupEquipment()}
+                      />
+                    </div>
+                    
+                    {!idEquipoFound ? (
+                      <button 
+                        onClick={lookupEquipment}
+                        disabled={loading || !formData.Ticket}
+                        className="px-6 h-11 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2"
+                      >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                        Validar
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => setIdEquipoFound(false)}
+                        className="px-4 h-11 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20 hover:bg-emerald-500/20 transition-all flex items-center justify-center"
+                        title="Cambiar Ticket"
+                      >
+                        <CheckCircle2 className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
-                  
-                  {!idEquipoFound ? (
-                    <button 
-                      onClick={lookupEquipment}
-                      disabled={loading || !formData.Ticket}
-                      className="px-6 h-11 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2"
-                    >
-                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                      Validar
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => setIdEquipoFound(false)}
-                      className="px-4 h-11 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20 hover:bg-emerald-500/20 transition-all flex items-center justify-center"
-                      title="Cambiar Ticket"
-                    >
-                      <CheckCircle2 className="w-5 h-5" />
-                    </button>
-                  )}
                 </div>
-              </div>
+              )}
 
               <AnimatePresence mode="wait">
                 {idEquipoFound && (
@@ -220,11 +234,13 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
                         <div>
-                          <p className="text-[9px] text-primary/70 font-black uppercase tracking-widest">Equipo Identificado</p>
+                          <p className="text-[9px] text-primary/70 font-black uppercase tracking-widest">
+                            {isEditing ? `Ticket #${formData.Ticket}` : 'Equipo Identificado'}
+                          </p>
                           <p className="text-sm font-black text-foreground">ID: {formData.IdEquipo}</p>
                         </div>
                         <div className="bg-emerald-500/10 text-emerald-600 px-2.5 py-0.5 rounded-lg text-[8px] font-black uppercase border border-emerald-500/10">
-                          Operativo en SAP
+                          {isEditing ? 'Registro Existente' : 'Operativo en SAP'}
                         </div>
                       </div>
                     </div>
@@ -436,7 +452,7 @@ const NewDevolucionModal = ({ onClose, onSuccess }: Props) => {
               disabled={loading || !idEquipoFound}
               className="px-8 h-10 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2"
             >
-              Confirmar Registro <ArrowRight className="w-4 h-4" />
+              {isEditing ? 'Actualizar Cambios' : 'Confirmar Registro'} <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         )}

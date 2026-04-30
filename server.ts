@@ -404,6 +404,41 @@ app.post('/api/devoluciones', authenticateToken, async (req: any, res) => {
   }
 });
 
+// Actualizar devolución existente
+app.put('/api/devoluciones/:ticket', authenticateToken, async (req: any, res) => {
+  const { ticket } = req.params;
+  const data = req.body;
+  
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('Ticket', sql.VarChar, ticket)
+      .input('N_Guia', sql.VarChar, data.N_Guia)
+      .input('N_Serie', sql.VarChar, data.N_Serie)
+      .input('Sticker', sql.VarChar, data.Sticker)
+      .input('Comentario', sql.VarChar, data.Comentario)
+      .input('Adjunto', sql.VarChar, data.Adjunto)
+      .query(`
+        UPDATE [dbo].[GAC_APP_TB_DEVOLUCION]
+        SET N_Guia = @N_Guia,
+            N_Serie = @N_Serie,
+            Sticker = @Sticker,
+            Comentario = @Comentario,
+            Adjunto = @Adjunto
+        WHERE Ticket = @Ticket
+      `);
+    
+    if (result.rowsAffected[0] === 0) {
+      return res.status(404).json({ message: 'No se encontró la devolución para actualizar' });
+    }
+    
+    res.json({ message: 'Devolución actualizada correctamente' });
+  } catch (error: any) {
+    console.error('Error al actualizar devolución:', error);
+    res.status(500).json({ message: 'Error al actualizar devolución', error: error.message });
+  }
+});
+
 // Endpoint para subir imágenes a Azure Blob Storage
 app.post('/api/upload', authenticateToken, upload.single('image'), async (req: any, res) => {
   try {

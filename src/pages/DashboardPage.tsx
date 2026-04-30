@@ -18,6 +18,7 @@ import {
   Download,
   Filter,
   Eye,
+  Edit,
   DownloadCloud,
   ClipboardList
 } from 'lucide-react';
@@ -39,6 +40,7 @@ const DashboardPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
   const [selectedDevolucion, setSelectedDevolucion] = useState<Devolucion | null>(null);
+  const [devolucionToEdit, setDevolucionToEdit] = useState<Devolucion | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set<string>());
   const [isPrinting, setIsPrinting] = useState(false);
@@ -214,7 +216,10 @@ const DashboardPage = () => {
               Carga Masiva
             </button>
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                setDevolucionToEdit(null);
+                setIsModalOpen(true);
+              }}
               className="h-10 px-6 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
@@ -415,6 +420,17 @@ const DashboardPage = () => {
                                <span className="text-[10px] font-black uppercase tracking-tighter">Imprimir</span>
                              </button>
                             <button 
+                              className="p-2 hover:bg-amber-500/10 text-muted-foreground/40 hover:text-amber-500 rounded-xl transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDevolucionToEdit(dev);
+                                setIsModalOpen(true);
+                              }}
+                              title="Editar"
+                            >
+                              <Edit size={15} strokeWidth={2.5} />
+                            </button>
+                            <button 
                               className="p-2 hover:bg-primary/10 text-muted-foreground/40 hover:text-primary rounded-xl transition-all"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -500,6 +516,16 @@ const DashboardPage = () => {
                         className="p-3 bg-primary/10 text-primary rounded-xl"
                       >
                         <Eye size={18} />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDevolucionToEdit(dev);
+                          setIsModalOpen(true);
+                        }}
+                        className="p-3 bg-amber-500/10 text-amber-500 rounded-xl"
+                      >
+                        <Edit size={18} />
                       </button>
                       <Link 
                         to={`/public/equipment/${dev.IdEquipo}`}
@@ -598,7 +624,11 @@ const DashboardPage = () => {
       <AnimatePresence>
         {isModalOpen && (
           <NewDevolucionModal 
-            onClose={() => setIsModalOpen(false)} 
+            devolucion={devolucionToEdit}
+            onClose={() => {
+              setIsModalOpen(false);
+              setDevolucionToEdit(null);
+            }} 
             onSuccess={() => {
               fetchDevoluciones();
               fetchStats();
