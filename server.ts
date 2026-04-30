@@ -692,7 +692,7 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
     
     console.log(`📡 Consultando C4C - Ticket Local: ${ticket}, Padded: ${normalizedTicket}, FSM: ${llamadaFSM}`);
 
-    // Construir filtro extendido para maximizar posibilidades de encuentro
+    // Construir filtro para maximizar posibilidades de encuentro (solo usando ID que es estándar)
     let filterParts = [
       `ID eq '${ticket}'`,
       `ID eq '${normalizedTicket}'`
@@ -701,8 +701,6 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
     if (llamadaFSM) {
       filterParts.push(`ID eq '${llamadaFSM}'`);
       filterParts.push(`ID eq '${llamadaFSM.toString().padStart(10, '0')}'`);
-      // También buscamos por el ID de FSM en el campo ExternalID por si acaso
-      filterParts.push(`ExternalID eq '${llamadaFSM}'`);
     }
 
     const filter = filterParts.join(' or ');
