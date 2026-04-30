@@ -30,6 +30,8 @@ export const ZebraPrinterUUIDs = {
 class BluetoothPrinterService {
   private device: any = null;
   private characteristic: any = null;
+  private selectedPrinter: any = null;
+  private isConnected: boolean = false;
 
   async connect() {
     if (Capacitor.isNativePlatform()) {
