@@ -83,6 +83,8 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
     const exportData = selectedData.map(dev => ({
       'Ticket': dev.Ticket,
       'ID_Equipo': dev.IdEquipo,
+      'Cliente': dev.NombreCliente || 'N/A',
+      'Producto': dev.NombreEquipo || 'N/A',
       'Serie': dev.N_Serie || 'N/A',
       'Guia': dev.N_Guia || 'N/A',
       'URL_Historial': `https://${window.location.host}/public/equipment/${dev.IdEquipo}`

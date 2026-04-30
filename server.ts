@@ -320,6 +320,7 @@ app.get('/api/lookups/tickets-by-period', authenticateToken, async (req, res) =>
           f.IdEquipo, 
           f.CodigoExternoEquipo, 
           f.NombreEquipo,
+          f.NombreCliente,
           s.VC_referencia as N_Guia,
           f.TrabajoRealizado as Comentario
         FROM [SIATC].[Dashboard_FSM] f
