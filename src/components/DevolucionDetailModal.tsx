@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { X, Calendar, Package, ClipboardList, Tag, FileText, Camera, Printer, RefreshCcw } from 'lucide-react';
+import { X, Calendar, Package, ClipboardList, Tag, FileText, Camera, Printer, RefreshCcw, User, Wrench, ExternalLink } from 'lucide-react';
 import { Devolucion } from '../types';
 import { bluetoothPrinter } from '../services/bluetoothPrinter';
 import { generateZPL } from '../services/zplService';
@@ -113,6 +113,30 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                       <p className="text-xs font-bold text-foreground">{devolucion.N_Guia || 'N/A'}</p>
                     </div>
                   </div>
+
+                  {devolucion.NombreCliente && (
+                    <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
+                      <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
+                        <User size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground/40">Cliente</p>
+                        <p className="text-xs font-bold text-foreground">{devolucion.NombreCliente}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {devolucion.NombreEquipo && (
+                    <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
+                      <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
+                        <Wrench size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground/40">Producto</p>
+                        <p className="text-xs font-bold text-foreground">{devolucion.NombreEquipo}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -124,6 +148,17 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                   </p>
                 </div>
               </div>
+
+              {devolucion.ComentarioTecnico && (
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Comentario del Técnico</h4>
+                  <div className="p-4 bg-muted/30 rounded-2xl border border-border/50">
+                    <p className="text-[11px] leading-relaxed font-medium text-foreground/80 italic">
+                      "{devolucion.ComentarioTecnico}"
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Image Section */}
@@ -153,6 +188,14 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
         </div>
 
         <div className="p-4 md:p-5 bg-muted/20 border-t border-border flex flex-col md:flex-row gap-3 justify-stretch md:justify-end">
+          <button 
+            onClick={() => window.open(`/api/c4c/pdf/${devolucion.Ticket}`, '_blank')}
+            className="flex-1 md:flex-none px-6 h-12 md:h-10 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Informe Técnico
+          </button>
+
           <button 
             onClick={handlePrint}
             disabled={isPrinting}

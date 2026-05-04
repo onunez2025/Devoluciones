@@ -20,6 +20,7 @@ export interface Devolucion {
   VC_nombre_equipo?: string;
   NombreCliente?: string;
   NombreEquipo?: string;
+  ComentarioTecnico?: string;
 }
 
 export interface TechnicalReport {
