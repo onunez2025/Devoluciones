@@ -245,6 +245,9 @@ app.get('/api/equipos/lookup/:ticket', authenticateToken, async (req, res) => {
         SELECT TOP 1 
           f.IdEquipo, 
           f.CodigoExternoEquipo,
+          f.NombreCliente,
+          f.NombreEquipo,
+          f.ComentarioTecnico,
           s.VC_referencia as N_Guia
         FROM [SIATC].[Dashboard_FSM] f
         LEFT JOIN [dbo].[GAC_APP_SD_ENTREGAS] s ON f.Ticket = s.VC_pedidocliente
@@ -256,7 +259,10 @@ app.get('/api/equipos/lookup/:ticket', authenticateToken, async (req, res) => {
       res.json({
         IdEquipo: equipo.IdEquipo || equipo.CodigoExternoEquipo,
         N_Serie: '',
-        N_Guia: equipo.N_Guia || ''
+        N_Guia: equipo.N_Guia || '',
+        NombreCliente: equipo.NombreCliente || '',
+        NombreEquipo: equipo.NombreEquipo || '',
+        ComentarioTecnico: equipo.ComentarioTecnico || ''
       });
     } else {
       res.status(404).json({ message: 'Equipo no encontrado en la base de datos de FSM' });

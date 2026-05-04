@@ -40,7 +40,10 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
     Sticker: devolucion?.Sticker || '',
     Comentario: devolucion?.Comentario || '',
     IdEquipo: devolucion?.IdEquipo || '',
-    Adjunto: devolucion?.Adjunto || ''
+    Adjunto: devolucion?.Adjunto || '',
+    NombreCliente: devolucion?.NombreCliente || '',
+    NombreEquipo: devolucion?.NombreEquipo || '',
+    ComentarioTecnico: devolucion?.ComentarioTecnico || ''
   });
 
   const [idEquipoFound, setIdEquipoFound] = useState(isEditing);
@@ -57,7 +60,10 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
         ...prev, 
         IdEquipo: response.data.IdEquipo,
         N_Guia: response.data.N_Guia || prev.N_Guia,
-        N_Serie: response.data.N_Serie || prev.N_Serie // Mantener el anterior si viene vacío
+        N_Serie: response.data.N_Serie || prev.N_Serie, // Mantener el anterior si viene vacío
+        NombreCliente: response.data.NombreCliente || prev.NombreCliente,
+        NombreEquipo: response.data.NombreEquipo || prev.NombreEquipo,
+        ComentarioTecnico: response.data.ComentarioTecnico || prev.ComentarioTecnico
       }));
       
       setIdEquipoFound(true);
@@ -243,6 +249,19 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                           {isEditing ? 'Registro Existente' : 'Operativo en SAP'}
                         </div>
                       </div>
+                      {(formData.NombreCliente || formData.NombreEquipo) && (
+                        <div className="mt-2 pt-2 border-t border-primary/10 flex flex-col gap-1 text-[11px] font-medium text-foreground/80">
+                          {formData.NombreCliente && (
+                            <p><strong>Cliente:</strong> {formData.NombreCliente}</p>
+                          )}
+                          {formData.NombreEquipo && (
+                            <p><strong>Producto:</strong> {formData.NombreEquipo}</p>
+                          )}
+                          {formData.ComentarioTecnico && (
+                            <p className="italic text-foreground/70"><strong>Comentario del técnico:</strong> "{formData.ComentarioTecnico}"</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
