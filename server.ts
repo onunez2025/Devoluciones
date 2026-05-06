@@ -496,6 +496,11 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
     const result = await pool.request()
       .input('id', sql.NVarChar, idEquipo)
       .query(`
+        WITH InfoEquipo AS (
+          SELECT TOP 1 IdCliente, CodigoExternoEquipo
+          FROM [SIATC].[Dashboard_FSM]
+          WHERE IdEquipo = @id OR CodigoExternoEquipo = @id
+        )
         SELECT 
           f.Ticket, 
           f.Estado, 
@@ -513,9 +518,11 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
           f.NombreCliente,
           t.Descripcion as TipoServicio
         FROM [SIATC].[Dashboard_FSM] f
+        CROSS JOIN InfoEquipo ie
         LEFT JOIN [SIATC].[FSM_TipoServicio] t ON f.IdServicio = t.Id
-        WHERE (f.IdEquipo = @id OR f.CodigoExternoEquipo = @id) 
-        AND f.Estado = 'Closed'
+        WHERE f.IdCliente = ie.IdCliente 
+          AND f.CodigoExternoEquipo = ie.CodigoExternoEquipo
+          AND f.Estado = 'Closed'
         ORDER BY f.FechaVisita DESC
       `);
     
