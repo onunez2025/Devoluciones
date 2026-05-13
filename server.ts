@@ -51,6 +51,7 @@ const sqlConfig = {
   password: process.env.DB_PASSWORD,
   server: process.env.DB_SERVER || '',
   database: process.env.DB_DATABASE || 'SIATC',
+  requestTimeout: 30000,
   options: {
     encrypt: true,
     trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true',
@@ -171,7 +172,18 @@ app.get('/api/devoluciones', authenticateToken, async (req, res) => {
       request.input('search', sql.VarChar, `%${search}%`);
     }
 
-    // Consulta de datos con OFFSET/FETCH
+    // 1. Obtener el total de registros para paginación
+    let countQuery = `
+      SELECT COUNT(*) as total 
+      FROM [dbo].[GAC_APP_TB_DEVOLUCION] d
+      ${search ? 'LEFT JOIN [SIATC].[Dashboard_FSM] f ON d.Ticket = f.Ticket' : ''}
+      ${whereClause}
+    `;
+    
+    const countResult = await request.query(countQuery);
+    const totalRecords = countResult.recordset[0].total;
+
+    // 2. Consulta de datos paginados
     const result = await request
       .input('offset', sql.Int, offset)
       .input('limit', sql.Int, limit)
@@ -187,8 +199,7 @@ app.get('/api/devoluciones', authenticateToken, async (req, res) => {
           f.IdEquipo,
           f.NombreCliente,
           f.NombreEquipo,
-          f.ComentarioTecnico,
-          COUNT(*) OVER() as TotalCount
+          f.ComentarioTecnico
         FROM [dbo].[GAC_APP_TB_DEVOLUCION] d
         LEFT JOIN [SIATC].[Dashboard_FSM] f ON d.Ticket = f.Ticket
         ${whereClause}
@@ -196,8 +207,6 @@ app.get('/api/devoluciones', authenticateToken, async (req, res) => {
         OFFSET @offset ROWS
         FETCH NEXT @limit ROWS ONLY
       `);
-
-    const totalRecords = result.recordset.length > 0 ? result.recordset[0].TotalCount : 0;
     
     res.json({
       data: result.recordset,
