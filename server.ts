@@ -498,18 +498,35 @@ app.post('/api/upload', authenticateToken, upload.single('image'), async (req: a
 // --- Public View: Historial Técnico ---
 app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
   const { idEquipo } = req.params;
-  console.log(`🔍 Buscando historial para equipo: ${idEquipo}`);
+  console.log(`🔍 [Public] Buscando historial para equipo: ${idEquipo}`);
+  
   try {
     const pool = await poolPromise;
-    console.log(`🔍 Buscando historial para equipo: ${idEquipo}...`);
-    const result = await pool.request()
+    
+    // Paso 1: Obtener la información básica del equipo (IdCliente y CodigoExterno)
+    // Buscamos por Ticket (Indexado), IdEquipo o CodigoExterno
+    const infoResult = await pool.request()
       .input('id', sql.NVarChar, idEquipo)
       .query(`
-        WITH InfoEquipo AS (
-          SELECT TOP 1 IdCliente, CodigoExternoEquipo
-          FROM [SIATC].[Dashboard_FSM]
-          WHERE IdEquipo = @id OR CodigoExternoEquipo = @id
-        )
+        SELECT TOP 1 IdCliente, CodigoExternoEquipo
+        FROM [SIATC].[Dashboard_FSM]
+        WHERE Ticket = @id OR IdEquipo = @id OR CodigoExternoEquipo = @id
+        ORDER BY CASE WHEN Ticket = @id THEN 0 ELSE 1 END
+      `);
+
+    if (infoResult.recordset.length === 0) {
+      console.log(`⚠️ No se encontró información para el ID: ${idEquipo}`);
+      return res.json([]);
+    }
+
+    const { IdCliente, CodigoExternoEquipo } = infoResult.recordset[0];
+    console.log(`✅ Equipo identificado: Cliente=${IdCliente}, Codigo=${CodigoExternoEquipo}. Buscando historial...`);
+
+    // Paso 2: Buscar el historial usando los identificadores encontrados
+    const historyResult = await pool.request()
+      .input('idc', sql.NVarChar, IdCliente)
+      .input('cee', sql.NVarChar, CodigoExternoEquipo)
+      .query(`
         SELECT 
           f.Ticket, 
           f.Estado, 
@@ -527,19 +544,21 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
           f.NombreCliente,
           t.Descripcion as TipoServicio
         FROM [SIATC].[Dashboard_FSM] f
-        CROSS JOIN InfoEquipo ie
         LEFT JOIN [SIATC].[FSM_TipoServicio] t ON f.IdServicio = t.Id
-        WHERE f.IdCliente = ie.IdCliente 
-          AND f.CodigoExternoEquipo = ie.CodigoExternoEquipo
+        WHERE f.IdCliente = @idc 
+          AND f.CodigoExternoEquipo = @cee
           AND f.Estado = 'Closed'
         ORDER BY f.FechaVisita DESC
       `);
     
-    console.log(`✅ Se encontraron ${result.recordset.length} registros para ${idEquipo}`);
-    res.json(result.recordset);
+    console.log(`✅ Se encontraron ${historyResult.recordset.length} registros para ${idEquipo}`);
+    res.json(historyResult.recordset);
   } catch (error: any) {
-    console.error(`❌ Error crítico al obtener historial para equipo ${idEquipo}:`, error.message);
-    res.status(500).json({ message: `Error interno del servidor: ${error.message}` });
+    console.error(`❌ Error crítico en historial público (${idEquipo}):`, error.message);
+    res.status(500).json({ 
+      message: 'Error al cargar el historial del equipo', 
+      error: error.message 
+    });
   }
 });
 
