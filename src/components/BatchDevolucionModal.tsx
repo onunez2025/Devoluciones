@@ -87,7 +87,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
       'Producto': dev.NombreEquipo || 'N/A',
       'Serie': dev.N_Serie || 'N/A',
       'Guia': dev.N_Guia || 'N/A',
-      'URL_Historial': `https://${window.location.host}/public/equipment/${dev.IdEquipo}`
+      'URL_Historial': `https://${window.location.host}/public/equipment/${dev.Ticket}`
     }));
 
     const worksheet = utils.json_to_sheet(exportData);

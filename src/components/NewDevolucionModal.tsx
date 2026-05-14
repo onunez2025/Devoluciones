@@ -128,7 +128,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
   };
 
   const handlePrint = async () => {
-    const zpl = `^XA^FO50,50^BQN,2,10^FDQA,https://${window.location.host}/public/equipment/${formData.IdEquipo}^FS^FO250,70^A0N,30,30^FDTicket: ${formData.Ticket}^FS^FO250,110^A0N,25,25^FDEquipo: ${formData.IdEquipo}^FS^XZ`;
+    const zpl = `^XA^FO50,50^BQN,2,10^FDQA,https://${window.location.host}/public/equipment/${formData.Ticket}^FS^FO250,70^A0N,30,30^FDTicket: ${formData.Ticket}^FS^FO250,110^A0N,25,25^FDEquipo: ${formData.IdEquipo}^FS^XZ`;
     
     if (bluetoothPrinter.isSupported()) {
       try {
@@ -431,7 +431,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               {/* QR Ticket Style Card */}
               <div className="relative group p-6 bg-white rounded-[2.5rem] shadow-2xl border-4 border-muted/5 transition-transform hover:scale-[1.02] duration-500">
                 <QRCodeSVG 
-                  value={`https://${window.location.host}/public/equipment/${formData.IdEquipo}`}
+                  value={`https://${window.location.host}/public/equipment/${formData.Ticket}`}
                   size={140}
                   level="H"
                   includeMargin={true}

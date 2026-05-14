@@ -6,7 +6,8 @@ import { Devolucion } from '../types';
  * y el diseño visual de la plataforma Devoluciones.
  */
 export const generateZPL = (devolucion: Devolucion): string => {
-  const publicUrl = `https://gac-sole-devoluciones.jppsfv.easypanel.host/public/equipment/${devolucion.IdEquipo}`;
+  const host = typeof window !== 'undefined' ? window.location.host : 'gac-sole-devoluciones.jppsfv.easypanel.host';
+  const publicUrl = `https://${host}/public/equipment/${devolucion.Ticket}`;
   
   // PRUEBA DE TEXTO PLANO (Modo Línea / ESC-POS)
   // Muchas impresoras móviles de esta gama funcionan mejor así por defecto

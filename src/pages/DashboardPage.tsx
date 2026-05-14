@@ -149,7 +149,7 @@ const DashboardPage = () => {
         'Producto': dev.NombreEquipo || 'N/A',
         'Serie': dev.N_Serie || 'N/A',
         'Orden_Compra': dev.VC_oden_compra_numero || 'N/A',
-        'URL_Historial': `https://${window.location.host}/public/equipment/${dev.IdEquipo}`
+        'URL_Historial': `https://${window.location.host}/public/equipment/${dev.Ticket}`
       }));
 
     if (selectedData.length === 0) return;
@@ -399,7 +399,7 @@ const DashboardPage = () => {
                              <button 
                                onClick={(e) => {
                                  e.stopPropagation();
-                                 const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
+                                 const publicUrl = `https://${window.location.host}/public/equipment/${dev.Ticket}`;
                                  setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
                                  setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                                }}
@@ -547,7 +547,7 @@ const DashboardPage = () => {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          const publicUrl = `https://${window.location.host}/public/equipment/${dev.IdEquipo}`;
+                          const publicUrl = `https://${window.location.host}/public/equipment/${dev.Ticket}`;
                           setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
                           setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                         }}

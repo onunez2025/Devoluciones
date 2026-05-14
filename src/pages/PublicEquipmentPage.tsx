@@ -40,7 +40,13 @@ const PublicEquipmentPage = () => {
         console.log('📜 Historial recibido:', response.data);
         setHistory(response.data);
         
+        // Auto-seleccionar si el ID en la URL es un ticket específico
         if (response.data.length > 0) {
+          const matchingTicket = response.data.find((r: any) => String(r.Ticket) === String(idEquipo));
+          if (matchingTicket) {
+            setSelectedReport(matchingTicket);
+          }
+          
           const first = response.data[0];
           setEquipmentInfo({
             id: first.IdEquipo || idEquipo || '',
