@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { storageService } from '../services/storageService';
+import { useAuth } from '../hooks/useAuth';
 
 interface ProtectedRouteProps {
   allowedRoles?: number[];
@@ -8,15 +8,22 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles, requiredPermission }) => {
-  const user = storageService.getUser();
-  const token = storageService.getToken();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
-  if (!token || !user) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
   // Check roles (legacy)
-  if (allowedRoles && !allowedRoles.includes(user.roleId)) {
+  if (allowedRoles && user.roleId !== undefined && !allowedRoles.includes(user.roleId)) {
     return <Navigate to="/" replace />;
   }
 

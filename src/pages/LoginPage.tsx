@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogIn, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
 import apiClient from '../services/apiClient';
-import { storageService } from '../services/storageService';
+import { useAuth } from '../hooks/useAuth';
 import { ThemeToggle } from '../components/ThemeToggle';
 
 const LoginPage = () => {
@@ -12,6 +12,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,10 +22,10 @@ const LoginPage = () => {
     try {
       const response = await apiClient.post('/auth/login', { username, password });
       const { token, user } = response.data;
-      
-      storageService.setToken(token);
-      storageService.setUser(user);
-      
+
+      // login() guarda token en localStorage + escribe cookie SSO .siatc.cloud
+      login(user, token, true);
+
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al iniciar sesión. Verifique sus credenciales.');

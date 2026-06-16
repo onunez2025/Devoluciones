@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/config/UsersPage';
@@ -9,32 +10,33 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        
-        {/* Rutas Privadas */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<DashboardPage />} />
-        </Route>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Rutas de Configuración / RBAC */}
-        <Route element={<ProtectedRoute requiredPermission="USERS_VIEW" />}>
-          <Route path="/users" element={<UsersPage />} />
-        </Route>
-        
-        <Route element={<ProtectedRoute requiredPermission="ROLES_VIEW" />}>
-          <Route path="/roles" element={<RolesPage />} />
-        </Route>
+          {/* Rutas Privadas */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<DashboardPage />} />
+          </Route>
 
-        {/* Vista Pública (Escaneo QR) */}
-        <Route path="/public/equipment/:idEquipo" element={<PublicEquipmentPage />} />
+          {/* Rutas de Configuración / RBAC */}
+          <Route element={<ProtectedRoute requiredPermission="USERS_VIEW" />}>
+            <Route path="/users" element={<UsersPage />} />
+          </Route>
 
-        {/* Redirección por defecto */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+          <Route element={<ProtectedRoute requiredPermission="ROLES_VIEW" />}>
+            <Route path="/roles" element={<RolesPage />} />
+          </Route>
+
+          {/* Vista Pública (Escaneo QR) */}
+          <Route path="/public/equipment/:idEquipo" element={<PublicEquipmentPage />} />
+
+          {/* Redirección por defecto */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
 
 export default App;
-

@@ -1,16 +1,11 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { LogOut, User, Package, Users, Shield } from 'lucide-react';
-import { storageService } from '../services/storageService';
+import { useAuth } from '../hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
+import { AppSwitcher } from './AppSwitcher';
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const user = storageService.getUser();
-
-  const handleLogout = () => {
-    storageService.clearAll();
-    navigate('/login');
-  };
+  const { user, logout } = useAuth();
 
   return (
     <nav className="h-20 glass-card !rounded-none !border-t-0 !border-x-0 px-6 md:px-10 flex items-center justify-between sticky top-0 z-50 transition-colors duration-300">
@@ -23,14 +18,14 @@ const Navbar = () => {
             DEVOLUCIONES <span className="text-primary">MT</span>
           </span>
         </Link>
-        
+
         {user?.roleId === 1 && (
           <div className="h-8 w-[1px] bg-border hidden md:block" />
         )}
-        
+
         {(user?.permissions?.includes('USERS_VIEW') || user?.permissions?.includes('ADMIN')) && (
-          <Link 
-            to="/users" 
+          <Link
+            to="/users"
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all text-sm font-medium"
           >
             <Users className="w-4 h-4" />
@@ -39,8 +34,8 @@ const Navbar = () => {
         )}
 
         {(user?.permissions?.includes('ROLES_VIEW') || user?.permissions?.includes('ADMIN')) && (
-          <Link 
-            to="/roles" 
+          <Link
+            to="/roles"
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all text-sm font-medium"
           >
             <Shield className="w-4 h-4" />
@@ -57,10 +52,11 @@ const Navbar = () => {
 
         <div className="h-8 w-[1px] bg-border hidden sm:block" />
 
+        <AppSwitcher />
         <ThemeToggle />
-        
-        <button 
-          onClick={handleLogout}
+
+        <button
+          onClick={logout}
           className="p-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive rounded-xl transition-colors group"
           title="Cerrar sesión"
         >
@@ -72,4 +68,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

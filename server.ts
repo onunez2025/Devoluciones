@@ -10,18 +10,83 @@ import { fileURLToPath } from 'url';
 import { BlobServiceClient } from '@azure/storage-blob';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+// [SECURITY] Proxy de confianza para que express-rate-limit vea la IP real
+app.set('trust proxy', 1);
+
+// [SECURITY] CORS — múltiples orígenes desde env, con guard de producción
+if (IS_PRODUCTION && !(process.env.ALLOWED_ORIGINS || '').trim()) {
+  console.warn('WARNING: ALLOWED_ORIGINS no configurado en producción.');
+}
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!IS_PRODUCTION) return callback(null, true);
+    const allowed = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!origin || allowed.includes(origin)) callback(null, true);
+    else callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
+
+// [SECURITY] Cabeceras de seguridad via helmet (incluye CSP)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      formAction: ["'self'"],
+      baseUri: ["'self'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  hsts: IS_PRODUCTION ? { maxAge: 31536000, includeSubDomains: true } : false,
+}));
+
+// [SECURITY] Rate limiting general (1000 req / 15 min)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes. Intenta más tarde.' },
+});
+app.use(limiter);
+
+// [SECURITY] Rate limiting en auth (50 req / 1 hora)
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos de inicio de sesión. Espera 1 hora.' },
+});
+app.use('/api/auth/login', authLimiter);
+
+// [SECURITY] Limitar tamaño de body para prevenir DoS
+app.use(express.json({ limit: '2mb' }));
 
 const port = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-dev';
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET no configurado. El servidor no puede iniciarse de forma segura.');
+  process.exit(1);
+}
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 // Configuración Azure Blob Storage
 const AZURE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
@@ -70,12 +135,24 @@ const poolPromise = new sql.ConnectionPool(sqlConfig)
   });
 
 // --- Middleware de Autenticación ---
-const authenticateToken = (req: any, res: any, next: any) => {
+const verifyToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
 
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) return res.status(403).json({ message: 'Token inválido o expirado' });
+    req.user = user;
+    next();
+  });
+};
+
+// Solo para endpoints GET de descarga de archivos (browser no puede enviar headers en window.location.href)
+const verifyTokenForDownload = (req: any, res: any, next: any) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader?.split(' ')[1] || (req.query.token as string);
+  if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
   jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
     if (err) return res.status(403).json({ message: 'Token inválido o expirado' });
     req.user = user;
@@ -99,6 +176,9 @@ const checkPermission = (requiredPermission: string) => {
 
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Usuario y contraseña son requeridos' });
+  }
   try {
     const pool = await poolPromise;
     const result = await pool.request()
@@ -148,10 +228,58 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// --- Endpoint SSO: emite token fresco con campos app-específicos ---
+app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: 'No autenticado' });
+
+    const pool = await poolPromise;
+    const userResult = await pool.request()
+      .input('id', sql.UniqueIdentifier, userId)
+      .input('app', sql.VarChar(10), APP_IDENTIFIER)
+      .query(`
+        SELECT u.Id, u.Username, u.FullName, r.Name as RoleName, u.RoleId
+        FROM [EBM].[Users] u
+        LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id
+        WHERE u.Id = @id AND u.IsActive = 1
+          AND (u.Apps LIKE '%' + @app + '%' OR u.Apps LIKE '%ADMIN%')
+      `);
+
+    const user = userResult.recordset[0];
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    const permsResult = await pool.request()
+      .input('rid', sql.UniqueIdentifier, user.RoleId)
+      .query("SELECT Permission FROM [EBM].[RolePermissions] WHERE RoleId = @rid");
+    const perms = permsResult.recordset.map((p: any) => p.Permission);
+
+    const freshToken = jwt.sign(
+      { id: user.Id, username: user.Username, full_name: user.FullName, role: user.RoleName, perms, casId: null },
+      JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    res.json({
+      token: freshToken,
+      user: {
+        id: user.Id,
+        username: user.Username,
+        fullName: user.FullName,
+        role: user.RoleName,
+        permissions: perms
+      }
+    });
+  } catch (error: any) {
+    console.error('Error en /api/auth/me:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+});
+
 // --- Endpoints de Devoluciones ---
 
 // Listado de devoluciones con paginación y búsqueda
-app.get('/api/devoluciones', authenticateToken, async (req, res) => {
+app.get('/api/devoluciones', verifyToken, async (req, res) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 50;
   const search = (req.query.search as string) || '';
@@ -224,7 +352,7 @@ app.get('/api/devoluciones', authenticateToken, async (req, res) => {
 });
 
 // Estadísticas del dashboard
-app.get('/api/devoluciones/stats', authenticateToken, async (_req, res) => {
+app.get('/api/devoluciones/stats', verifyToken, async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
@@ -244,7 +372,7 @@ app.get('/api/devoluciones/stats', authenticateToken, async (_req, res) => {
 });
 
 // Búsqueda de equipo por ticket para validación previa
-app.get('/api/equipos/lookup/:ticket', authenticateToken, async (req, res) => {
+app.get('/api/equipos/lookup/:ticket', verifyToken, async (req, res) => {
   const { ticket } = req.params;
   try {
     const pool = await poolPromise;
@@ -283,7 +411,7 @@ app.get('/api/equipos/lookup/:ticket', authenticateToken, async (req, res) => {
 });
 
 // Búsqueda de datos SAP (Guía/Folio) por Ticket
-app.get('/api/sap/lookup/:ticket', authenticateToken, async (req, res) => {
+app.get('/api/sap/lookup/:ticket', verifyToken, async (req, res) => {
   const { ticket } = req.params;
   try {
     const pool = await poolPromise;
@@ -307,7 +435,7 @@ app.get('/api/sap/lookup/:ticket', authenticateToken, async (req, res) => {
 });
 
 // Listado de técnicos únicos para carga masiva
-app.get('/api/lookups/technicians', authenticateToken, async (_req, res) => {
+app.get('/api/lookups/technicians', verifyToken, async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
@@ -323,7 +451,7 @@ app.get('/api/lookups/technicians', authenticateToken, async (_req, res) => {
 });
 
 // Buscar tickets candidatos para carga masiva
-app.get('/api/lookups/tickets-by-period', authenticateToken, async (req, res) => {
+app.get('/api/lookups/tickets-by-period', verifyToken, async (req, res) => {
   const { date, tech } = req.query;
   try {
     const pool = await poolPromise;
@@ -352,7 +480,7 @@ app.get('/api/lookups/tickets-by-period', authenticateToken, async (req, res) =>
 });
 
 // Registro masivo de devoluciones
-app.post('/api/devoluciones/batch', authenticateToken, async (req: any, res) => {
+app.post('/api/devoluciones/batch', verifyToken, async (req: any, res) => {
   const { tickets } = req.body;
   const username = req.user?.username || 'unknown';
   
@@ -394,7 +522,7 @@ app.post('/api/devoluciones/batch', authenticateToken, async (req: any, res) => 
 });
 
 // Registro de nueva devolución
-app.post('/api/devoluciones', authenticateToken, async (req: any, res) => {
+app.post('/api/devoluciones', verifyToken, async (req: any, res) => {
   const data = req.body;
   const username = req.user?.username || 'unknown';
   
@@ -424,7 +552,7 @@ app.post('/api/devoluciones', authenticateToken, async (req: any, res) => {
 });
 
 // Actualizar devolución existente
-app.put('/api/devoluciones/:ticket', authenticateToken, async (req: any, res) => {
+app.put('/api/devoluciones/:ticket', verifyToken, async (req: any, res) => {
   const { ticket } = req.params;
   const data = req.body;
   
@@ -459,7 +587,7 @@ app.put('/api/devoluciones/:ticket', authenticateToken, async (req: any, res) =>
 });
 
 // Endpoint para subir imágenes a Azure Blob Storage
-app.post('/api/upload', authenticateToken, upload.single('image'), async (req: any, res) => {
+app.post('/api/upload', verifyToken, upload.single('image'), async (req: any, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No se ha proporcionado ninguna imagen' });
@@ -565,7 +693,7 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
 // --- Gestión de Usuarios, Roles y Permisos ---
 
 // Listado de usuarios
-app.get('/api/users', authenticateToken, checkPermission('USERS_VIEW'), async (_req, res) => {
+app.get('/api/users', verifyToken, checkPermission('USERS_VIEW'), async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
@@ -585,7 +713,7 @@ app.get('/api/users', authenticateToken, checkPermission('USERS_VIEW'), async (_
 });
 
 // Crear usuario
-app.post('/api/users', authenticateToken, checkPermission('USERS_EDIT'), async (req, res) => {
+app.post('/api/users', verifyToken, checkPermission('USERS_EDIT'), async (req, res) => {
   const { username, email, fullName, password, roleId, managementId, apps } = req.body;
   try {
     const pool = await poolPromise;
@@ -612,7 +740,7 @@ app.post('/api/users', authenticateToken, checkPermission('USERS_EDIT'), async (
 });
 
 // Actualizar usuario
-app.put('/api/users/:id', authenticateToken, checkPermission('USERS_EDIT'), async (req, res) => {
+app.put('/api/users/:id', verifyToken, checkPermission('USERS_EDIT'), async (req, res) => {
   const { id } = req.params;
   const { username, email, fullName, password, roleId, managementId, isActive, apps } = req.body;
   try {
@@ -647,7 +775,7 @@ app.put('/api/users/:id', authenticateToken, checkPermission('USERS_EDIT'), asyn
 });
 
 // Listado de roles
-app.get('/api/roles', authenticateToken, async (_req, res) => {
+app.get('/api/roles', verifyToken, async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
@@ -664,7 +792,7 @@ app.get('/api/roles', authenticateToken, async (_req, res) => {
 });
 
 // Obtener permisos de un rol
-app.get('/api/roles/:id/permissions', authenticateToken, checkPermission('ROLES_VIEW'), async (req, res) => {
+app.get('/api/roles/:id/permissions', verifyToken, checkPermission('ROLES_VIEW'), async (req, res) => {
   const { id } = req.params;
   try {
     const pool = await poolPromise;
@@ -678,7 +806,7 @@ app.get('/api/roles/:id/permissions', authenticateToken, checkPermission('ROLES_
 });
 
 // Actualizar permisos de un rol
-app.post('/api/roles/:id/permissions', authenticateToken, checkPermission('ROLES_EDIT'), async (req, res) => {
+app.post('/api/roles/:id/permissions', verifyToken, checkPermission('ROLES_EDIT'), async (req, res) => {
   const { id } = req.params;
   const { permissions } = req.body;
   try {
@@ -708,7 +836,7 @@ app.post('/api/roles/:id/permissions', authenticateToken, checkPermission('ROLES
 });
 
 // Listado de gerencias
-app.get('/api/managements', authenticateToken, async (_req, res) => {
+app.get('/api/managements', verifyToken, async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query("SELECT * FROM [EBM].[Managements] ORDER BY Name ASC");
@@ -720,7 +848,7 @@ app.get('/api/managements', authenticateToken, async (_req, res) => {
 
 
 // --- Integración SAP C4C (OData para PDF) ---
-app.get('/api/c4c/pdf/:ticket', async (req, res) => {
+app.get('/api/c4c/pdf/:ticket', verifyTokenForDownload, async (req, res) => {
   const { ticket } = req.params;
   const username = process.env.C4C_USER;
   const password = process.env.C4C_PASSWORD;
@@ -820,6 +948,21 @@ app.get('/api/c4c/pdf/:ticket', async (req, res) => {
   }
 });
 
+
+// --- APPLICATIONS (AppSwitcher dinámico) ---
+app.get('/api/applications', verifyToken, async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const activeOnly = req.query.activeOnly === 'true';
+    let query = 'SELECT Id as id, Code as code, Label as label, Url as url, LogoUrl as logo_url, CAST(IsActive AS BIT) as is_active, DisplayOrder as display_order FROM [dbo].[GAC_APP_TB_CONSOLE_APPLICATIONS]';
+    if (activeOnly) query += ' WHERE IsActive = 1';
+    query += ' ORDER BY DisplayOrder ASC';
+    const result = await pool.request().query(query);
+    res.json(result.recordset);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // --- Servir Frontend Estático ---
 
