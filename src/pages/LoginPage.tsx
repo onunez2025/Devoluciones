@@ -1,141 +1,212 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogIn, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
+import { LogIn, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { SIATC_THEME } from '../utils/siatc-theme';
+import { cn } from '../utils/cn';
 
-const LoginPage = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { login } = useAuth();
+export default function LoginPage() {
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    try {
-      const response = await apiClient.post('/auth/login', { username, password });
-      const { token, user } = response.data;
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
 
-      // login() guarda token en localStorage + escribe cookie SSO .siatc.cloud
-      login(user, token, true);
+        const cleanUsername = username.trim().toLowerCase();
 
-      navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al iniciar sesión. Verifique sus credenciales.');
-    } finally {
-      setLoading(false);
-    }
-  };
+        try {
+            const response = await apiClient.post('/auth/login', { 
+                username: cleanUsername, 
+                password,
+                remember: rememberMe 
+            });
+            const { token, user } = response.data;
 
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden transition-colors duration-500">
-      <div className="absolute top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
+            // login() register session in Context
+            login(user, token, rememberMe);
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md relative z-20"
-      >
-        <div className="glass-card p-8 md:p-10 shadow-2xl">
-          <div className="flex flex-col items-center mb-8">
-            <motion.div 
-              initial={{ scale: 0.5, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              className="w-20 h-20 bg-primary/20 flex items-center justify-center rounded-2xl mb-6 shadow-glow"
-            >
-              <LogIn className="w-10 h-10 text-primary" />
-            </motion.div>
-            <h1 className="text-3xl font-bold text-foreground mb-2 tracking-tight text-center uppercase">Bienvenido</h1>
-            <p className="text-[10px] text-muted-foreground text-center uppercase tracking-[0.2em]">Plataforma de Devoluciones</p>
-          </div>
+            navigate('/');
+        } catch (err: any) {
+            console.error('Login error:', err);
+            setError(err.response?.data?.message || err.response?.data?.error || 'Error al iniciar sesión. Verifique sus credenciales.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-          <form onSubmit={handleLogin} className="space-y-6 relative z-30">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Credencial de Usuario</label>
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none z-10" />
-                <input 
-                  type="text"
-                  required
-                  autoComplete="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="glass-input w-full pl-11 h-11 text-[12px] font-bold tracking-widest uppercase relative z-30 cursor-text"
-                  placeholder="USUARIO"
-                />
-              </div>
+    return (
+        <div className={SIATC_THEME.LOGIN_LAYOUT.CONTAINER}>
+            {/* Left Side - Brand / Visual */}
+            <div className={cn(SIATC_THEME.LOGIN_LAYOUT.LEFT_PANEL, "h-screen min-h-screen relative flex flex-col justify-between p-12")}>
+                {/* Abstract Background Pattern */}
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+IDxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0ibm9uZSIvPiA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjIiPiA8cGF0aCBkPSJNMCAzdjU0TTMgMGg1NCIvPiA8L2c+IDwvc3ZnPg==')] bg-[size:60px_60px] pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/50 pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                    <div>
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 flex items-center justify-center shrink-0 overflow-hidden">
+                                <img src="/Logo.png" alt="Devoluciones Logo" className="h-full w-full object-contain" />
+                            </div>
+                            <span className="text-2xl font-bold tracking-tight uppercase">Devoluciones</span>
+                        </div>
+                        <h1 className="text-5xl font-bold mb-4 leading-tight text-white">
+                            Gestión de<br />Devoluciones<br />y Garantías
+                        </h1>
+                        <div className="text-slate-400 text-lg max-w-md space-y-6">
+                            <p>Control integrado de solicitudes de devoluciones, aprobaciones técnicas y garantías de productos.</p>
+                            <div className="flex flex-col w-fit gap-2">
+                                <span className="text-2xl font-bold text-slate-100 tracking-tight">Gerencia de Atención al Cliente</span>
+                                <img 
+                                    src="/Logo - Grupo Sole - Transparente blanco-.png" 
+                                    alt="Logo Grupo Sole" 
+                                    className="h-auto max-w-[12rem] object-contain"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="text-sm text-slate-500 mt-8">
+                        © 2026 GAC - Grupo Sole. Rinnai Corporation. Todos los derechos reservados.
+                    </div>
+                </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Frase de Seguridad</label>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none z-10" />
-                <input 
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="glass-input w-full pl-11 h-11 text-[12px] relative z-30 cursor-text"
-                  placeholder="••••••••"
-                />
-              </div>
+            {/* Right Side - Login Form */}
+            <div className={SIATC_THEME.LOGIN_LAYOUT.RIGHT_PANEL}>
+                {/* Top Right Controls */}
+                <div className="absolute top-6 right-6 flex items-center gap-4">
+                    <ThemeToggle />
+                </div>
+
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-full max-w-md space-y-8"
+                >
+                    <div className="text-center">
+                        <h2 className={SIATC_THEME.LOGIN_LAYOUT.TITLE}>¡Bienvenido a Devoluciones!</h2>
+                        <p className={SIATC_THEME.LOGIN_LAYOUT.SUBTITLE}>
+                            Ingresa tus credenciales para acceder a la plataforma.
+                        </p>
+                    </div>
+
+                    <div className={SIATC_THEME.LOGIN_LAYOUT.CARD}>
+                        <form onSubmit={handleLogin} className="space-y-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5 ml-1">
+                                        Usuario
+                                    </label>
+                                    <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                                            <User className="w-5 h-5" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                                            className={SIATC_THEME.LOGIN_LAYOUT.INPUT}
+                                            placeholder="Ingrese usuario"
+                                            required
+                                            autoFocus
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5 ml-1">
+                                        Contraseña
+                                    </label>
+                                    <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                                            <Lock className="w-5 h-5" />
+                                        </div>
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className={SIATC_THEME.LOGIN_LAYOUT.INPUT}
+                                            placeholder="Ingrese contraseña"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                        >
+                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-sm">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="w-4 h-4 rounded border-cb-border text-primary focus:ring-primary" 
+                                    />
+                                    <span className="text-muted-foreground">Recordarme</span>
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => setError('Por favor, contacta a tu administrador de sistemas para recuperar tu clave.')}
+                                    className="font-medium text-primary hover:text-primary/80 transition-colors bg-transparent border-none p-0 cursor-pointer text-xs"
+                                >
+                                    ¿Olvidaste tu contraseña?
+                                </button>
+                            </div>
+
+                            {error && (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium text-center border border-destructive/20"
+                                >
+                                    {error}
+                                </motion.div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className={cn(
+                                    SIATC_THEME.COMPONENTS.BUTTON_PRIMARY,
+                                    "w-full flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                                )}
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <span>Iniciando sesión...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Iniciar Sesión</span>
+                                        <LogIn className="w-4 h-4" />
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    </div>
+                </motion.div>
             </div>
-
-            {error && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-destructive/10 border border-destructive/20 p-4 rounded-xl flex items-center gap-3 text-destructive text-sm"
-              >
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <p>{error}</p>
-              </motion.div>
-            )}
-
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="btn-primary w-full h-11 flex items-center justify-center gap-2 group relative z-30"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-[11px] uppercase tracking-widest">Verificando...</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-[11px] uppercase tracking-widest font-bold">Iniciar sesión</span>
-                  <LogIn className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </form>
-          
-          <div className="mt-8 pt-8 border-t border-border/50 text-center">
-            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-              © {new Date().getFullYear()} NoCodeCreator
-            </p>
-          </div>
         </div>
-      </motion.div>
-
-      {/* Background Decor - Movido al final y con z-0 */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[120px] animate-pulse pointer-events-none z-0" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[120px] animate-pulse pointer-events-none z-0" style={{ animationDelay: '2s' }} />
-    </div>
-  );
-};
-
-export default LoginPage;
-
+    );
+}

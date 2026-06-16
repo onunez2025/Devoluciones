@@ -22,12 +22,14 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    const isLoginRequest = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/login');
+    if ((error.response?.status === 401 || error.response?.status === 403) && !isLoginRequest) {
       storageService.clearAll();
       window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
+
 
 export default apiClient;

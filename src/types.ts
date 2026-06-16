@@ -7,6 +7,7 @@ export interface User {
   permissions?: string[];
   avatarUrl?: string;
   avatar_url?: string;
+  apps?: string;
 }
 
 export interface Devolucion {
