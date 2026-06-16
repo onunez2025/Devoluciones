@@ -2,8 +2,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-sans, 'DM Sans'), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-mono, 'JetBrains Mono'), monospace;
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -32,7 +32,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -81,7 +80,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-sans);
+    font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -159,7 +158,7 @@
   --radius-modal: 16px;
 
   /* SIATC — colores semánticos (modo claro) */
-  --cb-bg: #F4F6FA;
+  --cb-bg: #F9FAFB;
   --cb-text-primary: #1A1C1E;
   --cb-text-secondary: #515254;
   --cb-border: #E2E4E9;
@@ -176,7 +175,7 @@
   --transition-duration: 300ms;
 }
 
-.dark {
+.dark, html.dark {
   --background: #050F1A;
   --foreground: #F9FAFB;
 
@@ -222,7 +221,7 @@
 
 /* SIATC — responsive layout overrides */
 @media (max-width: 767px) {
-  :root, .dark {
+  :root, .dark, html.dark {
     --layout-border-width: 0px;
     --layout-shadow: none;
   }
