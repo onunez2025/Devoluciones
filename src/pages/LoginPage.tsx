@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogIn, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
 import apiClient from '../services/apiClient';
@@ -10,7 +9,6 @@ import { cn } from '../utils/cn';
 
 export default function LoginPage() {
     const { login } = useAuth();
-    const navigate = useNavigate();
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -37,7 +35,7 @@ export default function LoginPage() {
             // login() register session in Context
             login(user, token, rememberMe);
 
-            navigate('/');
+            window.location.href = '/';
         } catch (err: any) {
             console.error('Login error:', err);
             setError(err.response?.data?.message || err.response?.data?.error || 'Error al iniciar sesión. Verifique sus credenciales.');

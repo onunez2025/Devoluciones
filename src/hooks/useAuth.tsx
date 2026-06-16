@@ -88,54 +88,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function validateSession() {
-      // 1. Buscar token: localStorage → cookie SSO
-      let token = storageService.getToken();
-      let fromCookie = false;
-
-      if (!token) {
-        const cookieToken = getCookie(SSO_COOKIE);
-        if (cookieToken) {
-          token = cookieToken;
-          fromCookie = true;
-        }
-      }
-
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
-      // 2. Verificar que el token no haya expirado
-      const payload = decodeJwt(token);
-      if (!payload || (payload.exp && payload.exp * 1000 < Date.now())) {
-        storageService.clearAll();
-        clearSsoCookie();
-        setIsLoading(false);
-        return;
-      }
-
-      // Pre-hidratar el usuario desde el JWT inmediatamente para evitar parpadeos y retrasos en la UI
-      const preHydratedUser: User = {
-        id: payload.id as string,
-        username: payload.username as string,
-        fullName: (payload.full_name as string) || (payload.fullName as string) || '',
-        role: (payload.role_name as string) || (payload.role as string) || '',
-        role_name: (payload.role_name as string) || (payload.role as string) || '',
-        permissions: (payload.permissions as string[]) || (payload.perms as string[]) || [],
-        apps: (payload.apps as string) || ''
-      };
-      setUser(preHydratedUser);
-      storageService.setUser(preHydratedUser);
-
-      // 3. Si viene de cookie SSO, sincronizar localStorage y obtener token fresco
-      if (fromCookie) {
-        storageService.setToken(token);
-      }
-
-      // 4. Obtener token fresco del servidor (enriquece con permisos DEV actualizados)
       try {
+        const cookieToken = getCookie(SSO_COOKIE);
+        const localToken = storageService.getToken();
+        let activeToken = localToken;
+
+        if (cookieToken) {
+          if (cookieToken !== localToken) {
+            storageService.setToken(cookieToken);
+            activeToken = cookieToken;
+
+            const payload = decodeJwt(cookieToken);
+            if (payload) {
+              const preHydratedUser: User = {
+                id: payload.id as string,
+                username: payload.username as string,
+                fullName: (payload.full_name as string) || (payload.fullName as string) || '',
+                role: (payload.role_name as string) || (payload.role as string) || '',
+                role_name: (payload.role_name as string) || (payload.role as string) || '',
+                permissions: (payload.permissions as string[]) || (payload.perms as string[]) || [],
+                apps: (payload.apps as string) || ''
+              };
+              setUser(preHydratedUser);
+              storageService.setUser(preHydratedUser);
+            }
+          }
+        } else {
+          if (localToken) {
+            // Si el token no está en la cookie (logout global), limpiar sesión local
+            storageService.clearAll();
+            clearSsoCookie();
+            setUser(null);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        if (!activeToken) {
+          setIsLoading(false);
+          return;
+        }
+
+        // Obtener token fresco del servidor (enriquece con permisos DEV actualizados)
         const { data } = await apiClient.get('/api/auth/me', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${activeToken}` }
         });
 
         const freshToken = data.token as string;
@@ -145,10 +141,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         storageService.setUser(freshUser);
         setSsoCookie(freshToken);
         setUser(freshUser);
-      } catch {
+      } catch (error) {
+        console.error('Session validation error:', error);
         // Token inválido o usuario desactivado — purgar sesión
         storageService.clearAll();
         clearSsoCookie();
+        setUser(null);
       } finally {
         setIsLoading(false);
         resetInactivityTimer();
