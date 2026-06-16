@@ -185,9 +185,11 @@ app.post('/api/auth/login', async (req, res) => {
       .input('u', sql.VarChar, username)
       .input('app', sql.VarChar, APP_IDENTIFIER)
       .query(`
-        SELECT u.*, r.Name as RoleName 
+        SELECT u.*, r.Name as RoleName, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
         FROM [EBM].[Users] u 
         LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id 
+        LEFT JOIN [EBM].[UserCAS] uc ON u.Id = uc.UserId
+        LEFT JOIN [dbo].[GAC_APP_TB_CAS] c ON uc.CASId = c.ID_CAS
         WHERE (u.Username = @u OR u.Email = @u) 
           AND u.IsActive = 1 
           AND (u.Apps LIKE '%' + @app + '%' OR u.Apps LIKE '%ADMIN%')
@@ -206,7 +208,20 @@ app.post('/api/auth/login', async (req, res) => {
     const perms = permsResult.recordset.map(p => p.Permission);
 
     const token = jwt.sign(
-      { id: user.Id, username: user.Username, role: user.RoleName, perms },
+      { 
+        id: user.Id, 
+        role_id: user.RoleId,
+        role_name: user.RoleName,
+        role: user.RoleName,
+        username: user.Username,
+        full_name: user.FullName,
+        permissions: perms,
+        perms: perms,
+        apps: user.Apps || '',
+        casId: user.cas_id || null,
+        casName: user.cas_name || null,
+        casPrefijo: user.cas_prefijo || null
+      },
       JWT_SECRET,
       { expiresIn: '12h' }
     );
@@ -217,8 +232,12 @@ app.post('/api/auth/login', async (req, res) => {
         id: user.Id,
         username: user.Username,
         fullName: user.FullName,
+        role_name: user.RoleName,
         role: user.RoleName,
-        permissions: perms
+        permissions: perms,
+        perms: perms,
+        apps: user.Apps || '',
+        requires_password_change: user.RequiresPasswordChange === 1
       }
     });
 
@@ -239,9 +258,11 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
       .input('id', sql.UniqueIdentifier, userId)
       .input('app', sql.VarChar(10), APP_IDENTIFIER)
       .query(`
-        SELECT u.Id, u.Username, u.FullName, r.Name as RoleName, u.RoleId
+        SELECT u.Id, u.Username, u.FullName, r.Name as RoleName, u.RoleId, u.Apps, u.RequiresPasswordChange, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
         FROM [EBM].[Users] u
         LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id
+        LEFT JOIN [EBM].[UserCAS] uc ON u.Id = uc.UserId
+        LEFT JOIN [dbo].[GAC_APP_TB_CAS] c ON uc.CASId = c.ID_CAS
         WHERE u.Id = @id AND u.IsActive = 1
           AND (u.Apps LIKE '%' + @app + '%' OR u.Apps LIKE '%ADMIN%')
       `);
@@ -255,7 +276,20 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
     const perms = permsResult.recordset.map((p: any) => p.Permission);
 
     const freshToken = jwt.sign(
-      { id: user.Id, username: user.Username, full_name: user.FullName, role: user.RoleName, perms, casId: null },
+      { 
+        id: user.Id, 
+        role_id: user.RoleId,
+        role_name: user.RoleName,
+        role: user.RoleName,
+        username: user.Username,
+        full_name: user.FullName,
+        permissions: perms,
+        perms: perms,
+        apps: user.Apps || '',
+        casId: user.cas_id || null,
+        casName: user.cas_name || null,
+        casPrefijo: user.cas_prefijo || null
+      },
       JWT_SECRET,
       { expiresIn: '12h' }
     );
@@ -266,8 +300,11 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
         id: user.Id,
         username: user.Username,
         fullName: user.FullName,
+        role_name: user.RoleName,
         role: user.RoleName,
-        permissions: perms
+        permissions: perms,
+        perms: perms,
+        apps: user.Apps || ''
       }
     });
   } catch (error: any) {

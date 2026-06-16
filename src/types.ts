@@ -4,6 +4,7 @@ export interface User {
   fullName: string;
   role: string;
   roleId?: number;
+  role_name?: string;
   permissions?: string[];
   avatarUrl?: string;
   avatar_url?: string;

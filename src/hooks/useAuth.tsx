@@ -114,6 +114,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Pre-hidratar el usuario desde el JWT inmediatamente para evitar parpadeos y retrasos en la UI
+      const preHydratedUser: User = {
+        id: payload.id as string,
+        username: payload.username as string,
+        fullName: (payload.full_name as string) || (payload.fullName as string) || '',
+        role: (payload.role_name as string) || (payload.role as string) || '',
+        role_name: (payload.role_name as string) || (payload.role as string) || '',
+        permissions: (payload.permissions as string[]) || (payload.perms as string[]) || [],
+        apps: (payload.apps as string) || ''
+      };
+      setUser(preHydratedUser);
+      storageService.setUser(preHydratedUser);
+
       // 3. Si viene de cookie SSO, sincronizar localStorage y obtener token fresco
       if (fromCookie) {
         storageService.setToken(token);
@@ -147,7 +160,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const hasPermission = useCallback((permission: string): boolean => {
-    if (!user?.permissions) return false;
+    if (!user) return false;
+    const roleName = (user.role || user.role_name || '').trim().toLowerCase();
+    if (roleName === 'administrador' || roleName === 'admin' || roleName === 'console.administrador') return true;
+    if (!user.permissions) return false;
     return user.permissions.includes(permission) || user.permissions.includes('ADMIN');
   }, [user]);
 
