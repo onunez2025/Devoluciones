@@ -7,6 +7,8 @@ import { usersService, User } from '../../services/usersService';
 import { rolesService, Role } from '../../services/rolesService';
 import { managementsService, Management } from '../../services/managementsService';
 import { toast } from 'react-hot-toast';
+import { SIATC_THEME } from '../../utils/siatc-theme';
+import { cn } from '../../utils/cn';
 
 const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -107,113 +109,116 @@ const UsersPage: React.FC = () => {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div className="flex-1 w-full flex flex-col gap-6 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <Users className="w-8 h-8 text-primary" />
+          <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>
+            <Users className="w-6 h-6 text-primary inline-block mr-2" />
             Gestión de Usuarios
           </h1>
-          <p className="text-gray-500 mt-1">Administra los accesos y perfiles de la plataforma</p>
+          <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>Administra los accesos y perfiles de la plataforma</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-primary hover:opacity-90 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-primary/25 active:scale-95"
+          className={SIATC_THEME.COMPONENTS.BUTTON_PRIMARY}
         >
-          <UserPlus className="w-5 h-5" />
+          <UserPlus className="w-4 h-4 mr-1" />
           Nuevo Usuario
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row gap-4">
+      <div className={cn(
+        "bg-card border border-cb-border shadow-cb-level-1 overflow-hidden",
+        SIATC_THEME.TOKENS.MASTER_ROUNDNESS
+      )}>
+        <div className="p-4 border-b border-cb-border bg-cb-bg/30 flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-5 h-5" />
             <input
               type="text"
               placeholder="Buscar por nombre, usuario o email..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+              className={SIATC_THEME.COMPONENTS.INPUT}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-gray-200 text-gray-600">
-            <Filter className="w-4 h-4" />
-            <span className="text-sm font-medium">{filteredUsers.length} Usuarios</span>
+          <div className="flex items-center gap-2 px-3 py-2 bg-background border border-cb-border rounded-lg text-cb-text-secondary text-xs font-bold uppercase tracking-wider">
+            <Filter className="w-3.5 h-3.5" />
+            <span>{filteredUsers.length} Usuarios</span>
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
-              <tr className="bg-gray-50 text-gray-600 text-sm font-semibold uppercase tracking-wider">
-                <th className="px-6 py-4">Usuario</th>
-                <th className="px-6 py-4">Rol / Gerencia</th>
-                <th className="px-6 py-4">Aplicaciones</th>
-                <th className="px-6 py-4">Estado</th>
-                <th className="px-6 py-4 text-right">Acciones</th>
+              <tr className="sticky top-0 z-20 bg-card border-b border-cb-border shadow-sm">
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Usuario</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Rol / Gerencia</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Aplicaciones</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Estado</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right text-muted-foreground opacity-60">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border/30">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
+                  <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground/50">
                     Cargando usuarios...
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-gray-400">
+                  <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground/50">
                     No se encontraron usuarios
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.Id} className="hover:bg-primary/[0.02] transition-colors group">
-                    <td className="px-6 py-4">
+                  <tr key={user.Id} className="h-[64px] group hover:bg-cb-bg transition-colors border-b border-cb-border/60">
+                    <td className="px-6 py-4 font-sans text-cb-text-primary">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
                           {user.FullName.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-800">{user.FullName}</p>
-                          <p className="text-sm text-gray-500">{user.Username}</p>
+                          <p className="font-semibold text-foreground">{user.FullName}</p>
+                          <p className="text-sm text-muted-foreground">{user.Username}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 font-sans text-cb-text-primary">
                       <div className="space-y-1">
-                        <div className="flex items-center gap-1.5 text-sm text-gray-700">
+                        <div className="flex items-center gap-1.5 text-sm text-foreground">
                           <Shield className="w-4 h-4 text-orange-500" />
                           {user.RoleName}
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           <Briefcase className="w-3.5 h-3.5" />
                           {user.ManagementName}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 font-sans text-cb-text-primary">
                       <div className="flex flex-wrap gap-1">
                         {user.Apps.split(',').map(app => (
-                          <span key={app} className="px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold uppercase">
+                          <span key={app} className="px-2 py-0.5 rounded bg-muted/60 text-muted-foreground text-[10px] font-bold uppercase border border-border/50">
                             {app.trim()}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 font-sans text-cb-text-primary">
                       {user.IsActive ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/10 text-emerald-600 text-xs font-medium border border-green-500/20">
                           <CheckCircle className="w-3 h-3" /> Activo
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 text-xs font-medium border border-red-500/20">
                           <XCircle className="w-3 h-3" /> Inactivo
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 font-sans text-cb-text-primary text-right">
                       <button
                         onClick={() => handleOpenModal(user)}
                         className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
@@ -233,58 +238,61 @@ const UsersPage: React.FC = () => {
       {/* User Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-800">
+          <div className={cn(
+            "bg-card text-cb-text-primary border border-cb-border shadow-cb-level-3 p-6 overflow-hidden w-full max-w-lg animate-in fade-in zoom-in duration-200",
+            SIATC_THEME.TOKENS.RADIUS.MODAL
+          )}>
+            <div className="pb-4 border-b border-cb-border">
+              <h2 className="text-xl font-bold text-foreground">
                 {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
               </h2>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="pt-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Nombre Completo</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Nombre Completo</label>
                   <input
                     required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
+                    className={SIATC_THEME.COMPONENTS.INPUT}
                     value={formData.FullName}
                     onChange={(e) => setFormData({...formData, FullName: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Usuario</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Usuario</label>
                   <input
                     required
                     disabled={isEditing}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none disabled:bg-gray-50"
+                    className={cn(SIATC_THEME.COMPONENTS.INPUT, "disabled:bg-muted/40 disabled:cursor-not-allowed")}
                     value={formData.Username}
                     onChange={(e) => setFormData({...formData, Username: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">Email</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Email</label>
                   <input
                     type="email"
                     required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
+                    className={SIATC_THEME.COMPONENTS.INPUT}
                     value={formData.Email}
                     onChange={(e) => setFormData({...formData, Email: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">Password {isEditing && '(Dejar en blanco para mantener)'}</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Password {isEditing && '(Dejar en blanco para mantener)'}</label>
                   <input
                     type="password"
                     required={!isEditing}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
+                    className={SIATC_THEME.COMPONENTS.INPUT}
                     value={formData.Password}
                     onChange={(e) => setFormData({...formData, Password: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Rol</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Rol</label>
                   <select
                     required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
+                    className={SIATC_THEME.COMPONENTS.INPUT}
                     value={formData.RoleId}
                     onChange={(e) => setFormData({...formData, RoleId: e.target.value})}
                   >
@@ -293,10 +301,10 @@ const UsersPage: React.FC = () => {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Gerencia</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Gerencia</label>
                   <select
                     required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
+                    className={SIATC_THEME.COMPONENTS.INPUT}
                     value={formData.ManagementId}
                     onChange={(e) => setFormData({...formData, ManagementId: e.target.value})}
                   >
@@ -314,20 +322,20 @@ const UsersPage: React.FC = () => {
                   onChange={(e) => setFormData({...formData, IsActive: e.target.checked})}
                   className="w-4 h-4 text-primary rounded focus:ring-primary"
                 />
-                <label htmlFor="isActive" className="text-sm text-gray-700 font-medium cursor-pointer">Usuario Activo</label>
+                <label htmlFor="isActive" className="text-sm text-foreground font-medium cursor-pointer">Usuario Activo</label>
               </div>
 
-              <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+              <div className="flex justify-end gap-3 pt-6 border-t border-cb-border">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-5 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                  className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-primary text-white rounded-xl hover:opacity-90 transition-colors shadow-lg shadow-primary/25"
+                  className={SIATC_THEME.COMPONENTS.BUTTON_PRIMARY}
                 >
                   {isEditing ? 'Guardar Cambios' : 'Crear Usuario'}
                 </button>

@@ -4,6 +4,8 @@ import { Devolucion } from '../types';
 import { bluetoothPrinter } from '../services/bluetoothPrinter';
 import { generateZPL } from '../services/zplService';
 import { useState } from 'react';
+import { SIATC_THEME } from '../utils/siatc-theme';
+import { cn } from '../utils/cn';
 
 interface Props {
   devolucion: Devolucion;
@@ -37,12 +39,15 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass-card w-full max-w-3xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl border-white/10"
+        className={cn(
+          "bg-card text-cb-text-primary border border-cb-border shadow-cb-level-3 w-full max-w-3xl max-h-[92vh] overflow-hidden flex flex-col",
+          SIATC_THEME.TOKENS.RADIUS.MODAL
+        )}
       >
         {/* Header */}
-        <div className="glass-card-header flex items-center justify-between">
+        <div className="p-6 border-b border-cb-border bg-cb-bg/30 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-xl text-primary">
+            <div className={cn("p-2.5 bg-primary/10 text-primary", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -70,8 +75,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Información General</h4>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
-                  <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
+                  <div className={cn("flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0", SIATC_THEME.TOKENS.RADIUS.CARD)}>
+                    <div className={cn("w-10 h-10 bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                       <Calendar size={18} />
                     </div>
                     <div>
@@ -84,8 +89,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
+                  <div className={cn("flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0", SIATC_THEME.TOKENS.RADIUS.CARD)}>
+                    <div className={cn("w-10 h-10 bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                       <Package size={18} />
                     </div>
                     <div>
@@ -94,8 +99,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
+                  <div className={cn("flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0", SIATC_THEME.TOKENS.RADIUS.CARD)}>
+                    <div className={cn("w-10 h-10 bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                       <Tag size={18} />
                     </div>
                     <div>
@@ -104,8 +109,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
-                    <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
+                  <div className={cn("flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0", SIATC_THEME.TOKENS.RADIUS.CARD)}>
+                    <div className={cn("w-10 h-10 bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                       <ClipboardList size={18} />
                     </div>
                     <div>
@@ -115,8 +120,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                   </div>
 
                   {devolucion.NombreCliente && (
-                    <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
-                      <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
+                    <div className={cn("flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0", SIATC_THEME.TOKENS.RADIUS.CARD)}>
+                      <div className={cn("w-10 h-10 bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                         <User size={18} />
                       </div>
                       <div>
@@ -127,8 +132,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                   )}
 
                   {devolucion.NombreEquipo && (
-                    <div className="flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0 rounded-2xl">
-                      <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0">
+                    <div className={cn("flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0", SIATC_THEME.TOKENS.RADIUS.CARD)}>
+                      <div className={cn("w-10 h-10 bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                         <Wrench size={18} />
                       </div>
                       <div>
@@ -142,7 +147,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
 
               <div className="space-y-3">
                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Observaciones</h4>
-                <div className="p-4 bg-muted/30 rounded-2xl border border-border/50">
+                <div className={cn("p-4 bg-muted/30 border border-border/50", SIATC_THEME.TOKENS.RADIUS.CARD)}>
                   <p className="text-[11px] leading-relaxed font-medium text-foreground/80 italic">
                     "{devolucion.Comentario || 'Sin observaciones adicionales'}"
                   </p>
@@ -152,7 +157,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
               {devolucion.ComentarioTecnico && (
                 <div className="space-y-3">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Comentario del Técnico</h4>
-                  <div className="p-4 bg-muted/30 rounded-2xl border border-border/50">
+                  <div className={cn("p-4 bg-muted/30 border border-border/50", SIATC_THEME.TOKENS.RADIUS.CARD)}>
                     <p className="text-[11px] leading-relaxed font-medium text-foreground/80 italic">
                       "{devolucion.ComentarioTecnico}"
                     </p>
@@ -167,7 +172,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                 <Camera size={12} className="text-primary" /> Evidencia Fotográfica
               </h4>
               
-              <div className="relative aspect-video md:aspect-square rounded-3xl overflow-hidden bg-muted/50 border border-border/50 group">
+              <div className={cn("relative aspect-video md:aspect-square overflow-hidden bg-muted/50 border border-border/50 group", SIATC_THEME.TOKENS.RADIUS.MODAL)}>
                 {devolucion.Adjunto && (devolucion.Adjunto.startsWith('http') || devolucion.Adjunto.startsWith('blob')) ? (
                   <img 
                     src={devolucion.Adjunto} 
@@ -190,7 +195,10 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
         <div className="p-4 md:p-5 bg-muted/20 border-t border-border flex flex-col md:flex-row gap-3 justify-stretch md:justify-end">
           <button 
             onClick={() => window.open(`/api/c4c/pdf/${devolucion.Ticket}`, '_blank')}
-            className="flex-1 md:flex-none px-6 h-12 md:h-10 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2"
+            className={cn(
+              "flex-1 md:flex-none px-6 h-12 md:h-10 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2",
+              SIATC_THEME.TOKENS.RADIUS.BUTTON
+            )}
           >
             <ExternalLink className="w-4 h-4" />
             Informe Técnico
@@ -199,7 +207,10 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
           <button 
             onClick={handlePrint}
             disabled={isPrinting}
-            className="flex-1 md:flex-none px-6 h-12 md:h-10 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            className={cn(
+              "flex-1 md:flex-none px-6 h-12 md:h-10 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50",
+              SIATC_THEME.TOKENS.RADIUS.BUTTON
+            )}
           >
             {isPrinting ? (
               <RefreshCcw className="w-4 h-4 animate-spin" />
@@ -211,7 +222,10 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
           
           <button 
             onClick={onClose} 
-            className="flex-1 md:flex-none px-8 h-12 md:h-10 bg-foreground text-background rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg"
+            className={cn(
+              "flex-1 md:flex-none px-8 h-12 md:h-10 bg-foreground text-background text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg",
+              SIATC_THEME.TOKENS.RADIUS.BUTTON
+            )}
           >
             Cerrar Detalle
           </button>

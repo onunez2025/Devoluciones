@@ -17,8 +17,9 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import apiClient from '../services/apiClient';
 import { bluetoothPrinter } from '../services/bluetoothPrinter';
-
 import { Devolucion } from '../types';
+import { SIATC_THEME } from '../utils/siatc-theme';
+import { cn } from '../utils/cn';
 
 interface Props {
   onClose: () => void;
@@ -154,12 +155,15 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass-card w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl border-white/10"
+        className={cn(
+          "bg-card text-cb-text-primary border border-cb-border shadow-cb-level-3 w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col",
+          SIATC_THEME.TOKENS.RADIUS.MODAL
+        )}
       >
         {/* Modal Header */}
-        <div className="glass-card-header flex items-center justify-between">
+        <div className="p-6 border-b border-cb-border bg-cb-bg/30 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-xl text-primary shadow-inner">
+            <div className={cn("p-2.5 bg-primary/10 text-primary shadow-inner", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
               {step === 1 ? <Package className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
             </div>
             <div>
@@ -189,13 +193,16 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               {/* Buscador de Ticket */}
               {!isEditing && (
                 <div className="relative group">
-                  <label className="form-label">Identificación de Ticket (FSM)</label>
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 block">Identificación de Ticket (FSM)</label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${loading ? 'text-primary animate-pulse' : 'text-muted-foreground/40'}`} />
                       <input 
                         type="text"
-                        className="glass-input w-full pl-11 h-11 text-xs"
+                        className={cn(
+                          "w-full pl-11 h-11 text-xs",
+                          SIATC_THEME.COMPONENTS.INPUT
+                        )}
                         placeholder="Ingrese número de ticket sap..."
                         disabled={idEquipoFound || loading}
                         value={formData.Ticket}
@@ -208,7 +215,10 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                       <button 
                         onClick={lookupEquipment}
                         disabled={loading || !formData.Ticket}
-                        className="px-6 h-11 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2"
+                        className={cn(
+                          "px-6 h-11 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2",
+                          SIATC_THEME.TOKENS.RADIUS.BUTTON
+                        )}
                       >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                         Validar
@@ -216,7 +226,10 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                     ) : (
                       <button 
                         onClick={() => setIdEquipoFound(false)}
-                        className="px-4 h-11 bg-emerald-500/10 text-emerald-500 rounded-xl border border-emerald-500/20 hover:bg-emerald-500/20 transition-all flex items-center justify-center"
+                        className={cn(
+                          "px-4 h-11 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all flex items-center justify-center",
+                          SIATC_THEME.TOKENS.RADIUS.BUTTON
+                        )}
                         title="Cambiar Ticket"
                       >
                         <CheckCircle2 className="w-5 h-5" />
@@ -232,9 +245,12 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                     initial={{ opacity: 0, scale: 0.95, height: 0 }} 
                     animate={{ opacity: 1, scale: 1, height: 'auto' }}
                     exit={{ opacity: 0, scale: 0.95, height: 0 }}
-                    className="p-4 bg-primary/[0.03] border border-primary/20 rounded-2xl flex items-center gap-4 shadow-inner pointer-events-none overflow-hidden"
+                    className={cn(
+                      "p-4 bg-primary/[0.03] border border-primary/20 flex items-center gap-4 shadow-inner pointer-events-none overflow-hidden",
+                      SIATC_THEME.TOKENS.RADIUS.CARD
+                    )}
                   >
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/10 shadow-sm">
+                    <div className={cn("w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary border border-primary/10 shadow-sm", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                       <Package className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
@@ -270,12 +286,12 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               {/* Formulario Secundario */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="form-label flex items-center gap-1.5">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
                     <ClipboardList className="w-3 h-3 text-primary/60" /> Guía de Remisión
                   </label>
                   <input 
                     type="text" 
-                    className="glass-input w-full h-10"
+                    className={SIATC_THEME.COMPONENTS.INPUT}
                     placeholder="N° Guía..."
                     value={formData.N_Guia}
                     onChange={(e) => setFormData({...formData, N_Guia: e.target.value})}
@@ -285,12 +301,12 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                   </p>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="form-label flex items-center gap-1.5">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
                     <QrCode className="w-3 h-3 text-primary/60" /> Número de Serie
                   </label>
                   <input 
                     type="text" 
-                    className="glass-input w-full h-10"
+                    className={SIATC_THEME.COMPONENTS.INPUT}
                     placeholder="S/N del equipo..."
                     value={formData.N_Serie}
                     onChange={(e) => setFormData({...formData, N_Serie: e.target.value})}
@@ -299,11 +315,11 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="form-label flex items-center gap-1.5">
+                <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
                   <ClipboardList className="w-3 h-3 text-primary/60" /> Diagnóstico Preliminar / Observaciones
                 </label>
                 <textarea 
-                  className="glass-input w-full min-h-[80px] py-3 resize-none leading-relaxed"
+                  className={cn(SIATC_THEME.COMPONENTS.INPUT, "min-h-[80px] py-3 resize-none leading-relaxed")}
                   placeholder="Describa el estado funcional del equipo..."
                   value={formData.Comentario}
                   onChange={(e) => setFormData({...formData, Comentario: e.target.value})}
@@ -312,7 +328,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
 
               {/* Upload Zone */}
               <div className="space-y-2">
-                <label className="form-label flex items-center gap-1.5">
+                <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
                   <Camera className="w-3 h-3 text-primary/60" /> Evidencia Fotográfica
                 </label>
                 
@@ -337,7 +353,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                   />
                   
                   {formData.Adjunto ? (
-                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-emerald-500/30 bg-emerald-500/5 group/preview">
+                    <div className={cn("relative aspect-video overflow-hidden border border-emerald-500/30 bg-emerald-500/5 group/preview", SIATC_THEME.TOKENS.RADIUS.CARD)}>
                       <img 
                         src={formData.Adjunto} 
                         alt="Preview" 
@@ -365,13 +381,13 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                     <div className="grid grid-cols-2 gap-3">
                       <label 
                         htmlFor="camera-upload"
-                        className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
-                          uploading 
-                            ? 'border-primary/20 bg-primary/5 cursor-wait' 
-                            : 'border-primary/20 hover:border-primary/40 hover:bg-primary/5'
-                        }`}
+                        className={cn(
+                          `flex flex-col items-center justify-center gap-3 p-6 border-2 border-dashed transition-all cursor-pointer border-primary/20 hover:border-primary/40 hover:bg-primary/5`,
+                          uploading ? 'cursor-wait bg-primary/5' : '',
+                          SIATC_THEME.TOKENS.RADIUS.CARD
+                        )}
                       >
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <div className={cn("w-12 h-12 bg-primary/10 text-primary flex items-center justify-center", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                           {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Camera className="w-6 h-6" />}
                         </div>
                         <div className="text-center">
@@ -382,13 +398,13 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
 
                       <label 
                         htmlFor="gallery-upload"
-                        className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
-                          uploading 
-                            ? 'border-primary/20 bg-primary/5 cursor-wait' 
-                            : 'border-primary/20 hover:border-primary/40 hover:bg-primary/5'
-                        }`}
+                        className={cn(
+                          `flex flex-col items-center justify-center gap-3 p-6 border-2 border-dashed transition-all cursor-pointer border-primary/20 hover:border-primary/40 hover:bg-primary/5`,
+                          uploading ? 'cursor-wait bg-primary/5' : '',
+                          SIATC_THEME.TOKENS.RADIUS.CARD
+                        )}
                       >
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <div className={cn("w-12 h-12 bg-primary/10 text-primary flex items-center justify-center", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                           {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
                         </div>
                         <div className="text-center">
@@ -429,7 +445,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               </div>
 
               {/* QR Ticket Style Card */}
-              <div className="relative group p-6 bg-white rounded-[2.5rem] shadow-2xl border-4 border-muted/5 transition-transform hover:scale-[1.02] duration-500">
+              <div className="relative group p-6 bg-card rounded-[2.5rem] shadow-2xl border-4 border-muted/5 transition-transform hover:scale-[1.02] duration-500">
                 <QRCodeSVG 
                   value={`https://${window.location.host}/public/equipment/${formData.Ticket}`}
                   size={140}
@@ -442,7 +458,10 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               <div className="flex flex-col gap-2 w-full max-w-[340px]">
                 <button 
                   onClick={handlePrint}
-                  className="group relative flex items-center justify-center gap-2 h-11 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-primary/20"
+                  className={cn(
+                    "group relative flex items-center justify-center gap-2 h-11 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-primary/20",
+                    SIATC_THEME.TOKENS.RADIUS.BUTTON
+                  )}
                 >
                   <Printer className="w-4 h-4 group-hover:rotate-12 transition-transform" />
                   Imprimir Etiqueta Zebra
@@ -469,7 +488,10 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
             <button 
               onClick={handleSubmit} 
               disabled={loading || !idEquipoFound}
-              className="px-8 h-10 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2"
+              className={cn(
+                "px-8 h-10 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2",
+                SIATC_THEME.TOKENS.RADIUS.BUTTON
+              )}
             >
               {isEditing ? 'Actualizar Cambios' : 'Confirmar Registro'} <ArrowRight className="w-4 h-4" />
             </button>

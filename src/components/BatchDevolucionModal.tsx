@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { utils, writeFile } from 'xlsx';
 import apiClient from '../services/apiClient';
+import { SIATC_THEME } from '../utils/siatc-theme';
+import { cn } from '../utils/cn';
 
 interface Props {
   onClose: () => void;
@@ -123,12 +125,15 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass-card w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl border-white/10"
+        className={cn(
+          "bg-card text-cb-text-primary border border-cb-border shadow-cb-level-3 w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col",
+          SIATC_THEME.TOKENS.RADIUS.MODAL
+        )}
       >
         {/* Modal Header */}
-        <div className="glass-card-header flex items-center justify-between">
+        <div className="p-6 border-b border-cb-border bg-cb-bg/30 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-xl text-primary shadow-inner">
+            <div className={cn("p-2.5 bg-primary/10 text-primary shadow-inner", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
               {step === 1 ? <ClipboardList className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
             </div>
             <div>
@@ -154,22 +159,22 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
               {/* Filtros de Búsqueda */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="form-label flex items-center gap-1.5">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
                     <Calendar className="w-3 h-3 text-primary/60" /> Fecha de Visita
                   </label>
                   <input 
                     type="date" 
-                    className="glass-input w-full h-11"
+                    className={SIATC_THEME.COMPONENTS.INPUT}
                     value={filters.date}
                     onChange={(e) => setFilters({...filters, date: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="form-label flex items-center gap-1.5">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
                     <User className="w-3 h-3 text-primary/60" /> Técnico Responsable
                   </label>
                   <select 
-                    className="glass-input w-full h-11"
+                    className={SIATC_THEME.COMPONENTS.INPUT}
                     value={filters.tech}
                     onChange={(e) => setFilters({...filters, tech: e.target.value})}
                   >
@@ -184,7 +189,10 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
               <button 
                 onClick={searchTickets}
                 disabled={loading || !filters.tech || !filters.date}
-                className="w-full h-11 bg-primary/10 text-primary border border-primary/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center justify-center gap-2"
+                className={cn(
+                  "w-full h-11 bg-primary/10 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center justify-center gap-2",
+                  SIATC_THEME.TOKENS.RADIUS.BUTTON
+                )}
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                 Buscar Tickets Pendientes
@@ -211,11 +219,13 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
                       <div 
                         key={t.Ticket}
                         onClick={() => toggleTicket(String(t.Ticket))}
-                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${
+                        className={cn(
+                          "p-3 border transition-all cursor-pointer flex items-center gap-3",
                           selectedTicketIds.has(String(t.Ticket)) 
                             ? 'bg-primary/10 border-primary/30 shadow-inner' 
-                            : 'bg-muted/10 border-white/5 hover:bg-muted/20'
-                        }`}
+                            : 'bg-muted/10 border-cb-border hover:bg-muted/20',
+                          SIATC_THEME.TOKENS.RADIUS.CARD
+                        )}
                       >
                         <input 
                           type="checkbox" 
@@ -259,7 +269,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
                   Se registraron {selectedTicketIds.size} devoluciones y se descargó el archivo <span className="text-primary font-black">ZLabel.xlsx</span> automáticamente.
                 </p>
               </div>
-              <div className="p-4 bg-primary/5 rounded-xl border border-primary/10 flex items-center gap-3 max-w-[400px]">
+              <div className={cn("p-4 bg-primary/5 border border-primary/10 flex items-center gap-3 max-w-[400px]", SIATC_THEME.TOKENS.RADIUS.CARD)}>
                 <AlertCircle className="w-5 h-5 text-primary shrink-0" />
                 <p className="text-[10px] text-left font-bold text-muted-foreground/80 leading-relaxed">
                   Ya puedes importar el archivo descargado en la aplicación <span className="text-foreground">ZLabel Designer</span> de tu celular para imprimir las etiquetas.
@@ -267,7 +277,10 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
               </div>
               <button 
                 onClick={onClose}
-                className="w-full max-w-[200px] h-11 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 active:scale-95 transition-all"
+                className={cn(
+                  "w-full max-w-[200px] h-11 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 active:scale-95 transition-all",
+                  SIATC_THEME.TOKENS.RADIUS.BUTTON
+                )}
               >
                 Cerrar Ventana
               </button>
@@ -286,7 +299,10 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
             <button 
               onClick={handleBatchSubmit} 
               disabled={loading || selectedTicketIds.size === 0}
-              className="px-8 h-10 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2"
+              className={cn(
+                "px-8 h-10 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2",
+                SIATC_THEME.TOKENS.RADIUS.BUTTON
+              )}
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
               Registrar Seleccionados ({selectedTicketIds.size})

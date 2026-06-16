@@ -5,6 +5,8 @@ export interface User {
   role: string;
   roleId?: number;
   permissions?: string[];
+  avatarUrl?: string;
+  avatar_url?: string;
 }
 
 export interface Devolucion {

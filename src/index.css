@@ -1,7 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Lato', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-sans, 'DM Sans'), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono, 'JetBrains Mono'), monospace;
 
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -46,11 +48,11 @@
   --radius-cb-modal: var(--radius-modal, 16px);
 
   /* SIATC — fuentes dinámicas (sobreescribibles por theme_config) */
-  --font-title: var(--font-title, 'Lato'), sans-serif;
-  --font-subtitle: var(--font-subtitle, 'Lato'), sans-serif;
-  --font-header: var(--font-header, 'Lato'), sans-serif;
-  --font-sidebar: var(--font-sidebar, 'Lato'), sans-serif;
-  --font-table-data: var(--font-table-data, 'Lato'), monospace;
+  --font-title: var(--font-title, var(--font-sans));
+  --font-subtitle: var(--font-subtitle, var(--font-sans));
+  --font-header: var(--font-header, var(--font-sans));
+  --font-sidebar: var(--font-sidebar, var(--font-sans));
+  --font-table-data: var(--font-table-data, var(--font-sans));
 
   /* SIATC — colores semánticos fijos del sistema */
   --color-cb-blue: #4C5F80;
@@ -108,44 +110,12 @@
 }
 
 @layer components {
-  .glass-card {
-    @apply bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl shadow-premium transition-all duration-300;
-  }
-  
-  .glass-input {
-    @apply bg-background/40 border border-border rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 hover:border-primary/40 transition-all text-[11px] font-bold text-foreground placeholder:text-muted-foreground/30 placeholder:font-normal;
-  }
-
   .form-label {
     @apply text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 block;
   }
 
-  .glass-card-header {
-    @apply p-6 border-b border-border/50 bg-muted/20 backdrop-blur-md;
-  }
-
   .drop-zone {
     @apply border-2 border-dashed border-border/60 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 hover:bg-primary/[0.02] hover:border-primary/30 transition-all cursor-pointer;
-  }
-
-  .btn-primary {
-    @apply bg-primary text-primary-foreground px-6 py-2.5 rounded-xl font-bold hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/25 disabled:opacity-50 disabled:pointer-events-none;
-  }
-
-  .btn-secondary {
-    @apply bg-muted/50 text-muted-foreground px-6 py-2.5 rounded-xl font-bold hover:bg-muted transition-all active:scale-95 border border-border;
-  }
-
-  .table-container {
-    @apply bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm;
-  }
-
-  .table-header {
-    @apply bg-muted/60 backdrop-blur-md border-b border-border sticky top-0 z-10;
-  }
-
-  .table-row {
-    @apply hover:bg-primary/[0.02] transition-colors duration-200;
   }
 }
 
