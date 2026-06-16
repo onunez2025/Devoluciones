@@ -190,7 +190,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
         <div className="p-4 md:p-5 bg-muted/20 border-t border-border flex flex-col md:flex-row gap-3 justify-stretch md:justify-end">
           <button 
             onClick={() => window.open(`/api/c4c/pdf/${devolucion.Ticket}`, '_blank')}
-            className="flex-1 md:flex-none px-6 h-12 md:h-10 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2"
+            className="flex-1 md:flex-none px-6 h-12 md:h-10 bg-primary text-primary-foreground rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2"
           >
             <ExternalLink className="w-4 h-4" />
             Informe Técnico

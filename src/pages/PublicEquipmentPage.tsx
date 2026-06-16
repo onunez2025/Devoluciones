@@ -88,7 +88,7 @@ const PublicEquipmentPage = () => {
       {/* Decorative Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
       </div>
 
       <div className="relative max-w-4xl mx-auto p-4 md:p-8 space-y-6">
@@ -128,7 +128,7 @@ const PublicEquipmentPage = () => {
           className="glass-card overflow-hidden border-primary/10"
         >
           <div className="p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-gradient-to-br from-primary/20 to-blue-500/20 flex items-center justify-center border border-white/10 shadow-2xl shrink-0">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-white/10 shadow-2xl shrink-0">
               <Package size={64} className="text-primary animate-pulse" />
             </div>
             
@@ -234,7 +234,7 @@ const PublicEquipmentPage = () => {
                               Cerrado
                             </div>
                             {report.TipoServicio && (
-                              <div className="px-2 py-0.5 bg-blue-500/10 rounded text-[9px] text-blue-500 font-black uppercase tracking-tighter">
+                              <div className="px-2 py-0.5 bg-primary/10 rounded text-[9px] text-primary font-black uppercase tracking-tighter">
                                 {report.TipoServicio}
                               </div>
                             )}
@@ -360,8 +360,8 @@ const PublicEquipmentPage = () => {
                     </div>
                     <p className="text-sm font-bold text-foreground">{selectedReport.NombreCliente || 'No especificado'}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                    <div className="flex items-center gap-2 mb-2 opacity-50 text-blue-500">
+                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                    <div className="flex items-center gap-2 mb-2 opacity-50 text-primary">
                       <Package size={14} />
                       <span className="text-[10px] font-bold uppercase tracking-tighter">Producto / Equipo</span>
                     </div>
@@ -371,12 +371,12 @@ const PublicEquipmentPage = () => {
 
                 {/* Tipo de Servicio (Si existe) */}
                 {selectedReport.TipoServicio && (
-                  <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20">
-                    <div className="flex items-center gap-2 mb-2 opacity-50 text-blue-500">
+                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                    <div className="flex items-center gap-2 mb-2 opacity-50 text-primary">
                       <Wrench size={14} />
                       <span className="text-[10px] font-bold uppercase tracking-tighter">Tipo de Servicio</span>
                     </div>
-                    <p className="text-sm font-black text-blue-600 uppercase tracking-tight">{selectedReport.TipoServicio}</p>
+                    <p className="text-sm font-black text-primary uppercase tracking-tight">{selectedReport.TipoServicio}</p>
                   </div>
                 )}
 

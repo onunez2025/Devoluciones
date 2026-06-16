@@ -186,7 +186,7 @@ const DashboardPage = () => {
     { label: 'Total', value: stats.total, icon: Package, color: 'text-primary', bg: 'bg-primary/10' },
     { label: 'Hoy', value: stats.today, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
     { label: 'Pendientes', value: stats.pending || 0, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { label: 'En Proceso', value: stats.inProcess || 0, icon: RefreshCcw, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'En Proceso', value: stats.inProcess || 0, icon: RefreshCcw, color: 'text-primary', bg: 'bg-primary/10' },
     { label: 'Completados', value: stats.completed || 0, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-600/10' },
     { label: 'Rechazados', value: stats.rejected || 0, icon: Ban, color: 'text-red-500', bg: 'bg-red-500/10' },
     { label: 'Sin Diagnóstico', value: stats.noDiagnosis, icon: AlertCircle, color: 'text-purple-500', bg: 'bg-purple-500/10' },

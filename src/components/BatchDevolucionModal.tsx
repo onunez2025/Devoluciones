@@ -249,7 +249,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
                 <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-500">
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
-                <div className="absolute -right-1 -bottom-1 w-8 h-8 bg-blue-500 border-4 border-background rounded-full flex items-center justify-center text-white shadow-lg">
+                <div className="absolute -right-1 -bottom-1 w-8 h-8 bg-primary border-4 border-background rounded-full flex items-center justify-center text-white shadow-lg">
                   <DownloadCloud className="w-4 h-4" />
                 </div>
               </div>

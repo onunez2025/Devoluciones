@@ -33,7 +33,7 @@ export const ThemeToggle: React.FC = () => {
             exit={{ y: -20, opacity: 0, rotate: 45 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
-            <Moon className="w-5 h-5 text-blue-400" />
+            <Moon className="w-5 h-5 text-primary" />
           </motion.div>
         )}
       </AnimatePresence>

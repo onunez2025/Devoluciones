@@ -111,14 +111,14 @@ const UsersPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <Users className="w-8 h-8 text-blue-600" />
+            <Users className="w-8 h-8 text-primary" />
             Gestión de Usuarios
           </h1>
           <p className="text-gray-500 mt-1">Administra los accesos y perfiles de la plataforma</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-blue-200 active:scale-95"
+          className="flex items-center gap-2 bg-primary hover:opacity-90 text-white px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-primary/25 active:scale-95"
         >
           <UserPlus className="w-5 h-5" />
           Nuevo Usuario
@@ -132,7 +132,7 @@ const UsersPage: React.FC = () => {
             <input
               type="text"
               placeholder="Buscar por nombre, usuario o email..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -169,10 +169,10 @@ const UsersPage: React.FC = () => {
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.Id} className="hover:bg-blue-50/30 transition-colors group">
+                  <tr key={user.Id} className="hover:bg-primary/[0.02] transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
                           {user.FullName.charAt(0)}
                         </div>
                         <div>
@@ -216,7 +216,7 @@ const UsersPage: React.FC = () => {
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleOpenModal(user)}
-                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
                         title="Editar"
                       >
                         <Edit2 className="w-5 h-5" />
@@ -245,7 +245,7 @@ const UsersPage: React.FC = () => {
                   <label className="text-sm font-medium text-gray-700">Nombre Completo</label>
                   <input
                     required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
                     value={formData.FullName}
                     onChange={(e) => setFormData({...formData, FullName: e.target.value})}
                   />
@@ -255,7 +255,7 @@ const UsersPage: React.FC = () => {
                   <input
                     required
                     disabled={isEditing}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-50"
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none disabled:bg-gray-50"
                     value={formData.Username}
                     onChange={(e) => setFormData({...formData, Username: e.target.value})}
                   />
@@ -265,7 +265,7 @@ const UsersPage: React.FC = () => {
                   <input
                     type="email"
                     required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
                     value={formData.Email}
                     onChange={(e) => setFormData({...formData, Email: e.target.value})}
                   />
@@ -275,7 +275,7 @@ const UsersPage: React.FC = () => {
                   <input
                     type="password"
                     required={!isEditing}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
                     value={formData.Password}
                     onChange={(e) => setFormData({...formData, Password: e.target.value})}
                   />
@@ -284,7 +284,7 @@ const UsersPage: React.FC = () => {
                   <label className="text-sm font-medium text-gray-700">Rol</label>
                   <select
                     required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
                     value={formData.RoleId}
                     onChange={(e) => setFormData({...formData, RoleId: e.target.value})}
                   >
@@ -296,7 +296,7 @@ const UsersPage: React.FC = () => {
                   <label className="text-sm font-medium text-gray-700">Gerencia</label>
                   <select
                     required
-                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary outline-none"
                     value={formData.ManagementId}
                     onChange={(e) => setFormData({...formData, ManagementId: e.target.value})}
                   >
@@ -312,7 +312,7 @@ const UsersPage: React.FC = () => {
                   id="isActive"
                   checked={formData.IsActive}
                   onChange={(e) => setFormData({...formData, IsActive: e.target.checked})}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-primary rounded focus:ring-primary"
                 />
                 <label htmlFor="isActive" className="text-sm text-gray-700 font-medium cursor-pointer">Usuario Activo</label>
               </div>
@@ -327,7 +327,7 @@ const UsersPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                  className="px-5 py-2 bg-primary text-white rounded-xl hover:opacity-90 transition-colors shadow-lg shadow-primary/25"
                 >
                   {isEditing ? 'Guardar Cambios' : 'Crear Usuario'}
                 </button>
