@@ -165,8 +165,8 @@ const APP_IDENTIFIER = 'DEV';
 // --- Middleware de Permisos ---
 const checkPermission = (requiredPermission: string) => {
   return (_req: any, res: any, next: any) => {
-    const { perms } = _req.user;
-    if (perms && (perms.includes(requiredPermission) || perms.includes('ADMIN'))) {
+    const permissions = _req.user.permissions || (_req.user as any).perms;
+    if (permissions && (permissions.includes(requiredPermission) || permissions.includes('ADMIN'))) {
       return next();
     }
     return res.status(403).json({ message: 'No tiene permisos para realizar esta acción' });
@@ -208,15 +208,13 @@ app.post('/api/auth/login', async (req, res) => {
     const perms = permsResult.recordset.map(p => p.Permission);
 
     const token = jwt.sign(
-      { 
-        id: user.Id, 
+      {
+        id: user.Id,
         role_id: user.RoleId,
-        role_name: user.RoleName,
         role: user.RoleName,
         username: user.Username,
         full_name: user.FullName,
         permissions: perms,
-        perms: perms,
         apps: user.Apps || '',
         casId: user.cas_id || null,
         casName: user.cas_name || null,
@@ -276,15 +274,13 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
     const perms = permsResult.recordset.map((p: any) => p.Permission);
 
     const freshToken = jwt.sign(
-      { 
-        id: user.Id, 
+      {
+        id: user.Id,
         role_id: user.RoleId,
-        role_name: user.RoleName,
         role: user.RoleName,
         username: user.Username,
         full_name: user.FullName,
         permissions: perms,
-        perms: perms,
         apps: user.Apps || '',
         casId: user.cas_id || null,
         casName: user.cas_name || null,
