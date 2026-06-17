@@ -316,7 +316,7 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
 // --- Endpoints de Devoluciones ---
 
 // Listado de devoluciones con paginación y búsqueda
-app.get('/api/devoluciones', verifyToken, async (req, res) => {
+app.get('/api/devoluciones', verifyToken, async (req: any, res) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 50;
   const search = (req.query.search as string) || '';
@@ -324,14 +324,23 @@ app.get('/api/devoluciones', verifyToken, async (req, res) => {
 
   try {
     const pool = await poolPromise;
-    
+
     let whereClause = '';
     const request = pool.request();
 
+    // RLS: usuario CAS solo ve devoluciones de sus tickets
+    const casId = req.user?.casId || null;
+    const casJoin = casId
+      ? `INNER JOIN [APPGAC].[ServiciosViewSQL] svc ON TRIM(svc.Ticket) = TRIM(d.Ticket) AND svc.IdCAS = @casId`
+      : '';
+    if (casId) {
+      request.input('casId', sql.VarChar(50), casId);
+    }
+
     if (search) {
       whereClause = `
-        WHERE d.Ticket LIKE @search 
-        OR d.N_Serie LIKE @search 
+        WHERE d.Ticket LIKE @search
+        OR d.N_Serie LIKE @search
         OR f.IdEquipo LIKE @search
       `;
       request.input('search', sql.VarChar, `%${search}%`);
@@ -339,12 +348,13 @@ app.get('/api/devoluciones', verifyToken, async (req, res) => {
 
     // 1. Obtener el total de registros para paginación
     let countQuery = `
-      SELECT COUNT(*) as total 
+      SELECT COUNT(*) as total
       FROM [dbo].[GAC_APP_TB_DEVOLUCION] d
       ${search ? 'LEFT JOIN [SIATC].[Dashboard_FSM] f ON d.Ticket = f.Ticket' : ''}
+      ${casJoin}
       ${whereClause}
     `;
-    
+
     const countResult = await request.query(countQuery);
     const totalRecords = countResult.recordset[0].total;
 
@@ -353,20 +363,21 @@ app.get('/api/devoluciones', verifyToken, async (req, res) => {
       .input('offset', sql.Int, offset)
       .input('limit', sql.Int, limit)
       .query(`
-        SELECT 
-          d.Ticket, 
-          d.N_Guia, 
-          d.N_Serie, 
-          d.Sticker, 
-          d.Comentario, 
-          CAST(d.Adjunto AS NVARCHAR(MAX)) as Adjunto, 
-          d.Creado_el as FechaRegistro, 
+        SELECT
+          d.Ticket,
+          d.N_Guia,
+          d.N_Serie,
+          d.Sticker,
+          d.Comentario,
+          CAST(d.Adjunto AS NVARCHAR(MAX)) as Adjunto,
+          d.Creado_el as FechaRegistro,
           f.IdEquipo,
           f.NombreCliente,
           f.NombreEquipo,
           f.ComentarioTecnico
         FROM [dbo].[GAC_APP_TB_DEVOLUCION] d
         LEFT JOIN [SIATC].[Dashboard_FSM] f ON d.Ticket = f.Ticket
+        ${casJoin}
         ${whereClause}
         ORDER BY d.Creado_el DESC
         OFFSET @offset ROWS
@@ -389,18 +400,27 @@ app.get('/api/devoluciones', verifyToken, async (req, res) => {
 });
 
 // Estadísticas del dashboard
-app.get('/api/devoluciones/stats', verifyToken, async (_req, res) => {
+app.get('/api/devoluciones/stats', verifyToken, async (req: any, res) => {
   try {
     const pool = await poolPromise;
-    const result = await pool.request().query(`
-      SELECT 
-        (SELECT COUNT(*) FROM [dbo].[GAC_APP_TB_DEVOLUCION]) as total,
-        (SELECT COUNT(*) FROM [dbo].[GAC_APP_TB_DEVOLUCION] WHERE CAST(Creado_el AS DATE) = CAST(GETDATE() AS DATE)) as today,
-        (SELECT COUNT(*) FROM [dbo].[GAC_APP_TB_DEVOLUCION] d 
+    const casId = req.user?.casId || null;
+    const sqlReq = pool.request();
+    // RLS: filtro adicional por empresa CAS si el usuario es CAS
+    const casFilter = casId
+      ? `AND EXISTS (SELECT 1 FROM [APPGAC].[ServiciosViewSQL] svc WHERE TRIM(svc.Ticket) = TRIM(d.Ticket) AND svc.IdCAS = @casId)`
+      : '';
+    if (casId) {
+      sqlReq.input('casId', sql.VarChar(50), casId);
+    }
+    const result = await sqlReq.query(`
+      SELECT
+        (SELECT COUNT(*) FROM [dbo].[GAC_APP_TB_DEVOLUCION] d WHERE 1=1 ${casFilter}) as total,
+        (SELECT COUNT(*) FROM [dbo].[GAC_APP_TB_DEVOLUCION] d WHERE CAST(Creado_el AS DATE) = CAST(GETDATE() AS DATE) ${casFilter}) as today,
+        (SELECT COUNT(*) FROM [dbo].[GAC_APP_TB_DEVOLUCION] d
          WHERE NOT EXISTS (
-           SELECT 1 FROM [dbo].[GACP_APP_TB_INFORME_TECNICO_CERRADO] it 
+           SELECT 1 FROM [dbo].[GACP_APP_TB_INFORME_TECNICO_CERRADO] it
            WHERE TRIM(it.Ticket) = TRIM(d.Ticket)
-         )) as noDiagnosis
+         ) ${casFilter}) as noDiagnosis
     `);
     res.json(result.recordset[0]);
   } catch (error: any) {
@@ -562,9 +582,25 @@ app.post('/api/devoluciones/batch', verifyToken, async (req: any, res) => {
 app.post('/api/devoluciones', verifyToken, async (req: any, res) => {
   const data = req.body;
   const username = req.user?.username || 'unknown';
-  
+
   try {
     const pool = await poolPromise;
+
+    // RLS: usuario CAS solo puede registrar devoluciones de sus propios tickets
+    const casId = req.user?.casId || null;
+    if (casId) {
+      const ownerCheck = await pool.request()
+        .input('ticket', sql.VarChar(50), data.Ticket)
+        .input('casId', sql.VarChar(50), casId)
+        .query(`
+          SELECT 1
+          FROM [APPGAC].[ServiciosViewSQL] svc
+          WHERE TRIM(svc.Ticket) = TRIM(@ticket) AND svc.IdCAS = @casId
+        `);
+      if (ownerCheck.recordset.length === 0)
+        return res.status(403).json({ message: 'El ticket no pertenece a su empresa.' });
+    }
+
     await pool.request()
       .input('Ticket', sql.VarChar, data.Ticket)
       .input('Personal_ST', sql.VarChar, username)
@@ -592,9 +628,26 @@ app.post('/api/devoluciones', verifyToken, async (req: any, res) => {
 app.put('/api/devoluciones/:ticket', verifyToken, async (req: any, res) => {
   const { ticket } = req.params;
   const data = req.body;
-  
+
   try {
     const pool = await poolPromise;
+
+    // RLS: usuario CAS solo puede editar devoluciones de sus tickets
+    const casId = req.user?.casId || null;
+    if (casId) {
+      const ownerCheck = await pool.request()
+        .input('ticket', sql.VarChar(50), ticket)
+        .input('casId', sql.VarChar(50), casId)
+        .query(`
+          SELECT 1
+          FROM [dbo].[GAC_APP_TB_DEVOLUCION] d
+          INNER JOIN [APPGAC].[ServiciosViewSQL] svc ON TRIM(svc.Ticket) = TRIM(d.Ticket)
+          WHERE TRIM(d.Ticket) = TRIM(@ticket) AND svc.IdCAS = @casId
+        `);
+      if (ownerCheck.recordset.length === 0)
+        return res.status(403).json({ message: 'La devolución no pertenece a su empresa.' });
+    }
+
     const result = await pool.request()
       .input('Ticket', sql.VarChar, ticket)
       .input('N_Guia', sql.VarChar, data.N_Guia)
