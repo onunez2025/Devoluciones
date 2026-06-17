@@ -224,8 +224,13 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: '12h' }
     );
 
+    const ssoToken = jwt.sign(
+      { id: user.Id, role: user.RoleName, role_name: user.RoleName, username: user.Username, apps: user.Apps || '', casId: user.cas_id || null },
+      JWT_SECRET,
+      { expiresIn: '12h' }
+    );
     if (IS_PRODUCTION) {
-      res.cookie('token', token, {
+      res.cookie('token', ssoToken, {
         domain: '.siatc.cloud',
         maxAge: 12 * 60 * 60 * 1000,
         httpOnly: false,
@@ -301,8 +306,13 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
       { expiresIn: '12h' }
     );
 
+    const ssoToken = jwt.sign(
+      { id: user.Id, role: user.RoleName, role_name: user.RoleName, username: user.Username, apps: user.Apps || '', casId: user.cas_id || null },
+      JWT_SECRET,
+      { expiresIn: '12h' }
+    );
     if (IS_PRODUCTION) {
-      res.cookie('token', freshToken, {
+      res.cookie('token', ssoToken, {
         domain: '.siatc.cloud',
         maxAge: 12 * 60 * 60 * 1000,
         httpOnly: false,
