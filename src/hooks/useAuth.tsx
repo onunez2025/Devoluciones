@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Obtener token fresco del servidor (enriquece con permisos DEV actualizados)
-        const { data } = await apiClient.get('/api/auth/me', {
+        const { data } = await apiClient.get('/auth/me', {
           headers: { Authorization: `Bearer ${activeToken}` }
         });
 
