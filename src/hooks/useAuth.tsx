@@ -15,25 +15,25 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const SSO_COOKIE = 'token';
-const SSO_DOMAIN = '.siatc.cloud';
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 
 function getCookie(name: string): string | null {
-  const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
-  return match ? decodeURIComponent(match[1]) : null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
 }
 
 function setSsoCookie(token: string) {
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const domainPart = isLocalhost ? '' : `; domain=${SSO_DOMAIN}`;
-  const securePart = isLocalhost ? '' : '; Secure';
-  document.cookie = `${SSO_COOKIE}=${encodeURIComponent(token)}; path=/${domainPart}; SameSite=Lax${securePart}`;
+  const isProd = window.location.hostname.endsWith('.siatc.cloud');
+  const cookieDomain = isProd ? '; domain=.siatc.cloud' : '';
+  document.cookie = `token=${token}; path=/${cookieDomain}; max-age=${24 * 60 * 60}; SameSite=Lax; Secure=${isProd ? 'true' : 'false'}`;
 }
 
 function clearSsoCookie() {
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const domainPart = isLocalhost ? '' : `; domain=${SSO_DOMAIN}`;
-  document.cookie = `${SSO_COOKIE}=; path=/${domainPart}; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  const isProd = window.location.hostname.endsWith('.siatc.cloud');
+  const cookieDomain = isProd ? '; domain=.siatc.cloud' : '';
+  document.cookie = `token=; path=/${cookieDomain}; max-age=0; SameSite=Lax; Secure=${isProd ? 'true' : 'false'}`;
 }
 
 function decodeJwt(token: string): any | null {
