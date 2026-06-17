@@ -197,7 +197,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     const user = result.recordset[0];
 
-    if (!user || !(await bcrypt.compare(password, user.PasswordHash))) {
+    if (!user || !user.PasswordHash || !(await bcrypt.compare(password, user.PasswordHash))) {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
