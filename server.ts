@@ -182,8 +182,8 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('u', sql.VarChar, username)
-      .input('app', sql.VarChar, APP_IDENTIFIER)
+      .input('u', sql.NVarChar, username)
+      .input('app', sql.NVarChar, APP_IDENTIFIER)
       .query(`
         SELECT u.*, r.Name as RoleName, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
         FROM [EBM].[Users] u 
@@ -256,7 +256,7 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
     const pool = await poolPromise;
     const userResult = await pool.request()
       .input('id', sql.UniqueIdentifier, userId)
-      .input('app', sql.VarChar(10), APP_IDENTIFIER)
+      .input('app', sql.NVarChar, APP_IDENTIFIER)
       .query(`
         SELECT u.Id, u.Username, u.FullName, r.Name as RoleName, u.RoleId, u.Apps, u.RequiresPasswordChange, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
         FROM [EBM].[Users] u
