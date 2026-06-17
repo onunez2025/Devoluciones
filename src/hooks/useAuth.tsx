@@ -24,12 +24,6 @@ function getCookie(name: string): string | null {
   return null;
 }
 
-function setSsoCookie(token: string) {
-  const isProd = window.location.hostname.endsWith('.siatc.cloud');
-  const cookieDomain = isProd ? '; domain=.siatc.cloud' : '';
-  document.cookie = `token=${token}; path=/${cookieDomain}; max-age=${24 * 60 * 60}; SameSite=Lax; Secure=${isProd ? 'true' : 'false'}`;
-}
-
 function clearSsoCookie() {
   const isProd = window.location.hostname.endsWith('.siatc.cloud');
   const cookieDomain = isProd ? '; domain=.siatc.cloud' : '';
@@ -79,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback((userData: User, token?: string, _remember = true) => {
     if (token) {
       storageService.setToken(token);
-      setSsoCookie(token);
+      // Cookie SSO establecida server-side via Set-Cookie HTTP header
     }
     storageService.setUser(userData);
     setUser(userData);
@@ -139,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         storageService.setToken(freshToken);
         storageService.setUser(freshUser);
-        setSsoCookie(freshToken);
+        // Cookie SSO renovada server-side via Set-Cookie HTTP header
         setUser(freshUser);
       } catch (error) {
         console.error('Session validation error:', error);

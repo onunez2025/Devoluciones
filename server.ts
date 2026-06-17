@@ -224,6 +224,17 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: '12h' }
     );
 
+    if (IS_PRODUCTION) {
+      res.cookie('token', token, {
+        domain: '.siatc.cloud',
+        maxAge: 12 * 60 * 60 * 1000,
+        httpOnly: false,
+        secure: true,
+        sameSite: 'lax',
+        path: '/'
+      });
+    }
+
     res.json({
       token,
       user: {
@@ -289,6 +300,17 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
       JWT_SECRET,
       { expiresIn: '12h' }
     );
+
+    if (IS_PRODUCTION) {
+      res.cookie('token', freshToken, {
+        domain: '.siatc.cloud',
+        maxAge: 12 * 60 * 60 * 1000,
+        httpOnly: false,
+        secure: true,
+        sameSite: 'lax',
+        path: '/'
+      });
+    }
 
     res.json({
       token: freshToken,
