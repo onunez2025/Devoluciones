@@ -106,9 +106,31 @@ if (AZURE_CONNECTION_STRING) {
   console.warn('⚠️ AZURE_STORAGE_CONNECTION_STRING no definida. Las subidas de imágenes no funcionarán.');
 }
 
-const upload = multer({ 
+const IMAGE_MAGIC_BYTES: Record<string, number[][]> = {
+  'image/jpeg': [[0xFF, 0xD8, 0xFF]],
+  'image/png':  [[0x89, 0x50, 0x4E, 0x47]],
+  'image/webp': [[0x52, 0x49, 0x46, 0x46]],
+  'image/gif':  [[0x47, 0x49, 0x46, 0x38]],
+};
+
+function validateImageMagicBytes(buffer: Buffer, declaredMime: string): boolean {
+  const sigs = IMAGE_MAGIC_BYTES[declaredMime];
+  if (!sigs) return false;
+  return sigs.some(sig => sig.every((byte, i) => buffer[i] === byte));
+}
+
+function imageFileFilter(_req: express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) {
+  if (Object.keys(IMAGE_MAGIC_BYTES).includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Tipo de archivo no permitido: ${file.mimetype}. Solo se aceptan imágenes (JPEG, PNG, WEBP, GIF).`));
+  }
+}
+
+const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // Límite de 10MB
+  fileFilter: imageFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 // Configuración SQL Server
@@ -760,6 +782,10 @@ app.post('/api/upload', verifyToken, upload.single('image'), async (req: any, re
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No se ha proporcionado ninguna imagen' });
+    }
+
+    if (!validateImageMagicBytes(req.file.buffer, req.file.mimetype)) {
+      return res.status(400).json({ message: 'El archivo no es una imagen válida.' });
     }
 
     if (!containerClient) {
