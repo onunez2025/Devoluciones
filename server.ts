@@ -12,6 +12,7 @@ import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -174,11 +175,59 @@ const checkPermission = (requiredPermission: string) => {
 };
 
 
+const loginSchema = z.object({
+  username: z.string().min(1, 'Usuario requerido').max(255),
+  password: z.string().min(1, 'Contraseña requerida').max(255),
+});
+const devolucionSchema = z.object({
+  Ticket: z.string().min(1).max(50),
+  N_Guia: z.string().max(100).optional().default(''),
+  N_Serie: z.string().max(100).optional().default(''),
+  Sticker: z.string().max(100).optional().default(''),
+  Comentario: z.string().max(500).optional().default(''),
+  Adjunto: z.string().max(500).optional().default(''),
+});
+const updateDevolucionSchema = z.object({
+  N_Guia: z.string().max(100).optional(),
+  N_Serie: z.string().max(100).optional(),
+  Sticker: z.string().max(100).optional(),
+  Comentario: z.string().max(500).optional(),
+  Adjunto: z.string().max(500).optional(),
+});
+const batchDevolucionSchema = z.object({
+  tickets: z.array(z.object({
+    Ticket: z.string().min(1).max(50),
+    N_Guia: z.string().max(100).optional(),
+    N_Serie: z.string().max(100).optional(),
+    Comentario: z.string().max(500).optional(),
+  })).min(1, 'Se requiere al menos un ticket'),
+});
+const createUserSchema = z.object({
+  username: z.string().min(1).max(100),
+  email: z.email('Email inválido'),
+  fullName: z.string().min(1).max(200),
+  password: z.string().min(6, 'Mínimo 6 caracteres').max(255),
+  roleId: z.uuid('roleId debe ser UUID'),
+  managementId: z.uuid().optional(),
+  apps: z.string().optional(),
+});
+const updateUserSchema = z.object({
+  username: z.string().min(1).max(100).optional(),
+  email: z.email('Email inválido').optional(),
+  fullName: z.string().min(1).max(200).optional(),
+  password: z.string().min(6).max(255).optional(),
+  roleId: z.uuid('roleId debe ser UUID').optional(),
+  managementId: z.uuid().optional(),
+  isActive: z.boolean().optional(),
+  apps: z.string().optional(),
+});
+
 app.post('/api/auth/login', async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Usuario y contraseña son requeridos' });
+  const parseResult = loginSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({ message: 'Datos de login inválidos', details: parseResult.error.issues });
   }
+  const { username, password } = parseResult.data;
   try {
     const pool = await poolPromise;
     const result = await pool.request()
@@ -566,12 +615,10 @@ app.get('/api/lookups/tickets-by-period', verifyToken, async (req, res) => {
 
 // Registro masivo de devoluciones
 app.post('/api/devoluciones/batch', verifyToken, async (req: any, res) => {
-  const { tickets } = req.body;
+  const parsed = batchDevolucionSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: 'Datos inválidos', details: parsed.error.issues });
+  const { tickets } = parsed.data;
   const username = req.user?.username || 'unknown';
-  
-  if (!Array.isArray(tickets) || tickets.length === 0) {
-    return res.status(400).json({ message: 'No se enviaron tickets' });
-  }
 
   try {
     const pool = await poolPromise;
@@ -608,7 +655,9 @@ app.post('/api/devoluciones/batch', verifyToken, async (req: any, res) => {
 
 // Registro de nueva devolución
 app.post('/api/devoluciones', verifyToken, async (req: any, res) => {
-  const data = req.body;
+  const parsed = devolucionSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: 'Datos inválidos', details: parsed.error.issues });
+  const data = parsed.data;
   const username = req.user?.username || 'unknown';
 
   try {
@@ -655,7 +704,9 @@ app.post('/api/devoluciones', verifyToken, async (req: any, res) => {
 // Actualizar devolución existente
 app.put('/api/devoluciones/:ticket', verifyToken, async (req: any, res) => {
   const { ticket } = req.params;
-  const data = req.body;
+  const parsed = updateDevolucionSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: 'Datos inválidos', details: parsed.error.issues });
+  const data = parsed.data;
 
   try {
     const pool = await poolPromise;
@@ -832,7 +883,9 @@ app.get('/api/users', verifyToken, checkPermission('USERS_VIEW'), async (_req, r
 
 // Crear usuario
 app.post('/api/users', verifyToken, checkPermission('USERS_EDIT'), async (req, res) => {
-  const { username, email, fullName, password, roleId, managementId, apps } = req.body;
+  const parsedUser = createUserSchema.safeParse(req.body);
+  if (!parsedUser.success) return res.status(400).json({ message: 'Datos inválidos', details: parsedUser.error.issues });
+  const { username, email, fullName, password, roleId, managementId, apps } = parsedUser.data;
   try {
     const pool = await poolPromise;
     const passwordHash = await bcrypt.hash(password, 10);
@@ -860,7 +913,9 @@ app.post('/api/users', verifyToken, checkPermission('USERS_EDIT'), async (req, r
 // Actualizar usuario
 app.put('/api/users/:id', verifyToken, checkPermission('USERS_EDIT'), async (req, res) => {
   const { id } = req.params;
-  const { username, email, fullName, password, roleId, managementId, isActive, apps } = req.body;
+  const parsedUser = updateUserSchema.safeParse(req.body);
+  if (!parsedUser.success) return res.status(400).json({ message: 'Datos inválidos', details: parsedUser.error.issues });
+  const { username, email, fullName, password, roleId, managementId, isActive, apps } = parsedUser.data;
   try {
     const pool = await poolPromise;
     let query = `
