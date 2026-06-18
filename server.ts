@@ -795,7 +795,8 @@ app.post('/api/upload', verifyToken, upload.single('image'), async (req: any, re
 // --- Public View: Historial Técnico ---
 app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
   const { idEquipo } = req.params;
-  console.log(`🔍 [Public] Buscando historial para equipo: ${idEquipo}`);
+  const safeId = String(idEquipo).replace(/[\r\n]+/g, ' ');
+  console.log(`🔍 [Public] Buscando historial para equipo: ${safeId}`);
   
   try {
     const pool = await poolPromise;
@@ -812,7 +813,7 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
       `);
 
     if (infoResult.recordset.length === 0) {
-      console.log(`⚠️ No se encontró información para el ID: ${idEquipo}`);
+      console.log(`⚠️ No se encontró información para el ID: ${safeId}`);
       return res.json([]);
     }
 
@@ -1260,6 +1261,12 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
+
+const errorHandler: express.ErrorRequestHandler = (err, req, res, _next) => {
+  console.error(`[ERROR] ${req.method} ${req.path}:`, err);
+  res.status(500).json({ error: process.env.NODE_ENV === 'production' ? 'Error interno del servidor' : (err as Error).message });
+};
+app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`🚀 Servidor Devoluciones corriendo en http://localhost:${port}`);
