@@ -12,6 +12,9 @@ import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import Redis from 'ioredis';
+import { createHash } from 'crypto';
+import { RedisStore } from 'rate-limit-redis';
 import { z } from 'zod';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -66,6 +69,7 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Demasiadas solicitudes. Intenta más tarde.' },
+  store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:' }),
 });
 app.use(limiter);
 
@@ -76,6 +80,7 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Demasiados intentos de inicio de sesión. Espera 1 hora.' },
+  store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:auth:' }),
 });
 app.use('/api/auth/login', authLimiter);
 
@@ -157,30 +162,69 @@ const poolPromise = new sql.ConnectionPool(sqlConfig)
     process.exit(1);
   });
 
+// --- REDIS CLIENT ---
+let _redis: Redis | null = null;
+function getRedisClient(): Redis {
+    if (!_redis) {
+        _redis = new Redis({
+            host: process.env.REDIS_HOST || 'localhost',
+            port: parseInt(process.env.REDIS_PORT || '6379'),
+            password: process.env.REDIS_PASSWORD,
+            lazyConnect: true,
+            retryStrategy: (times: number) => Math.min(times * 100, 3000),
+        });
+        _redis.on('error', (err: Error) => console.error('[Redis] Error:', err.message));
+    }
+    return _redis;
+}
+async function isTokenBlacklisted(token: string): Promise<boolean> {
+    try {
+        const hash = createHash('sha256').update(token).digest('hex');
+        return (await getRedisClient().exists(`bl:${hash}`)) === 1;
+    } catch { return false; }
+}
+async function blacklistToken(token: string, exp: number): Promise<void> {
+    try {
+        const hash = createHash('sha256').update(token).digest('hex');
+        const ttl = Math.max(exp - Math.floor(Date.now() / 1000), 0);
+        if (ttl > 0) await getRedisClient().set(`bl:${hash}`, '1', 'EX', ttl);
+    } catch (err) { console.error('[Redis] Error al blacklistear token:', err); }
+}
+
 // --- Middleware de Autenticación ---
-const verifyToken = (req: any, res: any, next: any) => {
+const verifyToken = async (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
 
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
-    if (err) return res.status(403).json({ message: 'Token inválido o expirado' });
+  try {
+    const user = jwt.verify(token, JWT_SECRET);
+    if (await isTokenBlacklisted(token)) {
+      return res.status(401).json({ message: 'Sesión cerrada. Inicia sesión nuevamente.' });
+    }
     req.user = user;
     next();
-  });
+  } catch (err) {
+    return res.status(403).json({ message: 'Token inválido o expirado' });
+  }
 };
 
 // Solo para endpoints GET de descarga de archivos (browser no puede enviar headers en window.location.href)
-const verifyTokenForDownload = (req: any, res: any, next: any) => {
+const verifyTokenForDownload = async (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader?.split(' ')[1] || (req.query.token as string);
   if (!token) return res.status(401).json({ message: 'Token no proporcionado' });
-  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
-    if (err) return res.status(403).json({ message: 'Token inválido o expirado' });
+  try {
+    const user = jwt.verify(token, JWT_SECRET);
+    if (await isTokenBlacklisted(token)) {
+      return res.status(401).json({ message: 'Sesión cerrada. Inicia sesión nuevamente.' });
+    }
     req.user = user;
     next();
-  });
+  } catch (err) {
+    return res.status(403).json({ message: 'Token inválido o expirado' });
+  }
 };
 
 const APP_IDENTIFIER = 'DEV';
@@ -330,6 +374,12 @@ app.post('/api/auth/login', async (req, res) => {
     console.error('Error en Login:', error);
     res.status(500).json({ message: 'Error interno del servidor', error: error.message });
   }
+});
+
+app.post('/api/auth/logout', verifyToken, async (req: any, res: any) => {
+    const token = req.headers['authorization']!.split(' ')[1];
+    await blacklistToken(token, req.user?.exp ?? 0);
+    res.json({ message: 'Sesión cerrada correctamente.' });
 });
 
 // --- Endpoint SSO: emite token fresco con campos app-específicos ---
