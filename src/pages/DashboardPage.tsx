@@ -1,7 +1,7 @@
 // Build timestamp: 2026-04-28 11:54:00
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { utils, writeFile } from 'xlsx';
+import ExcelJS from 'exceljs';
 import { 
   Plus, 
   Search, 
@@ -140,7 +140,7 @@ const DashboardPage = () => {
     }
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     const selectedData = devoluciones
       .filter(dev => selectedTickets.has(String(dev.Ticket)))
       .map(dev => ({
@@ -155,13 +155,19 @@ const DashboardPage = () => {
 
     if (selectedData.length === 0) return;
 
-    // Crear hoja de trabajo y libro
-    const worksheet = utils.json_to_sheet(selectedData);
-    const workbook = utils.book_new();
-    utils.book_append_sheet(workbook, worksheet, 'Devoluciones');
-
-    // Generar archivo y descargar
-    writeFile(workbook, `ZLabel_Export_${new Date().getTime()}.xlsx`);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Devoluciones');
+    const headers = Object.keys(selectedData[0]);
+    worksheet.addRow(headers);
+    selectedData.forEach(row => worksheet.addRow(headers.map(h => (row as Record<string, unknown>)[h])));
+    const buf = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ZLabel_Export_${new Date().getTime()}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const toggleSelectAll = () => {

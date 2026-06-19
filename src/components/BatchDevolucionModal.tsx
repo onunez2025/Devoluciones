@@ -12,7 +12,7 @@ import {
   AlertCircle,
   DownloadCloud
 } from 'lucide-react';
-import { utils, writeFile } from 'xlsx';
+import ExcelJS from 'exceljs';
 import apiClient from '../services/apiClient';
 import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
@@ -81,7 +81,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
     }
   };
 
-  const exportToExcel = (selectedData: any[]) => {
+  const exportToExcel = async (selectedData: any[]) => {
     const exportData = selectedData.map(dev => ({
       'Ticket': dev.Ticket,
       'ID_Equipo': dev.IdEquipo,
@@ -92,23 +92,34 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
       'URL_Historial': `https://${window.location.host}/public/equipment/${dev.Ticket}`
     }));
 
-    const worksheet = utils.json_to_sheet(exportData);
-    const workbook = utils.book_new();
-    utils.book_append_sheet(workbook, worksheet, 'ZLabel');
-    writeFile(workbook, `ZLabel_Batch_${filters.tech}_${filters.date}.xlsx`);
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('ZLabel');
+    if (exportData.length > 0) {
+      const headers = Object.keys(exportData[0]);
+      worksheet.addRow(headers);
+      exportData.forEach(row => worksheet.addRow(headers.map(h => (row as Record<string, unknown>)[h])));
+    }
+    const buf = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ZLabel_Batch_${filters.tech}_${filters.date}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleBatchSubmit = async () => {
     if (selectedTicketIds.size === 0) return;
-    
+
     setLoading(true);
     const selectedData = tickets.filter(t => selectedTicketIds.has(String(t.Ticket)));
-    
+
     try {
       await apiClient.post('/devoluciones/batch', { tickets: selectedData });
-      
+
       // Descarga automática del Excel para ZLabel
-      exportToExcel(selectedData);
+      await exportToExcel(selectedData);
       
       setStep(2);
       onSuccess();
