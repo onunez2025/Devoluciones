@@ -191,6 +191,15 @@ async function blacklistToken(token: string, exp: number): Promise<void> {
     } catch (err) { console.error('[Redis] Error al blacklistear token:', err); }
 }
 
+// --- SECURITY HELPERS (ver CLAUDE.md) ---
+const safeError = (err: unknown): string =>
+    process.env.NODE_ENV === 'production'
+        ? 'Error interno del servidor'
+        : err instanceof Error ? err.message : String(err);
+
+const sanitizeLog = (val: unknown, maxLen = 200): string =>
+    String(val ?? '').replace(/[\r\n\t\x00-\x1F\x7F]/g, ' ').slice(0, maxLen);
+
 // --- Middleware de Autenticación ---
 const verifyToken = async (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
@@ -372,7 +381,7 @@ app.post('/api/auth/login', async (req, res) => {
 
   } catch (error: any) {
     console.error('Error en Login:', error);
-    res.status(500).json({ message: 'Error interno del servidor', error: error.message });
+    res.status(500).json({ message: 'Error interno del servidor', error: safeError(error) });
   }
 });
 
@@ -544,7 +553,7 @@ app.get('/api/devoluciones', verifyToken, async (req: any, res) => {
     });
   } catch (error: any) {
     console.error('Error al obtener devoluciones:', error);
-    res.status(500).json({ message: 'Error al obtener devoluciones', error: error.message });
+    res.status(500).json({ message: 'Error al obtener devoluciones', error: safeError(error) });
   }
 });
 
@@ -846,7 +855,7 @@ app.post('/api/upload', verifyToken, upload.single('image'), async (req: any, re
     const blobName = `${uuidv4()}${path.extname(req.file.originalname)}`;
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
-    console.log(`📤 Subiendo a Azure: ${blobName}...`);
+    console.log(`📤 Subiendo a Azure: ${sanitizeLog(blobName)}...`);
 
     // Subir el buffer directamente
     await blockBlobClient.uploadData(req.file.buffer, {
