@@ -306,8 +306,8 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('u', sql.NVarChar, username)
-      .input('app', sql.NVarChar, APP_IDENTIFIER)
+      .input('u', sql.NVarChar(sql.MAX), username)
+      .input('app', sql.NVarChar(sql.MAX), APP_IDENTIFIER)
       .query(`
         SELECT u.*, r.Name as RoleName, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
         FROM [EBM].[Users] u 
@@ -400,7 +400,7 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
     const pool = await poolPromise;
     const userResult = await pool.request()
       .input('id', sql.UniqueIdentifier, userId)
-      .input('app', sql.NVarChar, APP_IDENTIFIER)
+      .input('app', sql.NVarChar(sql.MAX), APP_IDENTIFIER)
       .query(`
         SELECT u.Id, u.Username, u.FullName, r.Name as RoleName, u.RoleId, u.Apps, u.RequiresPasswordChange, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
         FROM [EBM].[Users] u
@@ -501,7 +501,7 @@ app.get('/api/devoluciones', verifyToken, async (req: any, res) => {
         OR d.N_Serie LIKE @search
         OR f.IdEquipo LIKE @search
       `;
-      request.input('search', sql.VarChar, `%${search}%`);
+      request.input('search', sql.VarChar(255), `%${search}%`);
     }
 
     // 1. Obtener el total de registros para paginación
@@ -592,7 +592,7 @@ app.get('/api/equipos/lookup/:ticket', verifyToken, async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('ticket', sql.VarChar, ticket)
+      .input('ticket', sql.VarChar(255), ticket)
       .query(`
         SELECT TOP 1 
           f.IdEquipo, 
@@ -631,7 +631,7 @@ app.get('/api/sap/lookup/:ticket', verifyToken, async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('ticket', sql.VarChar, ticket)
+      .input('ticket', sql.VarChar(255), ticket)
       .query(`
         SELECT TOP 1 VC_pedidocliente as Ticket, VC_referencia as Folio
         FROM [dbo].[GAC_APP_SD_ENTREGAS]
@@ -672,7 +672,7 @@ app.get('/api/lookups/tickets-by-period', verifyToken, async (req, res) => {
     const pool = await poolPromise;
     const result = await pool.request()
       .input('date', sql.Date, date)
-      .input('tech', sql.VarChar, tech)
+      .input('tech', sql.VarChar(255), tech)
       .query(`
         SELECT 
           f.Ticket, 
@@ -709,12 +709,12 @@ app.post('/api/devoluciones/batch', verifyToken, async (req: any, res) => {
     try {
       for (const dev of tickets) {
         await transaction.request()
-          .input('Ticket', sql.VarChar, dev.Ticket)
-          .input('Personal_ST', sql.VarChar, username)
-          .input('Personal_Ope', sql.VarChar, username)
-          .input('N_Guia', sql.VarChar, dev.N_Guia || '')
-          .input('N_Serie', sql.VarChar, dev.N_Serie || '')
-          .input('Comentario', sql.VarChar, dev.Comentario || 'Carga Masiva')
+          .input('Ticket', sql.VarChar(255), dev.Ticket)
+          .input('Personal_ST', sql.VarChar(255), username)
+          .input('Personal_Ope', sql.VarChar(255), username)
+          .input('N_Guia', sql.VarChar(255), dev.N_Guia || '')
+          .input('N_Serie', sql.VarChar(255), dev.N_Serie || '')
+          .input('Comentario', sql.VarChar(255), dev.Comentario || 'Carga Masiva')
           .input('FechaRegistro', sql.DateTime, new Date())
           .query(`
             INSERT INTO [dbo].[GAC_APP_TB_DEVOLUCION] 
@@ -760,14 +760,14 @@ app.post('/api/devoluciones', verifyToken, async (req: any, res) => {
     }
 
     await pool.request()
-      .input('Ticket', sql.VarChar, data.Ticket)
-      .input('Personal_ST', sql.VarChar, username)
-      .input('Personal_Ope', sql.VarChar, username)
-      .input('N_Guia', sql.VarChar, data.N_Guia)
-      .input('N_Serie', sql.VarChar, data.N_Serie)
-      .input('Sticker', sql.VarChar, data.Sticker)
-      .input('Comentario', sql.VarChar, data.Comentario)
-      .input('Adjunto', sql.VarChar, data.Adjunto)
+      .input('Ticket', sql.VarChar(255), data.Ticket)
+      .input('Personal_ST', sql.VarChar(255), username)
+      .input('Personal_Ope', sql.VarChar(255), username)
+      .input('N_Guia', sql.VarChar(255), data.N_Guia)
+      .input('N_Serie', sql.VarChar(255), data.N_Serie)
+      .input('Sticker', sql.VarChar(255), data.Sticker)
+      .input('Comentario', sql.VarChar(255), data.Comentario)
+      .input('Adjunto', sql.VarChar(255), data.Adjunto)
       .input('FechaRegistro', sql.DateTime, new Date())
       .query(`
         INSERT INTO [dbo].[GAC_APP_TB_DEVOLUCION] 
@@ -809,12 +809,12 @@ app.put('/api/devoluciones/:ticket', verifyToken, async (req: any, res) => {
     }
 
     const result = await pool.request()
-      .input('Ticket', sql.VarChar, ticket)
-      .input('N_Guia', sql.VarChar, data.N_Guia)
-      .input('N_Serie', sql.VarChar, data.N_Serie)
-      .input('Sticker', sql.VarChar, data.Sticker)
-      .input('Comentario', sql.VarChar, data.Comentario)
-      .input('Adjunto', sql.VarChar, data.Adjunto)
+      .input('Ticket', sql.VarChar(255), ticket)
+      .input('N_Guia', sql.VarChar(255), data.N_Guia)
+      .input('N_Serie', sql.VarChar(255), data.N_Serie)
+      .input('Sticker', sql.VarChar(255), data.Sticker)
+      .input('Comentario', sql.VarChar(255), data.Comentario)
+      .input('Adjunto', sql.VarChar(255), data.Adjunto)
       .query(`
         UPDATE [dbo].[GAC_APP_TB_DEVOLUCION]
         SET N_Guia = @N_Guia,
@@ -889,7 +889,7 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
     // Paso 1: Obtener la información básica del equipo (IdCliente y CodigoExterno)
     // Buscamos por Ticket (Indexado), IdEquipo o CodigoExterno
     const infoResult = await pool.request()
-      .input('id', sql.NVarChar, idEquipo)
+      .input('id', sql.NVarChar(sql.MAX), idEquipo)
       .query(`
         SELECT TOP 1 IdCliente, CodigoExternoEquipo
         FROM [SIATC].[Dashboard_FSM]
@@ -907,8 +907,8 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
 
     // Paso 2: Buscar el historial usando los identificadores encontrados
     const historyResult = await pool.request()
-      .input('idc', sql.NVarChar, IdCliente)
-      .input('cee', sql.NVarChar, CodigoExternoEquipo)
+      .input('idc', sql.NVarChar(sql.MAX), IdCliente)
+      .input('cee', sql.NVarChar(sql.MAX), CodigoExternoEquipo)
       .query(`
         SELECT 
           f.Ticket, 
@@ -952,7 +952,7 @@ app.get('/api/users', verifyToken, checkPermission('USERS_VIEW'), async (_req, r
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('app', sql.VarChar, APP_IDENTIFIER)
+      .input('app', sql.VarChar(255), APP_IDENTIFIER)
       .query(`
         SELECT u.Id, u.Username, u.Email, u.FullName, u.RoleId, u.ManagementId, u.IsActive, u.Apps, r.Name as RoleName, m.Name as ManagementName
         FROM [EBM].[Users] u
@@ -979,13 +979,13 @@ app.post('/api/users', verifyToken, checkPermission('USERS_EDIT'), async (req, r
     
     await pool.request()
       .input('id', sql.UniqueIdentifier, userId)
-      .input('u', sql.NVarChar, username)
-      .input('e', sql.NVarChar, email)
-      .input('fn', sql.NVarChar, fullName)
-      .input('ph', sql.NVarChar, passwordHash)
+      .input('u', sql.NVarChar(sql.MAX), username)
+      .input('e', sql.NVarChar(sql.MAX), email)
+      .input('fn', sql.NVarChar(sql.MAX), fullName)
+      .input('ph', sql.NVarChar(sql.MAX), passwordHash)
       .input('rid', sql.UniqueIdentifier, roleId)
       .input('mid', sql.UniqueIdentifier, managementId)
-      .input('apps', sql.NVarChar, apps || APP_IDENTIFIER)
+      .input('apps', sql.NVarChar(sql.MAX), apps || APP_IDENTIFIER)
       .query(`
         INSERT INTO [EBM].[Users] (Id, Username, Email, FullName, PasswordHash, RoleId, ManagementId, IsActive, Apps, CreatedAt)
         VALUES (@id, @u, @e, @fn, @ph, @rid, @mid, 1, @apps, GETDATE())
@@ -1011,18 +1011,18 @@ app.put('/api/users/:id', verifyToken, checkPermission('USERS_EDIT'), async (req
     
     const request = pool.request()
       .input('id', sql.UniqueIdentifier, id)
-      .input('u', sql.NVarChar, username)
-      .input('e', sql.NVarChar, email)
-      .input('fn', sql.NVarChar, fullName)
+      .input('u', sql.NVarChar(sql.MAX), username)
+      .input('e', sql.NVarChar(sql.MAX), email)
+      .input('fn', sql.NVarChar(sql.MAX), fullName)
       .input('rid', sql.UniqueIdentifier, roleId)
       .input('mid', sql.UniqueIdentifier, managementId)
       .input('active', sql.Bit, isActive)
-      .input('apps', sql.NVarChar, apps);
+      .input('apps', sql.NVarChar(sql.MAX), apps);
 
     if (password) {
       const passwordHash = await bcrypt.hash(password, 10);
       query += `, PasswordHash = @ph`;
-      request.input('ph', sql.NVarChar, passwordHash);
+      request.input('ph', sql.NVarChar(sql.MAX), passwordHash);
     }
 
     query += ` WHERE Id = @id`;
@@ -1038,7 +1038,7 @@ app.get('/api/roles', verifyToken, async (_req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('app', sql.VarChar, APP_IDENTIFIER)
+      .input('app', sql.VarChar(255), APP_IDENTIFIER)
       .query(`
         SELECT * FROM [EBM].[Roles] 
         WHERE Apps LIKE '%' + @app + '%' OR Apps LIKE '%ADMIN%'
@@ -1080,7 +1080,7 @@ app.post('/api/roles/:id/permissions', verifyToken, checkPermission('ROLES_EDIT'
       for (const perm of permissions) {
         await transaction.request()
           .input('rid', sql.UniqueIdentifier, id)
-          .input('p', sql.NVarChar, perm)
+          .input('p', sql.NVarChar(sql.MAX), perm)
           .query("INSERT INTO [EBM].[RolePermissions] (RoleId, Permission) VALUES (@rid, @p)");
       }
       await transaction.commit();
@@ -1116,7 +1116,7 @@ app.get('/api/c4c/pdf/:ticket', verifyTokenForDownload, async (req, res) => {
   try {
     const pool = await poolPromise;
     const dbTicket = await pool.request()
-      .input('ticket', sql.VarChar, ticket)
+      .input('ticket', sql.VarChar(255), ticket)
       .query('SELECT TOP 1 LlamadaFSM FROM [SIATC].[Dashboard_FSM] WHERE Ticket = @ticket');
     
     const llamadaFSM = dbTicket.recordset[0]?.LlamadaFSM;
