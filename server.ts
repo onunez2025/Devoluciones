@@ -195,7 +195,7 @@ async function blacklistToken(token: string, exp: number): Promise<void> {
 const safeError = (err: unknown): string =>
     process.env.NODE_ENV === 'production'
         ? 'Error interno del servidor'
-        : err instanceof Error ? err.message : String(err);
+        : safeError(err);
 
 const sanitizeLog = (val: unknown, maxLen = 200): string =>
     String(val ?? '').replace(/[\r\n\t\x00-\x1F\x7F]/g, ' ').slice(0, maxLen);
@@ -778,7 +778,7 @@ app.post('/api/devoluciones', verifyToken, async (req: any, res) => {
     res.status(201).json({ message: 'Devolución registrada correctamente' });
   } catch (error: any) {
     console.error('Error al registrar devolución:', error);
-    res.status(500).json({ message: 'Error al registrar devolución', error: error.message });
+    res.status(500).json({ message: 'Error al registrar devolución', error: safeError(error) });
   }
 });
 
@@ -832,7 +832,7 @@ app.put('/api/devoluciones/:ticket', verifyToken, async (req: any, res) => {
     res.json({ message: 'Devolución actualizada correctamente' });
   } catch (error: any) {
     console.error('Error al actualizar devolución:', error);
-    res.status(500).json({ message: 'Error al actualizar devolución', error: error.message });
+    res.status(500).json({ message: 'Error al actualizar devolución', error: safeError(error) });
   }
 });
 
@@ -963,7 +963,7 @@ app.get('/api/users', verifyToken, checkPermission('USERS_VIEW'), async (_req, r
       `);
     res.json(result.recordset);
   } catch (error: any) {
-    res.status(500).json({ message: 'Error al obtener usuarios', error: error.message });
+    res.status(500).json({ message: 'Error al obtener usuarios', error: safeError(error) });
   }
 });
 
@@ -992,7 +992,7 @@ app.post('/api/users', verifyToken, checkPermission('USERS_EDIT'), async (req, r
       `);
     res.status(201).json({ message: 'Usuario creado correctamente' });
   } catch (error: any) {
-    res.status(500).json({ message: 'Error al crear usuario', error: error.message });
+    res.status(500).json({ message: 'Error al crear usuario', error: safeError(error) });
   }
 });
 
@@ -1029,7 +1029,7 @@ app.put('/api/users/:id', verifyToken, checkPermission('USERS_EDIT'), async (req
     await request.query(query);
     res.json({ message: 'Usuario actualizado correctamente' });
   } catch (error: any) {
-    res.status(500).json({ message: 'Error al actualizar usuario', error: error.message });
+    res.status(500).json({ message: 'Error al actualizar usuario', error: safeError(error) });
   }
 });
 
@@ -1046,7 +1046,7 @@ app.get('/api/roles', verifyToken, async (_req, res) => {
       `);
     res.json(result.recordset);
   } catch (error: any) {
-    res.status(500).json({ message: 'Error al obtener roles', error: error.message });
+    res.status(500).json({ message: 'Error al obtener roles', error: safeError(error) });
   }
 });
 
@@ -1060,7 +1060,7 @@ app.get('/api/roles/:id/permissions', verifyToken, checkPermission('ROLES_VIEW')
       .query("SELECT Permission FROM [EBM].[RolePermissions] WHERE RoleId = @rid");
     res.json(result.recordset.map(p => p.Permission));
   } catch (error: any) {
-    res.status(500).json({ message: 'Error al obtener permisos', error: error.message });
+    res.status(500).json({ message: 'Error al obtener permisos', error: safeError(error) });
   }
 });
 
@@ -1090,7 +1090,7 @@ app.post('/api/roles/:id/permissions', verifyToken, checkPermission('ROLES_EDIT'
       throw err;
     }
   } catch (error: any) {
-    res.status(500).json({ message: 'Error al actualizar permisos', error: error.message });
+    res.status(500).json({ message: 'Error al actualizar permisos', error: safeError(error) });
   }
 });
 
@@ -1101,7 +1101,7 @@ app.get('/api/managements', verifyToken, async (_req, res) => {
     const result = await pool.request().query("SELECT * FROM [EBM].[Managements] ORDER BY Name ASC");
     res.json(result.recordset);
   } catch (error: any) {
-    res.status(500).json({ message: 'Error al obtener gerencias', error: error.message });
+    res.status(500).json({ message: 'Error al obtener gerencias', error: safeError(error) });
   }
 });
 
@@ -1334,7 +1334,7 @@ app.get('/api/applications', verifyToken, async (req, res) => {
     
     res.json(apps);
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: safeError(err) });
   }
 });
 
