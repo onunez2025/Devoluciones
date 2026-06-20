@@ -870,18 +870,18 @@ app.post('/api/upload', verifyToken, upload.single('image'), async (req: any, re
     });
   } catch (error: any) {
     console.error('❌ Error al subir a Azure:', error);
-    res.status(500).json({ 
-      message: 'Error al procesar la subida a Azure', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error al procesar la subida a Azure',
+      error: safeError(error)
     });
   }
 });
 
 // --- Public View: Historial Técnico ---
-app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
+app.get('/api/public/equipment/:idEquipo/history', verifyToken, async (req, res) => {
   const { idEquipo } = req.params;
   const safeId = String(idEquipo).replace(/[\r\n]+/g, ' ');
-  console.log(`🔍 [Public] Buscando historial para equipo: ${safeId}`);
+  console.log(`🔍 [Public] Buscando historial para equipo: ${sanitizeLog(safeId)}`);
   
   try {
     const pool = await poolPromise;
@@ -898,7 +898,7 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
       `);
 
     if (infoResult.recordset.length === 0) {
-      console.log(`⚠️ No se encontró información para el ID: ${safeId}`);
+      console.log(`⚠️ No se encontró información para el ID: ${sanitizeLog(safeId)}`);
       return res.json([]);
     }
 
@@ -936,11 +936,11 @@ app.get('/api/public/equipment/:idEquipo/history', async (req, res) => {
     
     console.log(`✅ Se encontraron ${historyResult.recordset.length} registros para ${idEquipo}`);
     res.json(historyResult.recordset);
-  } catch (error: any) {
-    console.error(`❌ Error crítico en historial público (${idEquipo}):`, error.message);
-    res.status(500).json({ 
-      message: 'Error al cargar el historial del equipo', 
-      error: error.message 
+  } catch (error: unknown) {
+    console.error(`❌ Error crítico en historial de equipo:`, error instanceof Error ? error.message : String(error));
+    res.status(500).json({
+      message: 'Error al cargar el historial del equipo',
+      error: safeError(error)
     });
   }
 });
@@ -1198,11 +1198,11 @@ app.get('/api/c4c/pdf/:ticket', verifyTokenForDownload, async (req, res) => {
     res.setHeader('Content-Disposition', `inline; filename="${pdf.Name}"`);
     pdfResponse.data.pipe(res);
 
-  } catch (error: any) {
-    console.error(`❌ [C4C] Error crítico:`, error.message);
-    res.status(500).json({ 
-      message: `Error de integración con SAP C4C`, 
-      error: error.message 
+  } catch (error: unknown) {
+    console.error(`❌ [C4C] Error crítico:`, error instanceof Error ? error.message : String(error));
+    res.status(500).json({
+      message: 'Error de integración con SAP C4C',
+      error: safeError(error)
     });
   }
 });
