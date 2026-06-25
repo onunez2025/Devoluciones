@@ -73,16 +73,17 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// [SECURITY] Rate limiting en auth (50 req / 1 hora)
-const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 50,
+// Auth rate limiter — starts with safe defaults, overwritten from EBM.AppSessionConfig at startup
+let authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Demasiados intentos de inicio de sesión. Espera 1 hora.' },
-  store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:auth:' }),
+  skipSuccessfulRequests: true,
+  message: { error: 'Demasiados intentos de inicio de sesión. Intenta más tarde.' },
+  store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:auth:' }), // eslint-disable-line @typescript-eslint/no-explicit-any
 });
-app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/login', (req: any, res: any, next: any) => authLimiter(req, res, next)); // eslint-disable-line @typescript-eslint/no-explicit-any
 
 // [SECURITY] Limitar tamaño de body para prevenir DoS
 app.use(express.json({ limit: '2mb' }));
@@ -309,13 +310,14 @@ app.post('/api/auth/login', async (req, res) => {
       .input('u', sql.NVarChar(sql.MAX), username)
       .input('app', sql.NVarChar(sql.MAX), APP_IDENTIFIER)
       .query(`
-        SELECT u.*, r.Name as RoleName, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
-        FROM [EBM].[Users] u 
-        LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id 
+        SELECT u.*, r.Name as RoleName, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo,
+            r.InactivityTimeoutMinutes as role_timeout, r.WarningBeforeMinutes as role_warning
+        FROM [EBM].[Users] u
+        LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id
         LEFT JOIN [EBM].[UserCAS] uc ON u.Id = uc.UserId
         LEFT JOIN [dbo].[GAC_APP_TB_CAS] c ON uc.CASId = c.ID_CAS
-        WHERE (u.Username = @u OR u.Email = @u) 
-          AND u.IsActive = 1 
+        WHERE (u.Username = @u OR u.Email = @u)
+          AND u.IsActive = 1
           AND (u.Apps LIKE '%' + @app + '%' OR u.Apps LIKE '%ADMIN%')
       `);
 
@@ -330,6 +332,13 @@ app.post('/api/auth/login', async (req, res) => {
       .query("SELECT Permission FROM [EBM].[RolePermissions] WHERE RoleId = @rid");
     
     const perms = permsResult.recordset.map(p => p.Permission);
+
+    const appCfgResult = await pool.request()
+      .input('appCode', sql.VarChar(20), APP_IDENTIFIER)
+      .query('SELECT DefaultInactivityTimeoutMinutes, DefaultWarningBeforeMinutes FROM EBM.AppSessionConfig WHERE UPPER(AppCode) = UPPER(@appCode)');
+    const appCfg = appCfgResult.recordset[0];
+    const timeoutMinutes: number = user.role_timeout ?? appCfg?.DefaultInactivityTimeoutMinutes ?? 30;
+    const warningMinutes: number = user.role_warning ?? appCfg?.DefaultWarningBeforeMinutes ?? 2;
 
     const token = jwt.sign(
       {
@@ -376,7 +385,8 @@ app.post('/api/auth/login', async (req, res) => {
         perms: perms,
         apps: user.Apps || '',
         requires_password_change: user.RequiresPasswordChange === 1
-      }
+      },
+      sessionConfig: { timeoutMinutes, warningMinutes }
     });
 
   } catch (error: any) {
@@ -1353,6 +1363,35 @@ const errorHandler: express.ErrorRequestHandler = (err, req, res, _next) => {
 };
 app.use(errorHandler);
 
+interface SessionConfig { rateLimitMaxAttempts: number; rateLimitWindowMinutes: number; }
+
+async function fetchSessionConfig(): Promise<SessionConfig> {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().input('code', sql.VarChar(20), APP_IDENTIFIER)
+      .query('SELECT RateLimitMaxAttempts, RateLimitWindowMinutes FROM EBM.AppSessionConfig WHERE UPPER(AppCode) = UPPER(@code)');
+    if (result.recordset.length > 0) {
+      const row = result.recordset[0];
+      return { rateLimitMaxAttempts: row.RateLimitMaxAttempts, rateLimitWindowMinutes: row.RateLimitWindowMinutes };
+    }
+  } catch (err: unknown) {
+    console.warn('[SessionConfig] Could not fetch from DB, using defaults:', (err as Error).message);
+  }
+  return { rateLimitMaxAttempts: 20, rateLimitWindowMinutes: 15 };
+}
+
 app.listen(port, () => {
   console.log(`🚀 Servidor Devoluciones corriendo en http://localhost:${port}`);
+  fetchSessionConfig().then(cfg => {
+    authLimiter = rateLimit({
+      windowMs: cfg.rateLimitWindowMinutes * 60 * 1000,
+      max: cfg.rateLimitMaxAttempts,
+      standardHeaders: true,
+      legacyHeaders: false,
+      skipSuccessfulRequests: true,
+      message: { error: `Demasiados intentos de inicio de sesión. Espera ${cfg.rateLimitWindowMinutes} minutos.` },
+      store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:auth:' }), // eslint-disable-line @typescript-eslint/no-explicit-any
+    });
+    console.log(`[SessionConfig] Auth limiter: ${cfg.rateLimitMaxAttempts} intentos / ${cfg.rateLimitWindowMinutes} min`);
+  }).catch(err => console.error('[SessionConfig] Failed to load rate limit config:', err));
 });
