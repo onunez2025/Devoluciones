@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     const token = storageService.getToken();
     if (token) {
+      // blacklistToken — el servidor invalida el JWT en Redis via POST /auth/logout
       apiClient.post('/auth/logout').catch(() => { /* token ya expirado o red caída — limpiar igual */ });
     }
     setUser(null);
