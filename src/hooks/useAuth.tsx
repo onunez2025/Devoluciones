@@ -1,13 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import type { User } from '../types';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import type { User, SessionConfig } from '../types';
 import { storageService } from '../services/storageService';
 import apiClient from '../services/apiClient';
 
 interface AuthContextType {
   user: User | null;
+  sessionConfig: SessionConfig | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User, token?: string, remember?: boolean) => void;
+  login: (user: User, token?: string, remember?: boolean, sessionConfig?: SessionConfig) => void;
   logout: () => void;
   hasPermission: (permission: string) => boolean;
 }
@@ -15,7 +16,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const SSO_COOKIE = 'token';
-const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 
 function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`;
@@ -48,43 +48,31 @@ function decodeJwt(token: string): any | null {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearInactivityTimer = useCallback(() => {
-    if (inactivityTimer.current) {
-      clearTimeout(inactivityTimer.current);
-      inactivityTimer.current = null;
-    }
-  }, []);
+  const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(() => {
+    try { const s = localStorage.getItem('session_config'); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
 
   const logout = useCallback(() => {
-    clearInactivityTimer();
+    setUser(null);
+    setSessionConfig(null);
+    localStorage.removeItem('session_config');
     storageService.clearAll();
     clearSsoCookie();
-    setUser(null);
     window.location.href = '/login';
-  }, [clearInactivityTimer]);
+  }, []);
 
-  const resetInactivityTimer = useCallback(() => {
-    clearInactivityTimer();
-    inactivityTimer.current = setTimeout(logout, INACTIVITY_TIMEOUT_MS);
-  }, [clearInactivityTimer, logout]);
-
-  useEffect(() => {
-    const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
-    events.forEach(e => window.addEventListener(e, resetInactivityTimer, { passive: true }));
-    return () => events.forEach(e => window.removeEventListener(e, resetInactivityTimer));
-  }, [resetInactivityTimer]);
-
-  const login = useCallback((userData: User, token?: string, _remember = true) => {
+  const login = useCallback((userData: User, token?: string, _remember = true, newSessionConfig?: SessionConfig) => {
+    if (newSessionConfig) {
+      setSessionConfig(newSessionConfig);
+      localStorage.setItem('session_config', JSON.stringify(newSessionConfig));
+    }
     if (token) {
       storageService.setToken(token);
       setSsoCookie(token);
     }
     storageService.setUser(userData);
     setUser(userData);
-    resetInactivityTimer();
-  }, [resetInactivityTimer]);
+  }, []);
 
   useEffect(() => {
     async function validateSession() {
@@ -149,7 +137,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       } finally {
         setIsLoading(false);
-        resetInactivityTimer();
       }
     }
 
@@ -166,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout, hasPermission }}>
+    <AuthContext.Provider value={{ user, sessionConfig, isAuthenticated: !!user, isLoading, login, logout, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

@@ -34,9 +34,9 @@ export default function LoginPage() {
                 password,
                 remember: rememberMe 
             });
-            const { token, user } = response.data;
+            const { token, user, sessionConfig } = response.data;
 
-            login(user, token, rememberMe);
+            login(user, token, rememberMe, sessionConfig);
             refreshApplications();
             navigate('/');
         } catch (err: any) {

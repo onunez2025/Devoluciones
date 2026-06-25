@@ -1,3 +1,8 @@
+export interface SessionConfig {
+  timeoutMinutes: number;
+  warningMinutes: number;
+}
+
 export interface User {
   id: string;
   username: string;
