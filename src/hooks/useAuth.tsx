@@ -53,6 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const logout = useCallback(() => {
+    const token = storageService.getToken();
+    if (token) {
+      apiClient.post('/auth/logout').catch(() => { /* token ya expirado o red caída — limpiar igual */ });
+    }
     setUser(null);
     setSessionConfig(null);
     localStorage.removeItem('session_config');

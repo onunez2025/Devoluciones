@@ -74,12 +74,18 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Auth rate limiter — starts with safe defaults, overwritten from EBM.AppSessionConfig at startup
+// keyGenerator: IP + username — cada usuario tiene su propio contador (evita que IP compartida de oficina bloquee a todos)
+const authKeyGenerator = (req: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+  const username = String(req.body?.username || '').toLowerCase().trim().substring(0, 50);
+  return `${req.ip}:${username}`;
+};
 let authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
+  keyGenerator: authKeyGenerator,
   message: { error: 'Demasiados intentos de inicio de sesión. Intenta más tarde.' },
   store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:auth:' }), // eslint-disable-line @typescript-eslint/no-explicit-any
 });
@@ -1389,6 +1395,7 @@ app.listen(port, () => {
       standardHeaders: true,
       legacyHeaders: false,
       skipSuccessfulRequests: true,
+      keyGenerator: authKeyGenerator,
       message: { error: `Demasiados intentos de inicio de sesión. Espera ${cfg.rateLimitWindowMinutes} minutos.` },
       store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:auth:' }), // eslint-disable-line @typescript-eslint/no-explicit-any
     });
