@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../hooks/useAuth';
+import { useAppConfig } from '../../context/AppConfigContext';
 import { SIATC_THEME } from '../../utils/siatc-theme';
 
 interface SidebarProps {
@@ -19,6 +20,8 @@ interface SidebarProps {
 
 export function Sidebar({ className, onNavigate, isEffectivelyExpanded = true }: SidebarProps) {
   const { user, logout } = useAuth();
+  const appConfig = useAppConfig();
+  const logoUrl = appConfig?.logoUrl || null;
   const showFull = isEffectivelyExpanded;
 
   const navItems = [
@@ -55,8 +58,14 @@ export function Sidebar({ className, onNavigate, isEffectivelyExpanded = true }:
       {/* Header / Brand */}
       {showFull ? (
         <div className="p-6 flex items-center gap-4 border-b border-border/50 bg-gradient-to-br from-primary/5 to-transparent">
-          <div className="w-12 h-12 flex items-center justify-center shrink-0 overflow-hidden transition-transform hover:scale-105 bg-primary rounded-xl shadow-premium p-2.5">
-            <Package className="w-full h-full text-white" />
+          <div className={cn(
+            "w-12 h-12 flex items-center justify-center shrink-0 overflow-hidden transition-transform hover:scale-105",
+            !logoUrl && "bg-primary rounded-xl shadow-premium p-2.5"
+          )}>
+            {logoUrl
+              ? <img src={logoUrl} alt="Devoluciones Logo" className="h-full w-full object-contain" />
+              : <Package className="w-full h-full text-white" />
+            }
           </div>
           <div className="flex flex-col min-w-0">
             <h1 className="font-bold text-base leading-none tracking-tight text-foreground uppercase truncate">Devoluciones</h1>
@@ -65,8 +74,14 @@ export function Sidebar({ className, onNavigate, isEffectivelyExpanded = true }:
         </div>
       ) : (
         <div className="px-1 py-4 flex flex-col items-center gap-2 border-b border-border/50 bg-gradient-to-br from-primary/5 to-transparent">
-          <div className="w-9 h-9 flex items-center justify-center shrink-0 bg-primary rounded-xl p-2">
-            <Package className="w-full h-full text-white" />
+          <div className={cn(
+            "w-9 h-9 flex items-center justify-center shrink-0 overflow-hidden",
+            !logoUrl && "bg-primary rounded-xl p-2"
+          )}>
+            {logoUrl
+              ? <img src={logoUrl} alt="Devoluciones Logo" className="h-full w-full object-contain" />
+              : <Package className="w-full h-full text-white" />
+            }
           </div>
         </div>
       )}
