@@ -21,7 +21,7 @@ interface SidebarProps {
 export function Sidebar({ className, onNavigate, isEffectivelyExpanded = true }: SidebarProps) {
   const { user, logout } = useAuth();
   const appConfig = useAppConfig();
-  const logoUrl = appConfig?.logoUrl || null;
+  const logoUrl = appConfig.applications.find(a => a.code?.toUpperCase() === 'DEV')?.logo_url || null;
   const showFull = isEffectivelyExpanded;
 
   const navItems = [
