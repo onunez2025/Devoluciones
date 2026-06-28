@@ -202,14 +202,14 @@ const DashboardPage = () => {
   return (
     <div className="flex-1 w-full flex flex-col gap-6 animate-in fade-in duration-700">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className={SIATC_THEME.LAYOUT.HEADER_WRAPPER}>
         <div>
-          <h1 className="text-2xl font-black uppercase tracking-tighter text-foreground leading-none">
-            Control de Devoluciones
-          </h1>
-          <p className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-1.5 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Sincronización en tiempo real activa
+          <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>Control de Devoluciones</h1>
+          <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>
+            <span className="inline-flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Sincronización en tiempo real activa
+            </span>
           </p>
         </div>
         
