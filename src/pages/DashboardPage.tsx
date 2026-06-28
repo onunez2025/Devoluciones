@@ -200,7 +200,7 @@ const DashboardPage = () => {
   ];
 
   return (
-    <div className="flex-1 w-full flex flex-col gap-6 animate-in fade-in duration-700">
+    <div className="flex-1 w-full flex flex-col gap-3 min-h-0 overflow-hidden animate-in fade-in duration-700">
       {/* Top Header */}
       <div className={SIATC_THEME.LAYOUT.HEADER_WRAPPER}>
         <div>
@@ -331,13 +331,13 @@ const DashboardPage = () => {
         </div>
 
         {/* High-Density Table / Mobile Cards */}
-        <div className="space-y-4">
+        <div className="flex-1 min-h-0 flex flex-col gap-2">
           {/* Desktop Table View */}
           <div className={cn(
-            "hidden md:block bg-card border border-cb-border shadow-cb-level-1 overflow-hidden",
+            "hidden md:flex md:flex-col flex-1 min-h-0 bg-card border border-cb-border shadow-cb-level-1 overflow-hidden",
             SIATC_THEME.TOKENS.MASTER_ROUNDNESS
           )}>
-            <div className="overflow-x-auto">
+            <div className="overflow-auto flex-1 min-h-0">
               <table className="w-full text-left border-collapse min-w-[1000px]">
                 <thead>
                   <tr className="sticky top-0 z-20 bg-card border-b border-cb-border shadow-sm">
