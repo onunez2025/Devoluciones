@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogIn, Lock, User, Loader2, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Lock, User, Loader2, Eye, EyeOff, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { useAppConfig } from '../context/AppConfigContext';
@@ -10,6 +11,7 @@ import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
 
 export default function LoginPage() {
+    const { t, i18n } = useTranslation();
     const { login } = useAuth();
     const { refreshApplications } = useAppConfig();
     const navigate = useNavigate();
@@ -29,10 +31,10 @@ export default function LoginPage() {
         const cleanUsername = username.trim().toLowerCase();
 
         try {
-            const response = await apiClient.post('/auth/login', { 
-                username: cleanUsername, 
+            const response = await apiClient.post('/auth/login', {
+                username: cleanUsername,
                 password,
-                remember: rememberMe 
+                remember: rememberMe
             });
             const { token, user, sessionConfig } = response.data;
 
@@ -41,10 +43,14 @@ export default function LoginPage() {
             navigate('/');
         } catch (err: any) {
             console.error('Login error:', err);
-            setError(err.response?.data?.message || err.response?.data?.error || 'Error al iniciar sesión. Verifique sus credenciales.');
+            setError(err.response?.data?.message || err.response?.data?.error || t('auth.errors.invalid'));
         } finally {
             setLoading(false);
         }
+    };
+
+    const toggleLanguage = () => {
+        i18n.changeLanguage(i18n.language === 'es' ? 'en' : 'es');
     };
 
     return (
@@ -90,6 +96,13 @@ export default function LoginPage() {
                 {/* Top Right Controls */}
                 <div className="absolute top-6 right-6 flex items-center gap-4">
                     <ThemeToggle />
+                    <button
+                        onClick={toggleLanguage}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-accent text-sm font-medium transition-colors cursor-pointer"
+                    >
+                        <Globe className="w-4 h-4" />
+                        {i18n.language === 'es' ? 'ES' : 'EN'}
+                    </button>
                 </div>
 
                 <motion.div 
@@ -99,9 +112,9 @@ export default function LoginPage() {
                     className="w-full max-w-md space-y-8"
                 >
                     <div className="text-center">
-                        <h2 className={SIATC_THEME.LOGIN_LAYOUT.TITLE}>¡Bienvenido a Devoluciones!</h2>
+                        <h2 className={SIATC_THEME.LOGIN_LAYOUT.TITLE}>{t('common.welcome')}</h2>
                         <p className={SIATC_THEME.LOGIN_LAYOUT.SUBTITLE}>
-                            Ingresa tus credenciales para acceder a la plataforma.
+                            {t('auth.subtitle')}
                         </p>
                     </div>
 
@@ -110,7 +123,7 @@ export default function LoginPage() {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium mb-1.5 ml-1">
-                                        Usuario
+                                        {t('auth.username')}
                                     </label>
                                     <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
@@ -130,7 +143,7 @@ export default function LoginPage() {
 
                                 <div>
                                     <label className="block text-sm font-medium mb-1.5 ml-1">
-                                        Contraseña
+                                        {t('auth.password')}
                                     </label>
                                     <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
@@ -157,20 +170,20 @@ export default function LoginPage() {
 
                             <div className="flex items-center justify-between text-sm">
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         checked={rememberMe}
                                         onChange={(e) => setRememberMe(e.target.checked)}
-                                        className="w-4 h-4 rounded border-cb-border text-primary focus:ring-primary" 
+                                        className="w-4 h-4 rounded border-cb-border text-primary focus:ring-primary"
                                     />
-                                    <span className="text-muted-foreground">Recordarme</span>
+                                    <span className="text-muted-foreground">{t('auth.rememberMe')}</span>
                                 </label>
                                 <button
                                     type="button"
-                                    onClick={() => setError('Por favor, contacta a tu administrador de sistemas para recuperar tu clave.')}
+                                    onClick={() => setError(t('auth.forgotPasswordMessage'))}
                                     className="font-medium text-primary hover:text-primary/80 transition-colors bg-transparent border-none p-0 cursor-pointer text-xs"
                                 >
-                                    ¿Olvidaste tu contraseña?
+                                    {t('auth.forgotPassword')}
                                 </button>
                             </div>
 
@@ -195,11 +208,11 @@ export default function LoginPage() {
                                 {loading ? (
                                     <>
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span>Iniciando sesión...</span>
+                                        <span>{t('common.loading')}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <span>Iniciar Sesión</span>
+                                        <span>{t('auth.loginButton')}</span>
                                         <LogIn className="w-4 h-4" />
                                     </>
                                 )}

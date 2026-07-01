@@ -5,8 +5,10 @@ import {
   LogOut,
   ChevronRight,
   ClipboardList,
-  Package
+  Package,
+  Globe
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppConfig } from '../../context/AppConfigContext';
@@ -19,10 +21,15 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className, onNavigate, isEffectivelyExpanded = true }: SidebarProps) {
+  const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const appConfig = useAppConfig();
   const logoUrl = appConfig.applications.find(a => a.code?.toUpperCase() === 'DEV')?.logo_url || null;
   const showFull = isEffectivelyExpanded;
+
+  const toggleLanguage = () => {
+    i18n.changeLanguage(i18n.language === 'es' ? 'en' : 'es');
+  };
 
   const navItems = [
     {
@@ -139,24 +146,42 @@ export function Sidebar({ className, onNavigate, isEffectivelyExpanded = true }:
       {/* Footer */}
       <div className={cn(
         "border-t border-border/50 bg-muted/20 shrink-0",
-        showFull ? 'p-4 space-y-3' : 'p-2 flex flex-col items-center'
+        showFull ? 'p-4 space-y-2' : 'p-2 flex flex-col items-center gap-2'
       )}>
         {showFull ? (
-          <button
-            onClick={logout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-rose-500 hover:bg-rose-50 hover:text-white rounded-2xl transition-all shadow-rose-500/10 hover:shadow-lg uppercase tracking-[0.2em] cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            Cerrar Sesión
-          </button>
+          <>
+            <button
+              onClick={toggleLanguage}
+              className="group/lang w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
+            >
+              <Globe className="w-4 h-4 transition-transform duration-300 group-hover/lang:rotate-12" />
+              {i18n.language === 'es' ? 'Español' : 'English'}
+            </button>
+            <button
+              onClick={logout}
+              className="w-full flex items-center gap-3 px-4 py-3 text-xs font-black text-rose-500 hover:bg-rose-50 hover:text-white rounded-2xl transition-all shadow-rose-500/10 hover:shadow-lg uppercase tracking-[0.2em] cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              {t('common.logout')}
+            </button>
+          </>
         ) : (
-          <button
-            onClick={logout}
-            title="Cerrar Sesión"
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <>
+            <button
+              onClick={toggleLanguage}
+              title={i18n.language === 'es' ? 'Español' : 'English'}
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground transition-all"
+            >
+              <Globe className="w-4 h-4" />
+            </button>
+            <button
+              onClick={logout}
+              title={t('common.logout')}
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </>
         )}
       </div>
     </div>
