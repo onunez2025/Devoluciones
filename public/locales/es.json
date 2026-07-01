@@ -2,7 +2,24 @@
   "common": {
     "welcome": "¡Bienvenido a Devoluciones!",
     "logout": "Cerrar Sesión",
-    "loading": "Iniciando sesión..."
+    "loading": "Iniciando sesión...",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "save": "Guardar Cambios",
+    "edit": "Editar",
+    "na": "N/A",
+    "noSerial": "S/N Registrada",
+    "noGuide": "SIN GUÍA",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "selectOption": "Seleccionar...",
+    "actions": "ACCIONES",
+    "refresh": "Actualizar",
+    "validate": "Validar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "noResults": "Sin resultados",
+    "noResultsHint": "Intente cambiar los filtros de búsqueda"
   },
   "auth": {
     "subtitle": "Ingresa tus credenciales para acceder a la plataforma.",
@@ -14,6 +31,239 @@
     "loginButton": "Iniciar Sesión",
     "errors": {
       "invalid": "Error al iniciar sesión. Verifique sus credenciales."
+    }
+  },
+  "dashboard": {
+    "title": "Control de Devoluciones",
+    "subtitle": "Sincronización en tiempo real activa",
+    "bulkUpload": "Carga Masiva",
+    "newDevolucion": "Nueva Devolución",
+    "stats": {
+      "total": "Total",
+      "today": "Hoy",
+      "pending": "Pendientes",
+      "inProcess": "En Proceso",
+      "completed": "Completados",
+      "rejected": "Rechazados",
+      "noDiagnosis": "Sin Diagnóstico",
+      "live": "LIVE"
+    },
+    "filter": {
+      "search": "Buscar por Ticket, Serie, ID...",
+      "period": "Últimos 30 días"
+    },
+    "table": {
+      "ticket": "ID TICKET",
+      "equipment": "EQUIPO / SERIE",
+      "guide": "GUÍA REMISIÓN",
+      "date": "FECHA INGRESO",
+      "status": "ESTADO SAP",
+      "actions": "ACCIONES",
+      "validated": "Validado",
+      "history": "Historial",
+      "zlabel": "ZLabel",
+      "print": "Imprimir",
+      "editTitle": "Editar",
+      "viewDetails": "Ver Detalles",
+      "downloadZLabel": "Descargar para ZLabel Designer",
+      "printBluetooth": "Imprimir vía Bluetooth"
+    },
+    "mobile": {
+      "equipment": "Equipo / Serie",
+      "guide": "Guía Remisión"
+    },
+    "pagination": {
+      "showing": "Mostrando {{shown}} de {{total}} ingresos"
+    }
+  },
+  "public": {
+    "back": "Atrás",
+    "printLabel": "Imprimir Etiqueta (ZLabel)",
+    "publicQuery": "Consulta Pública",
+    "activeEquipment": "Equipo Activo",
+    "loading": {
+      "sap": "Sincronizando con SAP C4C",
+      "wait": "Esto puede tomar unos segundos..."
+    },
+    "error": {
+      "title": "Error de Conexión",
+      "retry": "Reintentar Consulta"
+    },
+    "section": {
+      "reports": "Informes Técnicos Cerrados ({{count}})"
+    },
+    "empty": {
+      "title": "Sin Historial Técnico",
+      "subtitle": "No se encontraron registros de reparaciones o diagnósticos finalizados."
+    },
+    "card": {
+      "closed": "Cerrado",
+      "detail": "Detalle Técnico"
+    },
+    "modal": {
+      "title": "Informe Técnico Digital",
+      "defaultSubject": "Mantenimiento de Equipo",
+      "visitDate": "Fecha de Visita",
+      "technician": "Técnico Asignado",
+      "client": "Cliente",
+      "product": "Producto / Equipo",
+      "serviceType": "Tipo de Servicio",
+      "visitStatus": "Estado de la Visita",
+      "statusDone": "Trabajo Realizado con Éxito",
+      "statusVisited": "Visita Realizada (Sin intervención técnica)",
+      "noDetails": "Sin detalles registrados",
+      "followUp": "Requerimiento Posterior",
+      "newVisit": "Nueva visita solicitada: {{reason}}",
+      "noFollowUp": "No requiere seguimiento inmediato",
+      "techComments": "Comentarios del Técnico",
+      "notSpecified": "No especificado",
+      "pending": "Pendiente",
+      "sapReport": "Intentar abrir informe SAP original",
+      "close": "Cerrar"
+    }
+  },
+  "users": {
+    "title": "Gestión de Usuarios",
+    "subtitle": "Administra los accesos y perfiles de la plataforma",
+    "newUser": "Nuevo Usuario",
+    "search": "Buscar por nombre, usuario o email...",
+    "count": "{{count}} Usuarios",
+    "table": {
+      "user": "Usuario",
+      "roleManagement": "Rol / Gerencia",
+      "apps": "Aplicaciones",
+      "status": "Estado"
+    },
+    "loading": "Cargando usuarios...",
+    "empty": "No se encontraron usuarios",
+    "modal": {
+      "editTitle": "Editar Usuario",
+      "newTitle": "Nuevo Usuario",
+      "fullName": "Nombre Completo",
+      "username": "Usuario",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "(Dejar en blanco para mantener)",
+      "role": "Rol",
+      "management": "Gerencia",
+      "isActive": "Usuario Activo",
+      "saveChanges": "Guardar Cambios",
+      "createUser": "Crear Usuario"
+    },
+    "toast": {
+      "loadError": "Error al cargar datos",
+      "updated": "Usuario actualizado",
+      "created": "Usuario creado",
+      "saveError": "Error al guardar usuario"
+    }
+  },
+  "roles": {
+    "title": "Roles y Permisos",
+    "subtitle": "Configura los niveles de acceso por rol de usuario",
+    "list": "Lista de Roles",
+    "note": "Los permisos se aplican inmediatamente al rol seleccionado. El permiso ADMIN otorga acceso total a todas las funciones.",
+    "matrix": "Matriz de Permisos",
+    "saving": "Guardando...",
+    "saveChanges": "Guardar Cambios",
+    "groups": {
+      "Tablero": "Tablero",
+      "Devoluciones": "Devoluciones",
+      "Configuración": "Configuración",
+      "Administrador": "Administrador"
+    },
+    "toast": {
+      "rolesError": "Error al cargar roles",
+      "permsError": "Error al cargar permisos",
+      "permsSaved": "Permisos guardados correctamente",
+      "saveError": "Error al guardar permisos"
+    }
+  },
+  "devolucion": {
+    "detail": {
+      "title": "Detalle de Devolución",
+      "infoSection": "Información General",
+      "registryDate": "Fecha de Registro",
+      "idEquipo": "ID Equipo (FSM)",
+      "serial": "Número de Serie",
+      "guide": "Guía de Remisión",
+      "client": "Cliente",
+      "product": "Producto",
+      "noSerial": "Sin registro",
+      "observations": "Observaciones",
+      "noObservations": "Sin observaciones adicionales",
+      "techComment": "Comentario del Técnico",
+      "photo": "Evidencia Fotográfica",
+      "noPhoto": "Sin evidencia visual",
+      "sapReport": "Informe Técnico",
+      "printLabel": "Imprimir Etiqueta",
+      "printing": "Imprimiendo...",
+      "close": "Cerrar Detalle"
+    },
+    "new": {
+      "title": "Registrar Nueva Devolución",
+      "editTitle": "Editar Devolución",
+      "successTitle": "¡Acción Completada!",
+      "subtitle": "Sistema de Control de Equipos Retornados",
+      "successSubtitleUpdated": "El registro se ha actualizado correctamente",
+      "successSubtitleSynced": "El registro se ha sincronizado correctamente",
+      "ticketLabel": "Identificación de Ticket (FSM)",
+      "ticketPlaceholder": "Ingrese número de ticket sap...",
+      "equipmentFound": "Equipo Identificado",
+      "existingRecord": "Registro Existente",
+      "operativeInSap": "Operativo en SAP",
+      "client": "Cliente",
+      "product": "Producto",
+      "techComment": "Comentario del técnico",
+      "guide": "Guía de Remisión",
+      "guidePlaceholder": "N° Guía...",
+      "sapHint": "✓ Sugerido por SAP (Validar con guía física)",
+      "manualHint": "Ingrese el folio manualmente",
+      "serial": "Número de Serie",
+      "serialPlaceholder": "S/N del equipo...",
+      "observations": "Diagnóstico Preliminar / Observaciones",
+      "observationsPlaceholder": "Describa el estado funcional del equipo...",
+      "photo": "Evidencia Fotográfica",
+      "camera": "Usar Cámara",
+      "cameraSub": "Tomar foto ahora",
+      "gallery": "Abrir Galería",
+      "gallerySub": "Elegir archivo",
+      "photoLoaded": "Evidencia Cargada Correctamente",
+      "successMain": "Ingreso Exitoso",
+      "successSub": "El equipo ha sido registrado en la base de datos de devoluciones corporativas.",
+      "printZebra": "Imprimir Etiqueta Zebra",
+      "finish": "Finalizar sesión",
+      "confirmRegister": "Confirmar Registro",
+      "updateChanges": "Actualizar Cambios",
+      "errors": {
+        "notFound": "No se pudo encontrar el equipo o el ticket. Verifique el número.",
+        "noEquipment": "Debe identificar un equipo válido antes de registrar.",
+        "imageTooLarge": "La imagen es demasiado grande. Máximo 10MB.",
+        "uploadFailed": "No se pudo subir la imagen a Azure. Intente nuevamente.",
+        "registerFailed": "Error al registrar la devolución.",
+        "updateFailed": "Error al actualizar la devolución."
+      }
+    }
+  },
+  "batch": {
+    "title": "Carga Masiva de Devoluciones",
+    "successTitle": "¡Registro Masivo Completado!",
+    "subtitle": "Seleccione técnico y fecha para importar tickets",
+    "successSubtitle": "Todos los tickets seleccionados han sido ingresados",
+    "dateLabel": "Fecha de Visita",
+    "techLabel": "Técnico Responsable",
+    "techPlaceholder": "Seleccione un técnico...",
+    "searchButton": "Buscar Tickets Pendientes",
+    "selectAll": "Seleccionar Todo ({{count}})",
+    "selectedCount": "{{count}} seleccionados",
+    "successMain": "¡Todo Listo!",
+    "successSub": "Se registraron {{count}} devoluciones y se descargó el archivo ZLabel.xlsx automáticamente.",
+    "zlabelNote": "Ya puedes importar el archivo descargado en la aplicación ZLabel Designer de tu celular para imprimir las etiquetas.",
+    "closeWindow": "Cerrar Ventana",
+    "registerSelected": "Registrar Seleccionados ({{count}})",
+    "errors": {
+      "noTickets": "No se encontraron tickets pendientes para este técnico en la fecha seleccionada.",
+      "searchFailed": "Error al buscar tickets.",
+      "batchFailed": "Error al realizar el registro masivo."
     }
   }
 }

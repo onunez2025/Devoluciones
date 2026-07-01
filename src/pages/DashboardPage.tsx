@@ -2,11 +2,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExcelJS from 'exceljs';
-import { 
-  Plus, 
-  Search, 
-  RefreshCcw, 
-  Calendar, 
+import {
+  Plus,
+  Search,
+  RefreshCcw,
+  Calendar,
   SearchX,
   History,
   Package,
@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
+import { useTranslation } from 'react-i18next';
 import NewDevolucionModal from '../components/NewDevolucionModal';
 import BatchDevolucionModal from '../components/BatchDevolucionModal';
 import DevolucionDetailModal from '../components/DevolucionDetailModal';
@@ -35,6 +36,7 @@ import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
 
 const DashboardPage = () => {
+  const { t } = useTranslation();
   const [devoluciones, setDevoluciones] = useState<Devolucion[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,7 +47,7 @@ const DashboardPage = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set<string>());
   const [isPrinting, setIsPrinting] = useState(false);
-  
+
   // Pagination & Search state
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
@@ -114,7 +116,7 @@ const DashboardPage = () => {
   const downloadAsImage = (id: string) => {
     const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
     if (!canvas) return;
-    
+
     const link = document.createElement('a');
     link.download = `etiqueta-${id}.png`;
     link.href = canvas.toDataURL('image/png');
@@ -131,7 +133,6 @@ const DashboardPage = () => {
     try {
       const zpl = generateZPL(dev);
       await bluetoothPrinter.print(zpl);
-      // Opcional: Feedback de éxito
     } catch (error: any) {
       console.error('Error al imprimir:', error);
       alert(`Error al imprimir: ${error.message}`);
@@ -190,13 +191,13 @@ const DashboardPage = () => {
 
 
   const metrics = [
-    { label: 'Total', value: stats.total, icon: Package, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Hoy', value: stats.today, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { label: 'Pendientes', value: stats.pending || 0, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-    { label: 'En Proceso', value: stats.inProcess || 0, icon: RefreshCcw, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Completados', value: stats.completed || 0, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-600/10' },
-    { label: 'Rechazados', value: stats.rejected || 0, icon: Ban, color: 'text-red-500', bg: 'bg-red-500/10' },
-    { label: 'Sin Diagnóstico', value: stats.noDiagnosis, icon: AlertCircle, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: t('dashboard.stats.total'), value: stats.total, icon: Package, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: t('dashboard.stats.today'), value: stats.today, icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: t('dashboard.stats.pending'), value: stats.pending || 0, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { label: t('dashboard.stats.inProcess'), value: stats.inProcess || 0, icon: RefreshCcw, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: t('dashboard.stats.completed'), value: stats.completed || 0, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-600/10' },
+    { label: t('dashboard.stats.rejected'), value: stats.rejected || 0, icon: Ban, color: 'text-red-500', bg: 'bg-red-500/10' },
+    { label: t('dashboard.stats.noDiagnosis'), value: stats.noDiagnosis, icon: AlertCircle, color: 'text-purple-500', bg: 'bg-purple-500/10' },
   ];
 
   return (
@@ -204,17 +205,17 @@ const DashboardPage = () => {
       {/* Top Header */}
       <div className={SIATC_THEME.LAYOUT.HEADER_WRAPPER}>
         <div>
-          <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>Control de Devoluciones</h1>
+          <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('dashboard.title')}</h1>
           <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>
             <span className="inline-flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Sincronización en tiempo real activa
+              {t('dashboard.subtitle')}
             </span>
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => setIsBatchModalOpen(true)}
             className={cn(
               "h-10 px-4 bg-muted/50 border border-border/50 text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2",
@@ -222,9 +223,9 @@ const DashboardPage = () => {
             )}
           >
             <ClipboardList className="w-3.5 h-3.5" />
-            Carga Masiva
+            {t('dashboard.bulkUpload')}
           </button>
-          <button 
+          <button
             onClick={() => {
               setDevolucionToEdit(null);
               setIsModalOpen(true);
@@ -235,7 +236,7 @@ const DashboardPage = () => {
             )}
           >
             <Plus className="w-4 h-4" />
-            Nueva Devolución
+            {t('dashboard.newDevolucion')}
           </button>
         </div>
       </div>
@@ -243,7 +244,7 @@ const DashboardPage = () => {
       {/* Metrics High-Density Grid */}
       <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-7 gap-3">
         {metrics.map((stat, i) => (
-          <motion.div 
+          <motion.div
             key={i}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -257,7 +258,7 @@ const DashboardPage = () => {
               <div className={cn("p-2", stat.bg, stat.color, SIATC_THEME.TOKENS.RADIUS.BUTTON, "group-hover:scale-110 transition-transform")}>
                 <stat.icon size={16} />
               </div>
-              <span className="text-[9px] font-black tracking-widest text-muted-foreground/30 uppercase">LIVE</span>
+              <span className="text-[9px] font-black tracking-widest text-muted-foreground/30 uppercase">{t('dashboard.stats.live')}</span>
             </div>
             <div>
               <p className="text-[20px] font-black text-foreground leading-none tracking-tighter">
@@ -278,9 +279,9 @@ const DashboardPage = () => {
       )}>
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
-          <input 
+          <input
             type="text"
-            placeholder="Buscar por Ticket, Serie, ID..."
+            placeholder={t('dashboard.filter.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={cn(
@@ -289,19 +290,19 @@ const DashboardPage = () => {
             )}
           />
         </div>
-          
+
           <div className="flex flex-wrap items-center gap-2">
             <div className="h-10 flex flex-1 md:flex-none items-center px-3 bg-muted/40 rounded-xl border border-border/50">
               <Calendar className="w-3.5 h-3.5 text-muted-foreground/60 mr-2" />
-              <span className="text-[10px] font-bold uppercase text-muted-foreground/80 whitespace-nowrap">Últimos 30 días</span>
+              <span className="text-[10px] font-bold uppercase text-muted-foreground/80 whitespace-nowrap">{t('dashboard.filter.period')}</span>
             </div>
-            
+
             <div className="flex gap-2">
               <button className="h-10 w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all">
                 <Filter className="w-4 h-4 text-muted-foreground/60" />
               </button>
 
-              <button 
+              <button
                 onClick={() => {
                   fetchDevoluciones();
                   fetchStats();
@@ -309,7 +310,7 @@ const DashboardPage = () => {
                 className="h-10 px-4 flex items-center gap-2 bg-primary/5 border border-primary/10 text-primary rounded-xl hover:bg-primary/10 transition-all"
               >
                 <RefreshCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest px-1">Actualizar</span>
+                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest px-1">{t('common.refresh')}</span>
               </button>
             </div>
 
@@ -342,25 +343,25 @@ const DashboardPage = () => {
                 <thead>
                   <tr className="sticky top-0 z-20 bg-card border-b border-cb-border shadow-sm">
                     <th className="px-6 py-4 w-10">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={selectedTickets.size === devoluciones.length && devoluciones.length > 0}
                         onChange={toggleSelectAll}
                         className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all"
                       />
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">ID TICKET</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">EQUIPO / SERIE</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">GUÍA REMISIÓN</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">FECHA INGRESO</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">ESTADO SAP</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right text-muted-foreground opacity-60">ACCIONES</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.ticket')}</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.equipment')}</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.guide')}</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.date')}</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.status')}</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right text-muted-foreground opacity-60">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
                   <AnimatePresence mode="popLayout">
                     {devoluciones.map((dev, idx) => (
-                      <motion.tr 
+                      <motion.tr
                         key={`${dev.Ticket}-${idx}`}
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -373,8 +374,8 @@ const DashboardPage = () => {
                         onClick={() => toggleSelect(String(dev.Ticket))}
                       >
                         <td className="px-6 py-3">
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             checked={selectedTickets.has(String(dev.Ticket))}
                             onChange={() => {}} // Handle via row click
                             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all"
@@ -390,12 +391,12 @@ const DashboardPage = () => {
                         <td className="px-6 py-3 font-sans text-cb-text-primary">
                           <div className="flex flex-col">
                             <span className="text-[11px] font-black text-foreground uppercase">{dev.IdEquipo}</span>
-                            <span className="text-[9px] font-bold text-muted-foreground/60 font-mono">{dev.N_Serie || 'S/N Registrada'}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground/60 font-mono">{dev.N_Serie || t('common.noSerial')}</span>
                           </div>
                         </td>
                         <td className="px-6 py-3 font-sans text-cb-text-primary">
                           <span className="text-[10px] font-bold text-muted-foreground/80 px-2 py-1 bg-muted/50 rounded-lg border border-border/30">
-                            {dev.N_Guia || 'SIN GUÍA'}
+                            {dev.N_Guia || t('common.noGuide')}
                           </span>
                         </td>
                         <td className="px-6 py-3 font-sans text-cb-text-primary">
@@ -409,20 +410,20 @@ const DashboardPage = () => {
                         <td className="px-6 py-3 font-sans text-cb-text-primary">
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/10">
                             <CheckCircle2 className="w-3 h-3" />
-                            <span className="text-[9px] font-black uppercase tracking-tighter">Validado</span>
+                            <span className="text-[9px] font-black uppercase tracking-tighter">{t('dashboard.table.validated')}</span>
                           </div>
                         </td>
                         <td className="px-6 py-3 font-sans text-cb-text-primary">
                           <div className="flex items-center justify-end gap-1">
-                            <Link 
+                            <Link
                               to={`/public/equipment/${dev.IdEquipo}`}
                               className="p-2 hover:bg-primary/10 text-muted-foreground/40 hover:text-primary rounded-xl transition-all"
-                              title="Historial"
+                              title={t('dashboard.table.history')}
                               onClick={(e) => e.stopPropagation()}
                             >
                               <History size={14} strokeWidth={2.5} />
                             </Link>
-                             <button 
+                             <button
                                onClick={(e) => {
                                  e.stopPropagation();
                                  const publicUrl = `https://${window.location.host}/public/equipment/${dev.Ticket}`;
@@ -430,42 +431,42 @@ const DashboardPage = () => {
                                  setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                                 }}
                                className="px-3 py-1.5 bg-orange-500/10 text-orange-600 hover:bg-orange-500 hover:text-white rounded-lg transition-all flex items-center gap-2 border border-orange-500/20 shadow-sm"
-                               title="Descargar para ZLabel Designer"
+                               title={t('dashboard.table.downloadZLabel')}
                              >
                                <DownloadCloud size={13} strokeWidth={2.5} />
-                               <span className="text-[10px] font-black uppercase tracking-tighter">ZLabel</span>
+                               <span className="text-[10px] font-black uppercase tracking-tighter">{t('dashboard.table.zlabel')}</span>
                              </button>
-                             <button 
+                             <button
                                onClick={(e) => {
                                  e.stopPropagation();
                                  handleBluetoothPrint(dev);
                                }}
                                disabled={isPrinting}
                                className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-all flex items-center gap-2 border border-primary/20 shadow-sm disabled:opacity-50"
-                               title="Imprimir vía Bluetooth"
+                               title={t('dashboard.table.printBluetooth')}
                              >
                                <RefreshCcw size={13} strokeWidth={2.5} className={isPrinting ? 'animate-spin' : ''} />
-                               <span className="text-[10px] font-black uppercase tracking-tighter">Imprimir</span>
+                               <span className="text-[10px] font-black uppercase tracking-tighter">{t('dashboard.table.print')}</span>
                              </button>
-                            <button 
+                            <button
                               className="p-2 hover:bg-amber-500/10 text-muted-foreground/40 hover:text-amber-500 rounded-xl transition-all"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDevolucionToEdit(dev);
                                 setIsModalOpen(true);
                               }}
-                              title="Editar"
+                              title={t('common.edit')}
                             >
                               <Edit size={15} strokeWidth={2.5} />
                             </button>
-                            <button 
+                            <button
                               className="p-2 hover:bg-primary/10 text-muted-foreground/40 hover:text-primary rounded-xl transition-all"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedDevolucion(dev);
                                 setIsDetailModalOpen(true);
                               }}
-                              title="Ver Detalles"
+                              title={t('dashboard.table.viewDetails')}
                             >
                               <Eye size={15} strokeWidth={2.5} />
                             </button>
@@ -497,8 +498,8 @@ const DashboardPage = () => {
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={selectedTickets.has(String(dev.Ticket))}
                         onChange={() => {}} // Handled by card click
                         className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all"
@@ -515,19 +516,19 @@ const DashboardPage = () => {
                       </div>
                     </div>
                     <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/10 text-[9px] font-black uppercase">
-                      Validado
+                      {t('dashboard.table.validated')}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">Equipo / Serie</p>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">{t('dashboard.mobile.equipment')}</p>
                       <p className="text-[11px] font-bold text-foreground uppercase">{dev.IdEquipo}</p>
-                      <p className="text-[9px] font-bold text-muted-foreground/60 font-mono truncate">{dev.N_Serie || 'S/N Registrada'}</p>
+                      <p className="text-[9px] font-bold text-muted-foreground/60 font-mono truncate">{dev.N_Serie || t('common.noSerial')}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">Guía Remisión</p>
-                      <p className="text-[11px] font-bold text-foreground">{dev.N_Guia || 'SIN GUÍA'}</p>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">{t('dashboard.mobile.guide')}</p>
+                      <p className="text-[11px] font-bold text-foreground">{dev.N_Guia || t('common.noGuide')}</p>
                     </div>
                   </div>
 
@@ -540,33 +541,33 @@ const DashboardPage = () => {
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedDevolucion(dev);
                             setIsDetailModalOpen(true);
                           }}
                           className="w-9 h-9 flex items-center justify-center bg-primary/10 text-primary rounded-xl"
-                          title="Ver Detalles"
+                          title={t('dashboard.table.viewDetails')}
                         >
                           <Eye size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setDevolucionToEdit(dev);
                             setIsModalOpen(true);
                           }}
                           className="w-9 h-9 flex items-center justify-center bg-amber-500/10 text-amber-500 rounded-xl"
-                          title="Editar"
+                          title={t('common.edit')}
                         >
                           <Edit size={16} />
                         </button>
-                        <Link 
+                        <Link
                           to={`/public/equipment/${dev.IdEquipo}`}
                           className="w-9 h-9 flex items-center justify-center bg-primary/5 text-primary rounded-xl"
                           onClick={(e) => e.stopPropagation()}
-                          title="Historial"
+                          title={t('dashboard.table.history')}
                         >
                           <History size={16} />
                         </Link>
@@ -574,7 +575,7 @@ const DashboardPage = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           const publicUrl = `https://${window.location.host}/public/equipment/${dev.Ticket}`;
@@ -582,12 +583,12 @@ const DashboardPage = () => {
                           setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                         }}
                         className="flex items-center justify-center gap-2 py-2.5 bg-orange-500 text-white rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-orange-500/20 active:scale-95 transition-all uppercase"
-                        title="Descargar Imagen"
+                        title={t('dashboard.table.downloadZLabel')}
                       >
                         <DownloadCloud size={14} />
-                        ZLabel
+                        {t('dashboard.table.zlabel')}
                       </button>
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleBluetoothPrint(dev);
@@ -596,7 +597,7 @@ const DashboardPage = () => {
                         className="flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all uppercase disabled:opacity-50"
                       >
                         <RefreshCcw size={14} className={isPrinting ? 'animate-spin' : ''} />
-                        Print
+                        {t('dashboard.table.print')}
                       </button>
                     </div>
                   </div>
@@ -615,8 +616,8 @@ const DashboardPage = () => {
                   <SearchX size={40} className="text-muted-foreground/20" />
                 </div>
                 <div className="text-center">
-                  <p className="text-[13px] font-black uppercase tracking-widest text-muted-foreground/40">Sin resultados</p>
-                  <p className="text-[10px] font-bold text-muted-foreground/20 mt-1 italic">Intente cambiar los filtros de búsqueda</p>
+                  <p className="text-[13px] font-black uppercase tracking-widest text-muted-foreground/40">{t('common.noResults')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground/20 mt-1 italic">{t('common.noResultsHint')}</p>
                 </div>
               </div>
             </div>
@@ -627,10 +628,10 @@ const DashboardPage = () => {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-2">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-              Mostrando <span className="text-foreground">{devoluciones.length}</span> de <span className="text-foreground">{totalRecords}</span> ingresos
+              {t('dashboard.pagination.showing', { shown: devoluciones.length, total: totalRecords })}
             </p>
             <div className="flex items-center gap-1">
-              <button 
+              <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1 || loading}
                 className={cn(
@@ -638,7 +639,7 @@ const DashboardPage = () => {
                   SIATC_THEME.TOKENS.RADIUS.BUTTON
                 )}
               >
-                Anterior
+                {t('common.previous')}
               </button>
               <div className={cn(
                 "h-9 px-4 flex items-center bg-primary/5 border border-primary/10 text-[10px] font-black text-primary",
@@ -646,7 +647,7 @@ const DashboardPage = () => {
               )}>
                 {page} / {totalPages}
               </div>
-              <button 
+              <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages || loading}
                 className={cn(
@@ -654,7 +655,7 @@ const DashboardPage = () => {
                   SIATC_THEME.TOKENS.RADIUS.BUTTON
                 )}
               >
-                Siguiente
+                {t('common.next')}
               </button>
             </div>
           </div>
@@ -662,35 +663,35 @@ const DashboardPage = () => {
 
       <AnimatePresence>
         {isBatchModalOpen && (
-          <BatchDevolucionModal 
-            onClose={() => setIsBatchModalOpen(false)} 
+          <BatchDevolucionModal
+            onClose={() => setIsBatchModalOpen(false)}
             onSuccess={() => {
               fetchDevoluciones();
               fetchStats();
-            }} 
+            }}
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {isModalOpen && (
-          <NewDevolucionModal 
+          <NewDevolucionModal
             devolucion={devolucionToEdit}
             onClose={() => {
               setIsModalOpen(false);
               setDevolucionToEdit(null);
-            }} 
+            }}
             onSuccess={() => {
               fetchDevoluciones();
               fetchStats();
-            }} 
+            }}
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {isDetailModalOpen && selectedDevolucion && (
-          <DevolucionDetailModal 
+          <DevolucionDetailModal
             devolucion={selectedDevolucion}
             onClose={() => setIsDetailModalOpen(false)}
           />
@@ -725,19 +726,19 @@ const DashboardPage = () => {
       {/* Canvas oculto para generación de imagen */}
       <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
         {printData && (
-          <div id="capture-area" style={{ 
-            width: '600px', 
-            height: '400px', 
-            background: 'white', 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div id="capture-area" style={{
+            width: '600px',
+            height: '400px',
+            background: 'white',
+            display: 'flex',
+            alignItems: 'center',
             padding: '40px',
             color: 'black'
           }}>
-            <QRCodeCanvas 
+            <QRCodeCanvas
               id="qr-canvas"
-              value={printData.url} 
-              size={320} 
+              value={printData.url}
+              size={320}
               level="H"
               includeMargin={true}
             />

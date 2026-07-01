@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, UserPlus, Search, Edit2, Shield, 
+import {
+  Users, UserPlus, Search, Edit2, Shield,
   CheckCircle, XCircle, Briefcase, Filter
 } from 'lucide-react';
 import { usersService, User } from '../../services/usersService';
 import { rolesService, Role } from '../../services/rolesService';
 import { managementsService, Management } from '../../services/managementsService';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { SIATC_THEME } from '../../utils/siatc-theme';
 import { cn } from '../../utils/cn';
 
 const UsersPage: React.FC = () => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [managements, setManagements] = useState<Management[]>([]);
@@ -48,7 +50,7 @@ const UsersPage: React.FC = () => {
       setRoles(rolesData);
       setManagements(managementsData);
     } catch (error) {
-      toast.error('Error al cargar datos');
+      toast.error(t('users.toast.loadError'));
     } finally {
       setLoading(false);
     }
@@ -90,19 +92,19 @@ const UsersPage: React.FC = () => {
     try {
       if (isEditing && selectedUser) {
         await usersService.updateUser(selectedUser.Id!, formData);
-        toast.success('Usuario actualizado');
+        toast.success(t('users.toast.updated'));
       } else {
         await usersService.createUser(formData);
-        toast.success('Usuario creado');
+        toast.success(t('users.toast.created'));
       }
       setShowModal(false);
       fetchData();
     } catch (error) {
-      toast.error('Error al guardar usuario');
+      toast.error(t('users.toast.saveError'));
     }
   };
 
-  const filteredUsers = users.filter(user => 
+  const filteredUsers = users.filter(user =>
     user.FullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.Username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.Email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -114,16 +116,16 @@ const UsersPage: React.FC = () => {
         <div>
           <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>
             <Users className="w-6 h-6 text-primary inline-block mr-2" />
-            Gestión de Usuarios
+            {t('users.title')}
           </h1>
-          <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>Administra los accesos y perfiles de la plataforma</p>
+          <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('users.subtitle')}</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
           className={SIATC_THEME.COMPONENTS.BUTTON_PRIMARY}
         >
           <UserPlus className="w-4 h-4 mr-1" />
-          Nuevo Usuario
+          {t('users.newUser')}
         </button>
       </div>
 
@@ -136,7 +138,7 @@ const UsersPage: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 w-5 h-5" />
             <input
               type="text"
-              placeholder="Buscar por nombre, usuario o email..."
+              placeholder={t('users.search')}
               className={SIATC_THEME.COMPONENTS.INPUT}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -144,7 +146,7 @@ const UsersPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 px-3 py-2 bg-background border border-cb-border rounded-lg text-cb-text-secondary text-xs font-bold uppercase tracking-wider">
             <Filter className="w-3.5 h-3.5" />
-            <span>{filteredUsers.length} Usuarios</span>
+            <span>{t('users.count', { count: filteredUsers.length })}</span>
           </div>
         </div>
 
@@ -152,24 +154,24 @@ const UsersPage: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr className="sticky top-0 z-20 bg-card border-b border-cb-border shadow-sm">
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Usuario</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Rol / Gerencia</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Aplicaciones</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Estado</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right text-muted-foreground opacity-60">Acciones</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('users.table.user')}</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('users.table.roleManagement')}</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('users.table.apps')}</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('users.table.status')}</th>
+                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right text-muted-foreground opacity-60">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
               {loading ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground/50">
-                    Cargando usuarios...
+                    {t('users.loading')}
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground/50">
-                    No se encontraron usuarios
+                    {t('users.empty')}
                   </td>
                 </tr>
               ) : (
@@ -210,11 +212,11 @@ const UsersPage: React.FC = () => {
                     <td className="px-6 py-4 font-sans text-cb-text-primary">
                       {user.IsActive ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/10 text-emerald-600 text-xs font-medium border border-green-500/20">
-                          <CheckCircle className="w-3 h-3" /> Activo
+                          <CheckCircle className="w-3 h-3" /> {t('common.active')}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/10 text-red-600 text-xs font-medium border border-red-500/20">
-                          <XCircle className="w-3 h-3" /> Inactivo
+                          <XCircle className="w-3 h-3" /> {t('common.inactive')}
                         </span>
                       )}
                     </td>
@@ -222,7 +224,7 @@ const UsersPage: React.FC = () => {
                       <button
                         onClick={() => handleOpenModal(user)}
                         className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                        title="Editar"
+                        title={t('common.edit')}
                       >
                         <Edit2 className="w-5 h-5" />
                       </button>
@@ -244,13 +246,13 @@ const UsersPage: React.FC = () => {
           )}>
             <div className="pb-4 border-b border-cb-border">
               <h2 className="text-xl font-bold text-foreground">
-                {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
+                {t(isEditing ? 'users.modal.editTitle' : 'users.modal.newTitle')}
               </h2>
             </div>
             <form onSubmit={handleSubmit} className="pt-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Nombre Completo</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">{t('users.modal.fullName')}</label>
                   <input
                     required
                     className={SIATC_THEME.COMPONENTS.INPUT}
@@ -259,7 +261,7 @@ const UsersPage: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Usuario</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">{t('users.modal.username')}</label>
                   <input
                     required
                     disabled={isEditing}
@@ -269,7 +271,7 @@ const UsersPage: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Email</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">{t('users.modal.email')}</label>
                   <input
                     type="email"
                     required
@@ -279,7 +281,9 @@ const UsersPage: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Password {isEditing && '(Dejar en blanco para mantener)'}</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">
+                    {t('users.modal.password')} {isEditing && <span className="font-normal normal-case">{t('users.modal.passwordHint')}</span>}
+                  </label>
                   <input
                     type="password"
                     required={!isEditing}
@@ -289,26 +293,26 @@ const UsersPage: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Rol</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">{t('users.modal.role')}</label>
                   <select
                     required
                     className={SIATC_THEME.COMPONENTS.INPUT}
                     value={formData.RoleId}
                     onChange={(e) => setFormData({...formData, RoleId: e.target.value})}
                   >
-                    <option value="">Seleccionar...</option>
+                    <option value="">{t('common.selectOption')}</option>
                     {roles.map(r => <option key={r.Id} value={r.Id}>{r.Name}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">Gerencia</label>
+                  <label className="text-xs font-bold text-cb-neutral uppercase tracking-wider">{t('users.modal.management')}</label>
                   <select
                     required
                     className={SIATC_THEME.COMPONENTS.INPUT}
                     value={formData.ManagementId}
                     onChange={(e) => setFormData({...formData, ManagementId: e.target.value})}
                   >
-                    <option value="">Seleccionar...</option>
+                    <option value="">{t('common.selectOption')}</option>
                     {managements.map(m => <option key={m.Id} value={m.Id}>{m.Name}</option>)}
                   </select>
                 </div>
@@ -322,7 +326,7 @@ const UsersPage: React.FC = () => {
                   onChange={(e) => setFormData({...formData, IsActive: e.target.checked})}
                   className="w-4 h-4 text-primary rounded focus:ring-primary"
                 />
-                <label htmlFor="isActive" className="text-sm text-foreground font-medium cursor-pointer">Usuario Activo</label>
+                <label htmlFor="isActive" className="text-sm text-foreground font-medium cursor-pointer">{t('users.modal.isActive')}</label>
               </div>
 
               <div className="flex justify-end gap-3 pt-6 border-t border-cb-border">
@@ -331,13 +335,13 @@ const UsersPage: React.FC = () => {
                   onClick={() => setShowModal(false)}
                   className={SIATC_THEME.COMPONENTS.BUTTON_SECONDARY}
                 >
-                  Cancelar
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className={SIATC_THEME.COMPONENTS.BUTTON_PRIMARY}
                 >
-                  {isEditing ? 'Guardar Cambios' : 'Crear Usuario'}
+                  {t(isEditing ? 'users.modal.saveChanges' : 'users.modal.createUser')}
                 </button>
               </div>
             </form>

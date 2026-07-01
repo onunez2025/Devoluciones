@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  X, 
-  Calendar, 
-  User, 
-  Search, 
-  CheckCircle2, 
-  Loader2, 
-  Package, 
+import {
+  X,
+  Calendar,
+  User,
+  Search,
+  CheckCircle2,
+  Loader2,
+  Package,
   ClipboardList,
   AlertCircle,
   DownloadCloud
 } from 'lucide-react';
 import ExcelJS from 'exceljs';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
 import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
@@ -23,13 +24,14 @@ interface Props {
 }
 
 const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [technicians, setTechnicians] = useState<string[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
   const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
-  
+
   const [filters, setFilters] = useState({
     date: new Date().toISOString().split('T')[0],
     tech: ''
@@ -57,10 +59,10 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
       setTickets(response.data);
       setSelectedTicketIds(new Set());
       if (response.data.length === 0) {
-        setError('No se encontraron tickets pendientes para este técnico en la fecha seleccionada.');
+        setError(t('batch.errors.noTickets'));
       }
     } catch (err) {
-      setError('Error al buscar tickets.');
+      setError(t('batch.errors.searchFailed'));
     } finally {
       setLoading(false);
     }
@@ -118,13 +120,12 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
     try {
       await apiClient.post('/devoluciones/batch', { tickets: selectedData });
 
-      // Descarga automática del Excel para ZLabel
       await exportToExcel(selectedData);
-      
+
       setStep(2);
       onSuccess();
     } catch (err) {
-      setError('Error al realizar el registro masivo.');
+      setError(t('batch.errors.batchFailed'));
     } finally {
       setLoading(false);
     }
@@ -132,7 +133,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -149,15 +150,15 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
             </div>
             <div>
               <h3 className="text-sm font-black uppercase tracking-tighter text-foreground">
-                {step === 1 ? 'Carga Masiva de Devoluciones' : '¡Registro Masivo Completado!'}
+                {step === 1 ? t('batch.title') : t('batch.successTitle')}
               </h3>
               <p className="text-[10px] font-bold text-muted-foreground/60">
-                {step === 1 ? 'Seleccione técnico y fecha para importar tickets' : 'Todos los tickets seleccionados han sido ingresados'}
+                {step === 1 ? t('batch.subtitle') : t('batch.successSubtitle')}
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-full transition-all duration-300 group"
           >
             <X className="w-5 h-5 opacity-40 group-hover:opacity-100" />
@@ -171,10 +172,10 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3 text-primary/60" /> Fecha de Visita
+                    <Calendar className="w-3 h-3 text-primary/60" /> {t('batch.dateLabel')}
                   </label>
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     className={SIATC_THEME.COMPONENTS.INPUT}
                     value={filters.date}
                     onChange={(e) => setFilters({...filters, date: e.target.value})}
@@ -182,22 +183,22 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
-                    <User className="w-3 h-3 text-primary/60" /> Técnico Responsable
+                    <User className="w-3 h-3 text-primary/60" /> {t('batch.techLabel')}
                   </label>
-                  <select 
+                  <select
                     className={SIATC_THEME.COMPONENTS.INPUT}
                     value={filters.tech}
                     onChange={(e) => setFilters({...filters, tech: e.target.value})}
                   >
-                    <option value="">Seleccione un técnico...</option>
-                    {technicians.map(t => (
-                      <option key={t} value={t}>{t}</option>
+                    <option value="">{t('batch.techPlaceholder')}</option>
+                    {technicians.map(tech => (
+                      <option key={tech} value={tech}>{tech}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={searchTickets}
                 disabled={loading || !filters.tech || !filters.date}
                 className={cn(
@@ -206,7 +207,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
                 )}
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                Buscar Tickets Pendientes
+                {t('batch.searchButton')}
               </button>
 
               {/* Lista de Tickets Resultantes */}
@@ -214,42 +215,46 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-2">
                     <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={selectedTicketIds.size === tickets.length}
                         onChange={toggleAll}
                         className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
                       />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Seleccionar Todo ({tickets.length})</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                        {t('batch.selectAll', { count: tickets.length })}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold text-primary">{selectedTicketIds.size} seleccionados</span>
+                    <span className="text-[10px] font-bold text-primary">
+                      {t('batch.selectedCount', { count: selectedTicketIds.size })}
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                    {tickets.map((t) => (
-                      <div 
-                        key={t.Ticket}
-                        onClick={() => toggleTicket(String(t.Ticket))}
+                    {tickets.map((ticket) => (
+                      <div
+                        key={ticket.Ticket}
+                        onClick={() => toggleTicket(String(ticket.Ticket))}
                         className={cn(
                           "p-3 border transition-all cursor-pointer flex items-center gap-3",
-                          selectedTicketIds.has(String(t.Ticket)) 
-                            ? 'bg-primary/10 border-primary/30 shadow-inner' 
+                          selectedTicketIds.has(String(ticket.Ticket))
+                            ? 'bg-primary/10 border-primary/30 shadow-inner'
                             : 'bg-muted/10 border-cb-border hover:bg-muted/20',
                           SIATC_THEME.TOKENS.RADIUS.CARD
                         )}
                       >
-                        <input 
-                          type="checkbox" 
-                          checked={selectedTicketIds.has(String(t.Ticket))}
+                        <input
+                          type="checkbox"
+                          checked={selectedTicketIds.has(String(ticket.Ticket))}
                           onChange={() => {}} // Handled by div click
                           className="w-4 h-4 rounded border-gray-300 text-primary"
                         />
                         <div className="flex-1">
                           <div className="flex justify-between">
-                            <span className="text-xs font-black">Ticket #{t.Ticket}</span>
-                            <span className="text-[10px] font-bold text-muted-foreground/60 uppercase">{t.N_Guia || 'SIN GUÍA'}</span>
+                            <span className="text-xs font-black">Ticket #{ticket.Ticket}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground/60 uppercase">{ticket.N_Guia || t('common.noGuide')}</span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">{t.IdEquipo} • {t.N_Serie || 'S/N'}</p>
+                          <p className="text-[10px] text-muted-foreground/60 font-mono mt-0.5">{ticket.IdEquipo} • {ticket.N_Serie || 'S/N'}</p>
                         </div>
                       </div>
                     ))}
@@ -275,25 +280,25 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
                 </div>
               </div>
               <div>
-                <h4 className="text-lg font-black uppercase text-foreground">¡Todo Listo!</h4>
+                <h4 className="text-lg font-black uppercase text-foreground">{t('batch.successMain')}</h4>
                 <p className="text-[11px] font-bold text-muted-foreground mt-2 max-w-[300px]">
-                  Se registraron {selectedTicketIds.size} devoluciones y se descargó el archivo <span className="text-primary font-black">ZLabel.xlsx</span> automáticamente.
+                  {t('batch.successSub', { count: selectedTicketIds.size })}
                 </p>
               </div>
               <div className={cn("p-4 bg-primary/5 border border-primary/10 flex items-center gap-3 max-w-[400px]", SIATC_THEME.TOKENS.RADIUS.CARD)}>
                 <AlertCircle className="w-5 h-5 text-primary shrink-0" />
                 <p className="text-[10px] text-left font-bold text-muted-foreground/80 leading-relaxed">
-                  Ya puedes importar el archivo descargado en la aplicación <span className="text-foreground">ZLabel Designer</span> de tu celular para imprimir las etiquetas.
+                  {t('batch.zlabelNote')}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 className={cn(
                   "w-full max-w-[200px] h-11 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 active:scale-95 transition-all",
                   SIATC_THEME.TOKENS.RADIUS.BUTTON
                 )}
               >
-                Cerrar Ventana
+                {t('batch.closeWindow')}
               </button>
             </div>
           )}
@@ -301,14 +306,14 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
 
         {step === 1 && (
           <div className="p-5 bg-muted/20 border-t border-border flex justify-end gap-2.5">
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="px-6 h-10 text-[10px] font-black uppercase text-muted-foreground/60 hover:text-foreground transition-colors"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
-            <button 
-              onClick={handleBatchSubmit} 
+            <button
+              onClick={handleBatchSubmit}
               disabled={loading || selectedTicketIds.size === 0}
               className={cn(
                 "px-8 h-10 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2",
@@ -316,7 +321,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
               )}
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Package className="w-4 h-4" />}
-              Registrar Seleccionados ({selectedTicketIds.size})
+              {t('batch.registerSelected', { count: selectedTicketIds.size })}
             </button>
           </div>
         )}

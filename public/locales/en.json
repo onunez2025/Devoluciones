@@ -2,7 +2,24 @@
   "common": {
     "welcome": "Welcome to Returns!",
     "logout": "Log Out",
-    "loading": "Signing in..."
+    "loading": "Signing in...",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save Changes",
+    "edit": "Edit",
+    "na": "N/A",
+    "noSerial": "S/N Registered",
+    "noGuide": "NO GUIDE",
+    "active": "Active",
+    "inactive": "Inactive",
+    "selectOption": "Select...",
+    "actions": "ACTIONS",
+    "refresh": "Refresh",
+    "validate": "Validate",
+    "previous": "Previous",
+    "next": "Next",
+    "noResults": "No results",
+    "noResultsHint": "Try changing the search filters"
   },
   "auth": {
     "subtitle": "Enter your credentials to access the platform.",
@@ -14,6 +31,239 @@
     "loginButton": "Log In",
     "errors": {
       "invalid": "Login failed. Please check your credentials."
+    }
+  },
+  "dashboard": {
+    "title": "Returns Control",
+    "subtitle": "Real-time synchronization active",
+    "bulkUpload": "Bulk Upload",
+    "newDevolucion": "New Return",
+    "stats": {
+      "total": "Total",
+      "today": "Today",
+      "pending": "Pending",
+      "inProcess": "In Process",
+      "completed": "Completed",
+      "rejected": "Rejected",
+      "noDiagnosis": "No Diagnosis",
+      "live": "LIVE"
+    },
+    "filter": {
+      "search": "Search by Ticket, Serial, ID...",
+      "period": "Last 30 days"
+    },
+    "table": {
+      "ticket": "TICKET ID",
+      "equipment": "EQUIPMENT / SERIAL",
+      "guide": "DELIVERY GUIDE",
+      "date": "ENTRY DATE",
+      "status": "SAP STATUS",
+      "actions": "ACTIONS",
+      "validated": "Validated",
+      "history": "History",
+      "zlabel": "ZLabel",
+      "print": "Print",
+      "editTitle": "Edit",
+      "viewDetails": "View Details",
+      "downloadZLabel": "Download for ZLabel Designer",
+      "printBluetooth": "Print via Bluetooth"
+    },
+    "mobile": {
+      "equipment": "Equipment / Serial",
+      "guide": "Delivery Guide"
+    },
+    "pagination": {
+      "showing": "Showing {{shown}} of {{total}} records"
+    }
+  },
+  "public": {
+    "back": "Back",
+    "printLabel": "Print Label (ZLabel)",
+    "publicQuery": "Public Query",
+    "activeEquipment": "Active Equipment",
+    "loading": {
+      "sap": "Syncing with SAP C4C",
+      "wait": "This may take a few seconds..."
+    },
+    "error": {
+      "title": "Connection Error",
+      "retry": "Retry Query"
+    },
+    "section": {
+      "reports": "Closed Technical Reports ({{count}})"
+    },
+    "empty": {
+      "title": "No Technical History",
+      "subtitle": "No repair or diagnosis records found."
+    },
+    "card": {
+      "closed": "Closed",
+      "detail": "Technical Detail"
+    },
+    "modal": {
+      "title": "Digital Technical Report",
+      "defaultSubject": "Equipment Maintenance",
+      "visitDate": "Visit Date",
+      "technician": "Assigned Technician",
+      "client": "Client",
+      "product": "Product / Equipment",
+      "serviceType": "Service Type",
+      "visitStatus": "Visit Status",
+      "statusDone": "Work Completed Successfully",
+      "statusVisited": "Visit Completed (No technical intervention)",
+      "noDetails": "No details recorded",
+      "followUp": "Follow-up Requirement",
+      "newVisit": "New visit requested: {{reason}}",
+      "noFollowUp": "No immediate follow-up required",
+      "techComments": "Technician's Comments",
+      "notSpecified": "Not specified",
+      "pending": "Pending",
+      "sapReport": "Try opening original SAP report",
+      "close": "Close"
+    }
+  },
+  "users": {
+    "title": "User Management",
+    "subtitle": "Manage platform access and profiles",
+    "newUser": "New User",
+    "search": "Search by name, username or email...",
+    "count": "{{count}} Users",
+    "table": {
+      "user": "User",
+      "roleManagement": "Role / Management",
+      "apps": "Applications",
+      "status": "Status"
+    },
+    "loading": "Loading users...",
+    "empty": "No users found",
+    "modal": {
+      "editTitle": "Edit User",
+      "newTitle": "New User",
+      "fullName": "Full Name",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "(Leave blank to keep)",
+      "role": "Role",
+      "management": "Management",
+      "isActive": "Active User",
+      "saveChanges": "Save Changes",
+      "createUser": "Create User"
+    },
+    "toast": {
+      "loadError": "Error loading data",
+      "updated": "User updated",
+      "created": "User created",
+      "saveError": "Error saving user"
+    }
+  },
+  "roles": {
+    "title": "Roles & Permissions",
+    "subtitle": "Configure access levels per user role",
+    "list": "Role List",
+    "note": "Permissions are applied immediately to the selected role. The ADMIN permission grants full access to all functions.",
+    "matrix": "Permission Matrix",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "groups": {
+      "Tablero": "Dashboard",
+      "Devoluciones": "Returns",
+      "Configuración": "Configuration",
+      "Administrador": "Administrator"
+    },
+    "toast": {
+      "rolesError": "Error loading roles",
+      "permsError": "Error loading permissions",
+      "permsSaved": "Permissions saved successfully",
+      "saveError": "Error saving permissions"
+    }
+  },
+  "devolucion": {
+    "detail": {
+      "title": "Return Detail",
+      "infoSection": "General Information",
+      "registryDate": "Registration Date",
+      "idEquipo": "Equipment ID (FSM)",
+      "serial": "Serial Number",
+      "guide": "Delivery Guide",
+      "client": "Client",
+      "product": "Product",
+      "noSerial": "Not registered",
+      "observations": "Observations",
+      "noObservations": "No additional observations",
+      "techComment": "Technician's Comment",
+      "photo": "Photo Evidence",
+      "noPhoto": "No visual evidence",
+      "sapReport": "Technical Report",
+      "printLabel": "Print Label",
+      "printing": "Printing...",
+      "close": "Close Detail"
+    },
+    "new": {
+      "title": "Register New Return",
+      "editTitle": "Edit Return",
+      "successTitle": "Action Completed!",
+      "subtitle": "Returned Equipment Control System",
+      "successSubtitleUpdated": "The record has been updated successfully",
+      "successSubtitleSynced": "The record has been synced successfully",
+      "ticketLabel": "Ticket Identification (FSM)",
+      "ticketPlaceholder": "Enter SAP ticket number...",
+      "equipmentFound": "Equipment Identified",
+      "existingRecord": "Existing Record",
+      "operativeInSap": "Operative in SAP",
+      "client": "Client",
+      "product": "Product",
+      "techComment": "Technician's comment",
+      "guide": "Delivery Guide",
+      "guidePlaceholder": "Guide No....",
+      "sapHint": "✓ Suggested by SAP (Validate with physical guide)",
+      "manualHint": "Enter folio manually",
+      "serial": "Serial Number",
+      "serialPlaceholder": "Equipment S/N...",
+      "observations": "Preliminary Diagnosis / Observations",
+      "observationsPlaceholder": "Describe the functional state of the equipment...",
+      "photo": "Photo Evidence",
+      "camera": "Use Camera",
+      "cameraSub": "Take photo now",
+      "gallery": "Open Gallery",
+      "gallerySub": "Choose file",
+      "photoLoaded": "Evidence Uploaded Successfully",
+      "successMain": "Successful Entry",
+      "successSub": "The equipment has been registered in the corporate returns database.",
+      "printZebra": "Print Zebra Label",
+      "finish": "Finish session",
+      "confirmRegister": "Confirm Registration",
+      "updateChanges": "Update Changes",
+      "errors": {
+        "notFound": "Could not find the equipment or ticket. Please verify the number.",
+        "noEquipment": "You must identify a valid equipment before registering.",
+        "imageTooLarge": "The image is too large. Maximum 10MB.",
+        "uploadFailed": "Could not upload the image to Azure. Please try again.",
+        "registerFailed": "Error registering the return.",
+        "updateFailed": "Error updating the return."
+      }
+    }
+  },
+  "batch": {
+    "title": "Bulk Return Upload",
+    "successTitle": "Bulk Registration Completed!",
+    "subtitle": "Select technician and date to import tickets",
+    "successSubtitle": "All selected tickets have been entered",
+    "dateLabel": "Visit Date",
+    "techLabel": "Responsible Technician",
+    "techPlaceholder": "Select a technician...",
+    "searchButton": "Search Pending Tickets",
+    "selectAll": "Select All ({{count}})",
+    "selectedCount": "{{count}} selected",
+    "successMain": "All Done!",
+    "successSub": "{{count}} returns were registered and the ZLabel.xlsx file was downloaded automatically.",
+    "zlabelNote": "You can now import the downloaded file in the ZLabel Designer app on your phone to print labels.",
+    "closeWindow": "Close Window",
+    "registerSelected": "Register Selected ({{count}})",
+    "errors": {
+      "noTickets": "No pending tickets found for this technician on the selected date.",
+      "searchFailed": "Error searching for tickets.",
+      "batchFailed": "Error performing bulk registration."
     }
   }
 }

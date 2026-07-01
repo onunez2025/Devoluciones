@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  Upload, 
-  Search, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  X,
+  Upload,
+  Search,
+  CheckCircle2,
+  AlertCircle,
   Printer,
   Loader2,
   Package,
@@ -15,6 +15,7 @@ import {
   QrCode
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
 import { bluetoothPrinter } from '../services/bluetoothPrinter';
 import { Devolucion } from '../types';
@@ -28,12 +29,13 @@ interface Props {
 }
 
 const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
+  const { t } = useTranslation();
   const isEditing = !!devolucion;
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [formData, setFormData] = useState({
     Ticket: devolucion?.Ticket || '',
     N_Guia: devolucion?.N_Guia || '',
@@ -54,22 +56,21 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
     setLoading(true);
     setError('');
     try {
-      // Buscar equipo en FSM y datos de SAP integrados
       const response = await apiClient.get(`/equipos/lookup/${formData.Ticket}`);
-      
-      setFormData(prev => ({ 
-        ...prev, 
+
+      setFormData(prev => ({
+        ...prev,
         IdEquipo: response.data.IdEquipo,
         N_Guia: response.data.N_Guia || prev.N_Guia,
-        N_Serie: response.data.N_Serie || prev.N_Serie, // Mantener el anterior si viene vacío
+        N_Serie: response.data.N_Serie || prev.N_Serie,
         NombreCliente: response.data.NombreCliente || prev.NombreCliente,
         NombreEquipo: response.data.NombreEquipo || prev.NombreEquipo,
         ComentarioTecnico: response.data.ComentarioTecnico || prev.ComentarioTecnico
       }));
-      
+
       setIdEquipoFound(true);
     } catch (err: any) {
-      setError('No se pudo encontrar el equipo o el ticket. Verifique el número.');
+      setError(t('devolucion.new.errors.notFound'));
       setIdEquipoFound(false);
     } finally {
       setLoading(false);
@@ -80,15 +81,14 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validar tamaño (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      setError('La imagen es demasiado grande. Máximo 10MB.');
+      setError(t('devolucion.new.errors.imageTooLarge'));
       return;
     }
 
     setUploading(true);
     setError('');
-    
+
     const uploadData = new FormData();
     uploadData.append('image', file);
 
@@ -96,12 +96,12 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
       const response = await apiClient.post('/upload', uploadData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
+
       setFormData(prev => ({ ...prev, Adjunto: response.data.imageUrl }));
       console.log('✅ Imagen subida a Azure:', response.data.imageUrl);
     } catch (err: any) {
       console.error('Error al subir imagen:', err);
-      setError('No se pudo subir la imagen a Azure. Intente nuevamente.');
+      setError(t('devolucion.new.errors.uploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -109,7 +109,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
 
   const handleSubmit = async () => {
     if (!idEquipoFound) {
-      setError('Debe identificar un equipo válido antes de registrar.');
+      setError(t('devolucion.new.errors.noEquipment'));
       return;
     }
     setLoading(true);
@@ -122,7 +122,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
       setStep(2);
       onSuccess();
     } catch (err) {
-      setError(`Error al ${isEditing ? 'actualizar' : 'registrar'} la devolución.`);
+      setError(t(isEditing ? 'devolucion.new.errors.updateFailed' : 'devolucion.new.errors.registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
 
   const handlePrint = async () => {
     const zpl = `^XA^FO50,50^BQN,2,10^FDQA,https://${window.location.host}/public/equipment/${formData.Ticket}^FS^FO250,70^A0N,30,30^FDTicket: ${formData.Ticket}^FS^FO250,110^A0N,25,25^FDEquipo: ${formData.IdEquipo}^FS^XZ`;
-    
+
     if (bluetoothPrinter.isSupported()) {
       try {
         await bluetoothPrinter.print(zpl);
@@ -151,7 +151,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -168,19 +168,19 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
             </div>
             <div>
               <h3 className="text-sm font-black uppercase tracking-tighter text-foreground">
-                {step === 1 
-                  ? (isEditing ? 'Editar Devolución' : 'Registrar Nueva Devolución') 
-                  : '¡Acción Completada!'}
+                {step === 1
+                  ? t(isEditing ? 'devolucion.new.editTitle' : 'devolucion.new.title')
+                  : t('devolucion.new.successTitle')}
               </h3>
               <p className="text-[10px] font-bold text-muted-foreground/60">
-                {step === 1 
-                  ? 'Sistema de Control de Equipos Retornados' 
-                  : `El registro se ha ${isEditing ? 'actualizado' : 'sincronizado'} correctamente`}
+                {step === 1
+                  ? t('devolucion.new.subtitle')
+                  : t(isEditing ? 'devolucion.new.successSubtitleUpdated' : 'devolucion.new.successSubtitleSynced')}
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-full transition-all duration-300 group"
           >
             <X className="w-5 h-5 opacity-40 group-hover:opacity-100" />
@@ -193,26 +193,26 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               {/* Buscador de Ticket */}
               {!isEditing && (
                 <div className="relative group">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 block">Identificación de Ticket (FSM)</label>
+                  <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 block">{t('devolucion.new.ticketLabel')}</label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Search className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${loading ? 'text-primary animate-pulse' : 'text-muted-foreground/40'}`} />
-                      <input 
+                      <input
                         type="text"
                         className={cn(
                           "w-full pl-11 h-11 text-xs",
                           SIATC_THEME.COMPONENTS.INPUT
                         )}
-                        placeholder="Ingrese número de ticket sap..."
+                        placeholder={t('devolucion.new.ticketPlaceholder')}
                         disabled={idEquipoFound || loading}
                         value={formData.Ticket}
                         onChange={(e) => setFormData({...formData, Ticket: e.target.value.replace(/\D/g, '')})}
                         onKeyDown={(e) => e.key === 'Enter' && lookupEquipment()}
                       />
                     </div>
-                    
+
                     {!idEquipoFound ? (
-                      <button 
+                      <button
                         onClick={lookupEquipment}
                         disabled={loading || !formData.Ticket}
                         className={cn(
@@ -221,10 +221,10 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                         )}
                       >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                        Validar
+                        {t('common.validate')}
                       </button>
                     ) : (
-                      <button 
+                      <button
                         onClick={() => setIdEquipoFound(false)}
                         className={cn(
                           "px-4 h-11 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all flex items-center justify-center",
@@ -241,8 +241,8 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
 
               <AnimatePresence mode="wait">
                 {idEquipoFound && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95, height: 0 }} 
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, height: 0 }}
                     animate={{ opacity: 1, scale: 1, height: 'auto' }}
                     exit={{ opacity: 0, scale: 0.95, height: 0 }}
                     className={cn(
@@ -257,24 +257,24 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="text-[9px] text-primary/70 font-black uppercase tracking-widest">
-                            {isEditing ? `Ticket #${formData.Ticket}` : 'Equipo Identificado'}
+                            {isEditing ? `Ticket #${formData.Ticket}` : t('devolucion.new.equipmentFound')}
                           </p>
                           <p className="text-sm font-black text-foreground">ID: {formData.IdEquipo}</p>
                         </div>
                         <div className="bg-emerald-500/10 text-emerald-600 px-2.5 py-0.5 rounded-lg text-[8px] font-black uppercase border border-emerald-500/10">
-                          {isEditing ? 'Registro Existente' : 'Operativo en SAP'}
+                          {t(isEditing ? 'devolucion.new.existingRecord' : 'devolucion.new.operativeInSap')}
                         </div>
                       </div>
                       {(formData.NombreCliente || formData.NombreEquipo) && (
                         <div className="mt-2 pt-2 border-t border-primary/10 flex flex-col gap-1 text-[11px] font-medium text-foreground/80">
                           {formData.NombreCliente && (
-                            <p><strong>Cliente:</strong> {formData.NombreCliente}</p>
+                            <p><strong>{t('devolucion.new.client')}:</strong> {formData.NombreCliente}</p>
                           )}
                           {formData.NombreEquipo && (
-                            <p><strong>Producto:</strong> {formData.NombreEquipo}</p>
+                            <p><strong>{t('devolucion.new.product')}:</strong> {formData.NombreEquipo}</p>
                           )}
                           {formData.ComentarioTecnico && (
-                            <p className="italic text-foreground/70"><strong>Comentario del técnico:</strong> "{formData.ComentarioTecnico}"</p>
+                            <p className="italic text-foreground/70"><strong>{t('devolucion.new.techComment')}:</strong> "{formData.ComentarioTecnico}"</p>
                           )}
                         </div>
                       )}
@@ -287,27 +287,27 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
-                    <ClipboardList className="w-3 h-3 text-primary/60" /> Guía de Remisión
+                    <ClipboardList className="w-3 h-3 text-primary/60" /> {t('devolucion.new.guide')}
                   </label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className={SIATC_THEME.COMPONENTS.INPUT}
-                    placeholder="N° Guía..."
+                    placeholder={t('devolucion.new.guidePlaceholder')}
                     value={formData.N_Guia}
                     onChange={(e) => setFormData({...formData, N_Guia: e.target.value})}
                   />
                   <p className="text-[8px] font-bold text-primary/40 uppercase tracking-widest mt-1">
-                    {formData.N_Guia ? '✓ Sugerido por SAP (Validar con guía física)' : 'Ingrese el folio manualmente'}
+                    {formData.N_Guia ? t('devolucion.new.sapHint') : t('devolucion.new.manualHint')}
                   </p>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
-                    <QrCode className="w-3 h-3 text-primary/60" /> Número de Serie
+                    <QrCode className="w-3 h-3 text-primary/60" /> {t('devolucion.new.serial')}
                   </label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className={SIATC_THEME.COMPONENTS.INPUT}
-                    placeholder="S/N del equipo..."
+                    placeholder={t('devolucion.new.serialPlaceholder')}
                     value={formData.N_Serie}
                     onChange={(e) => setFormData({...formData, N_Serie: e.target.value})}
                   />
@@ -316,11 +316,11 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
 
               <div className="space-y-1.5">
                 <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
-                  <ClipboardList className="w-3 h-3 text-primary/60" /> Diagnóstico Preliminar / Observaciones
+                  <ClipboardList className="w-3 h-3 text-primary/60" /> {t('devolucion.new.observations')}
                 </label>
-                <textarea 
+                <textarea
                   className={cn(SIATC_THEME.COMPONENTS.INPUT, "min-h-[80px] py-3 resize-none leading-relaxed")}
-                  placeholder="Describa el estado funcional del equipo..."
+                  placeholder={t('devolucion.new.observationsPlaceholder')}
                   value={formData.Comentario}
                   onChange={(e) => setFormData({...formData, Comentario: e.target.value})}
                 />
@@ -329,44 +329,44 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               {/* Upload Zone */}
               <div className="space-y-2">
                 <label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground/70 ml-1 mb-1.5 flex items-center gap-1.5">
-                  <Camera className="w-3 h-3 text-primary/60" /> Evidencia Fotográfica
+                  <Camera className="w-3 h-3 text-primary/60" /> {t('devolucion.new.photo')}
                 </label>
-                
+
                 <div className="relative group">
                   {/* Hidden Inputs */}
-                  <input 
+                  <input
                     id="camera-upload"
-                    type="file" 
-                    className="hidden" 
+                    type="file"
+                    className="hidden"
                     accept="image/*"
                     capture="environment"
                     onChange={handleFileUpload}
                     disabled={uploading}
                   />
-                  <input 
+                  <input
                     id="gallery-upload"
-                    type="file" 
-                    className="hidden" 
+                    type="file"
+                    className="hidden"
                     accept="image/*"
                     onChange={handleFileUpload}
                     disabled={uploading}
                   />
-                  
+
                   {formData.Adjunto ? (
                     <div className={cn("relative aspect-video overflow-hidden border border-emerald-500/30 bg-emerald-500/5 group/preview", SIATC_THEME.TOKENS.RADIUS.CARD)}>
-                      <img 
-                        src={formData.Adjunto} 
-                        alt="Preview" 
+                      <img
+                        src={formData.Adjunto}
+                        alt="Preview"
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                        <label 
+                        <label
                           htmlFor="camera-upload"
                           className="p-3 bg-white text-black rounded-full cursor-pointer hover:scale-110 transition-transform"
                         >
                           <Camera className="w-5 h-5" />
                         </label>
-                        <button 
+                        <button
                           onClick={() => setFormData(prev => ({ ...prev, Adjunto: '' }))}
                           className="p-3 bg-white text-destructive rounded-full hover:scale-110 transition-transform"
                         >
@@ -374,12 +374,12 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                         </button>
                       </div>
                       <div className="absolute bottom-3 left-3 right-3 p-2 bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest text-center shadow-lg">
-                        Evidencia Cargada Correctamente
+                        {t('devolucion.new.photoLoaded')}
                       </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
-                      <label 
+                      <label
                         htmlFor="camera-upload"
                         className={cn(
                           `flex flex-col items-center justify-center gap-3 p-6 border-2 border-dashed transition-all cursor-pointer border-primary/20 hover:border-primary/40 hover:bg-primary/5`,
@@ -391,12 +391,12 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                           {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Camera className="w-6 h-6" />}
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Usar Cámara</p>
-                          <p className="text-[8px] text-muted-foreground/60 font-bold mt-1">Tomar foto ahora</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{t('devolucion.new.camera')}</p>
+                          <p className="text-[8px] text-muted-foreground/60 font-bold mt-1">{t('devolucion.new.cameraSub')}</p>
                         </div>
                       </label>
 
-                      <label 
+                      <label
                         htmlFor="gallery-upload"
                         className={cn(
                           `flex flex-col items-center justify-center gap-3 p-6 border-2 border-dashed transition-all cursor-pointer border-primary/20 hover:border-primary/40 hover:bg-primary/5`,
@@ -408,8 +408,8 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                           {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6" />}
                         </div>
                         <div className="text-center">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Abrir Galería</p>
-                          <p className="text-[8px] text-muted-foreground/60 font-bold mt-1">Elegir archivo</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{t('devolucion.new.gallery')}</p>
+                          <p className="text-[8px] text-muted-foreground/60 font-bold mt-1">{t('devolucion.new.gallerySub')}</p>
                         </div>
                       </label>
                     </div>
@@ -418,7 +418,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               </div>
 
               {error && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3 text-destructive text-[11px] font-bold"
@@ -436,17 +436,17 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                 </div>
                 <div className="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full translate-y-2 opacity-50" />
               </div>
-              
+
               <div>
-                <h4 className="text-lg font-black uppercase text-foreground leading-none">Ingreso Exitoso</h4>
+                <h4 className="text-lg font-black uppercase text-foreground leading-none">{t('devolucion.new.successMain')}</h4>
                 <p className="text-[11px] font-bold text-muted-foreground mt-2 max-w-[300px]">
-                  El equipo ha sido registrado en la base de datos de devoluciones corporativas.
+                  {t('devolucion.new.successSub')}
                 </p>
               </div>
 
               {/* QR Ticket Style Card */}
               <div className="relative group p-6 bg-card rounded-[2.5rem] shadow-2xl border-4 border-muted/5 transition-transform hover:scale-[1.02] duration-500">
-                <QRCodeSVG 
+                <QRCodeSVG
                   value={`https://${window.location.host}/public/equipment/${formData.Ticket}`}
                   size={140}
                   level="H"
@@ -456,7 +456,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
               </div>
 
               <div className="flex flex-col gap-2 w-full max-w-[340px]">
-                <button 
+                <button
                   onClick={handlePrint}
                   className={cn(
                     "group relative flex items-center justify-center gap-2 h-11 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-primary/20",
@@ -464,13 +464,13 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
                   )}
                 >
                   <Printer className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                  Imprimir Etiqueta Zebra
+                  {t('devolucion.new.printZebra')}
                 </button>
-                <button 
+                <button
                   onClick={onClose}
                   className="h-10 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 hover:text-foreground transition-colors"
                 >
-                  Finalizar sesión
+                  {t('devolucion.new.finish')}
                 </button>
               </div>
             </div>
@@ -479,21 +479,21 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
 
         {step === 1 && (
           <div className="p-5 bg-muted/20 border-t border-border flex justify-end gap-2.5">
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="px-6 h-10 text-[10px] font-black uppercase text-muted-foreground/60 hover:text-foreground transition-colors"
             >
-              Cancelar
+              {t('common.cancel')}
             </button>
-            <button 
-              onClick={handleSubmit} 
+            <button
+              onClick={handleSubmit}
               disabled={loading || !idEquipoFound}
               className={cn(
                 "px-8 h-10 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-30 flex items-center gap-2",
                 SIATC_THEME.TOKENS.RADIUS.BUTTON
               )}
             >
-              {isEditing ? 'Actualizar Cambios' : 'Confirmar Registro'} <ArrowRight className="w-4 h-4" />
+              {t(isEditing ? 'devolucion.new.updateChanges' : 'devolucion.new.confirmRegister')} <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         )}

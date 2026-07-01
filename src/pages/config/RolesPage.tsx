@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Shield, Key, Check, 
+import {
+  Shield, Key, Check,
   ChevronRight, AlertCircle, Save
 } from 'lucide-react';
 import { rolesService, Role } from '../../services/rolesService';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { SIATC_THEME } from '../../utils/siatc-theme';
 import { cn } from '../../utils/cn';
 
@@ -16,6 +17,7 @@ const ALL_PERMISSIONS = [
 ];
 
 const RolesPage: React.FC = () => {
+  const { t } = useTranslation();
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [rolePerms, setRolePerms] = useState<string[]>([]);
@@ -35,7 +37,7 @@ const RolesPage: React.FC = () => {
         handleSelectRole(data[0]);
       }
     } catch (error) {
-      toast.error('Error al cargar roles');
+      toast.error(t('roles.toast.rolesError'));
     } finally {
       setLoading(false);
     }
@@ -47,12 +49,12 @@ const RolesPage: React.FC = () => {
       const perms = await rolesService.getRolePermissions(role.Id);
       setRolePerms(perms);
     } catch (error) {
-      toast.error('Error al cargar permisos');
+      toast.error(t('roles.toast.permsError'));
     }
   };
 
   const handleTogglePerm = (perm: string) => {
-    setRolePerms(prev => 
+    setRolePerms(prev =>
       prev.includes(perm) ? prev.filter(p => p !== perm) : [...prev, perm]
     );
   };
@@ -62,9 +64,9 @@ const RolesPage: React.FC = () => {
     try {
       setSaving(true);
       await rolesService.updateRolePermissions(selectedRole.Id, rolePerms);
-      toast.success('Permisos guardados correctamente');
+      toast.success(t('roles.toast.permsSaved'));
     } catch (error) {
-      toast.error('Error al guardar permisos');
+      toast.error(t('roles.toast.saveError'));
     } finally {
       setSaving(false);
     }
@@ -75,9 +77,9 @@ const RolesPage: React.FC = () => {
       <div className="flex flex-col gap-2">
         <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>
           <Shield className="w-6 h-6 text-primary inline-block mr-2" />
-          Roles y Permisos
+          {t('roles.title')}
         </h1>
-        <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>Configura los niveles de acceso por rol de usuario</p>
+        <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>{t('roles.subtitle')}</p>
       </div>
 
       <div className="flex flex-1 gap-6 overflow-hidden min-h-0 flex-col md:flex-row">
@@ -88,7 +90,7 @@ const RolesPage: React.FC = () => {
             SIATC_THEME.TOKENS.MASTER_ROUNDNESS
           )}>
             <div className="p-4 border-b border-cb-border bg-cb-bg/30">
-              <h3 className="font-semibold text-cb-text-secondary uppercase text-xs tracking-wider">Lista de Roles</h3>
+              <h3 className="font-semibold text-cb-text-secondary uppercase text-xs tracking-wider">{t('roles.list')}</h3>
             </div>
             <div className="divide-y divide-cb-border/50">
               {roles.map((role) => (
@@ -97,8 +99,8 @@ const RolesPage: React.FC = () => {
                   onClick={() => handleSelectRole(role)}
                   className={cn(
                     "w-full text-left px-5 py-4 flex items-center justify-between transition-all group border-l-4 border-transparent",
-                    selectedRole?.Id === role.Id 
-                      ? 'bg-primary/5 text-primary border-l-primary font-bold' 
+                    selectedRole?.Id === role.Id
+                      ? 'bg-primary/5 text-primary border-l-primary font-bold'
                       : 'hover:bg-muted/40 text-cb-text-secondary'
                   )}
                 >
@@ -114,7 +116,7 @@ const RolesPage: React.FC = () => {
               ))}
             </div>
           </div>
-          
+
           <div className={cn(
             "p-4 bg-primary/5 border border-primary/20",
             SIATC_THEME.TOKENS.MASTER_ROUNDNESS
@@ -122,7 +124,7 @@ const RolesPage: React.FC = () => {
             <div className="flex gap-3">
               <AlertCircle className="w-5 h-5 text-primary shrink-0" />
               <p className="text-xs text-primary leading-relaxed font-medium">
-                Los permisos se aplican inmediatamente al rol seleccionado. El permiso <strong>ADMIN</strong> otorga acceso total a todas las funciones.
+                {t('roles.note')}
               </p>
             </div>
           </div>
@@ -136,7 +138,7 @@ const RolesPage: React.FC = () => {
           <div className="p-4 border-b border-cb-border bg-cb-bg/30 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <Key className="w-5 h-5 text-muted-foreground/60" />
-              <h3 className="font-semibold text-foreground">Matriz de Permisos: <span className="text-primary">{selectedRole?.Name}</span></h3>
+              <h3 className="font-semibold text-foreground">{t('roles.matrix')}: <span className="text-primary">{selectedRole?.Name}</span></h3>
             </div>
             <button
               onClick={handleSave}
@@ -144,7 +146,7 @@ const RolesPage: React.FC = () => {
               className={SIATC_THEME.COMPONENTS.BUTTON_PRIMARY}
             >
               <Save className="w-4 h-4 mr-1" />
-              {saving ? 'Guardando...' : 'Guardar Cambios'}
+              {saving ? t('roles.saving') : t('roles.saveChanges')}
             </button>
           </div>
 
@@ -154,11 +156,11 @@ const RolesPage: React.FC = () => {
                 <div key={group.group} className="space-y-3">
                   <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-primary/30"></span>
-                    {group.group}
+                    {t(`roles.groups.${group.group}`, group.group)}
                   </h4>
                   <div className="space-y-2">
                     {group.perms.map((perm) => (
-                      <label 
+                      <label
                         key={perm}
                         className={cn(
                           "flex items-center justify-between p-3 border cursor-pointer transition-all",

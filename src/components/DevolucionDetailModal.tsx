@@ -4,6 +4,7 @@ import { Devolucion } from '../types';
 import { bluetoothPrinter } from '../services/bluetoothPrinter';
 import { generateZPL } from '../services/zplService';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
 
@@ -13,6 +14,7 @@ interface Props {
 }
 
 const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
+  const { t } = useTranslation();
   const [isPrinting, setIsPrinting] = useState(false);
 
   const handlePrint = async () => {
@@ -35,7 +37,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -52,15 +54,15 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
             </div>
             <div>
               <h3 className="text-sm font-black uppercase tracking-tighter text-foreground">
-                Detalle de Devolución
+                {t('devolucion.detail.title')}
               </h3>
               <p className="text-[10px] font-bold text-muted-foreground/60">
                 Ticket #{devolucion.Ticket}
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-full transition-all group"
           >
             <X className="w-5 h-5 opacity-40 group-hover:opacity-100" />
@@ -72,17 +74,17 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
             {/* Info Section */}
             <div className="space-y-6">
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Información General</h4>
-                
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">{t('devolucion.detail.infoSection')}</h4>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
                   <div className={cn("flex items-center gap-4 bg-muted/20 md:bg-transparent p-3 md:p-0", SIATC_THEME.TOKENS.RADIUS.CARD)}>
                     <div className={cn("w-10 h-10 bg-muted/50 flex items-center justify-center text-muted-foreground/40 shrink-0", SIATC_THEME.TOKENS.RADIUS.BUTTON)}>
                       <Calendar size={18} />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">Fecha de Registro</p>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">{t('devolucion.detail.registryDate')}</p>
                       <p className="text-xs font-bold text-foreground">
-                        {new Date(devolucion.FechaRegistro).toLocaleDateString('es-PE', { 
+                        {new Date(devolucion.FechaRegistro).toLocaleDateString('es-PE', {
                           day: '2-digit', month: 'long', year: 'numeric'
                         })}
                       </p>
@@ -94,8 +96,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                       <Package size={18} />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">ID Equipo (FSM)</p>
-                      <p className="text-xs font-black text-primary">{devolucion.IdEquipo || 'N/A'}</p>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">{t('devolucion.detail.idEquipo')}</p>
+                      <p className="text-xs font-black text-primary">{devolucion.IdEquipo || t('common.na')}</p>
                     </div>
                   </div>
 
@@ -104,8 +106,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                       <Tag size={18} />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">Número de Serie</p>
-                      <p className="text-xs font-bold text-foreground">{devolucion.N_Serie || 'Sin registro'}</p>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">{t('devolucion.detail.serial')}</p>
+                      <p className="text-xs font-bold text-foreground">{devolucion.N_Serie || t('devolucion.detail.noSerial')}</p>
                     </div>
                   </div>
 
@@ -114,8 +116,8 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                       <ClipboardList size={18} />
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">Guía de Remisión</p>
-                      <p className="text-xs font-bold text-foreground">{devolucion.N_Guia || 'N/A'}</p>
+                      <p className="text-[9px] font-black uppercase text-muted-foreground/40">{t('devolucion.detail.guide')}</p>
+                      <p className="text-xs font-bold text-foreground">{devolucion.N_Guia || t('common.na')}</p>
                     </div>
                   </div>
 
@@ -125,7 +127,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                         <User size={18} />
                       </div>
                       <div>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground/40">Cliente</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground/40">{t('devolucion.detail.client')}</p>
                         <p className="text-xs font-bold text-foreground">{devolucion.NombreCliente}</p>
                       </div>
                     </div>
@@ -137,7 +139,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                         <Wrench size={18} />
                       </div>
                       <div>
-                        <p className="text-[9px] font-black uppercase text-muted-foreground/40">Producto</p>
+                        <p className="text-[9px] font-black uppercase text-muted-foreground/40">{t('devolucion.detail.product')}</p>
                         <p className="text-xs font-bold text-foreground">{devolucion.NombreEquipo}</p>
                       </div>
                     </div>
@@ -146,17 +148,17 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Observaciones</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">{t('devolucion.detail.observations')}</h4>
                 <div className={cn("p-4 bg-muted/30 border border-border/50", SIATC_THEME.TOKENS.RADIUS.CARD)}>
                   <p className="text-[11px] leading-relaxed font-medium text-foreground/80 italic">
-                    "{devolucion.Comentario || 'Sin observaciones adicionales'}"
+                    "{devolucion.Comentario || t('devolucion.detail.noObservations')}"
                   </p>
                 </div>
               </div>
 
               {devolucion.ComentarioTecnico && (
                 <div className="space-y-3">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">Comentario del Técnico</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">{t('devolucion.detail.techComment')}</h4>
                   <div className={cn("p-4 bg-muted/30 border border-border/50", SIATC_THEME.TOKENS.RADIUS.CARD)}>
                     <p className="text-[11px] leading-relaxed font-medium text-foreground/80 italic">
                       "{devolucion.ComentarioTecnico}"
@@ -169,14 +171,14 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
             {/* Image Section */}
             <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 flex items-center gap-2">
-                <Camera size={12} className="text-primary" /> Evidencia Fotográfica
+                <Camera size={12} className="text-primary" /> {t('devolucion.detail.photo')}
               </h4>
-              
+
               <div className={cn("relative aspect-video md:aspect-square overflow-hidden bg-muted/50 border border-border/50 group", SIATC_THEME.TOKENS.RADIUS.MODAL)}>
                 {devolucion.Adjunto && (devolucion.Adjunto.startsWith('http') || devolucion.Adjunto.startsWith('blob')) ? (
-                  <img 
-                    src={devolucion.Adjunto} 
-                    alt="Evidencia" 
+                  <img
+                    src={devolucion.Adjunto}
+                    alt="Evidencia"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 ) : (
@@ -184,7 +186,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center text-muted-foreground/20">
                       <Camera size={32} />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Sin evidencia visual</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{t('devolucion.detail.noPhoto')}</p>
                   </div>
                 )}
               </div>
@@ -193,7 +195,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
         </div>
 
         <div className="p-4 md:p-5 bg-muted/20 border-t border-border flex flex-col md:flex-row gap-3 justify-stretch md:justify-end">
-          <button 
+          <button
             onClick={() => window.open(`/api/c4c/pdf/${devolucion.Ticket}`, '_blank')}
             className={cn(
               "flex-1 md:flex-none px-6 h-12 md:h-10 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2",
@@ -201,10 +203,10 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
             )}
           >
             <ExternalLink className="w-4 h-4" />
-            Informe Técnico
+            {t('devolucion.detail.sapReport')}
           </button>
 
-          <button 
+          <button
             onClick={handlePrint}
             disabled={isPrinting}
             className={cn(
@@ -217,17 +219,17 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
             ) : (
               <Printer className="w-4 h-4" />
             )}
-            {isPrinting ? 'Imprimiendo...' : 'Imprimir Etiqueta'}
+            {t(isPrinting ? 'devolucion.detail.printing' : 'devolucion.detail.printLabel')}
           </button>
-          
-          <button 
-            onClick={onClose} 
+
+          <button
+            onClick={onClose}
             className={cn(
               "flex-1 md:flex-none px-8 h-12 md:h-10 bg-foreground text-background text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg",
               SIATC_THEME.TOKENS.RADIUS.BUTTON
             )}
           >
-            Cerrar Detalle
+            {t('devolucion.detail.close')}
           </button>
         </div>
       </motion.div>
