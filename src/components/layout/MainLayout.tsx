@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Menu, X, Sun, Moon, Calendar, User, Package, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Menu, X, Sun, Moon, Calendar, Package, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useInactivityTimer } from '../../hooks/useInactivityTimer';
 import { NavLink, Navigate, Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
@@ -219,18 +219,6 @@ export const MainLayout: React.FC = () => {
             <Calendar className="w-5 h-5" />
             <span className="text-[10px] font-medium">Devoluciones</span>
           </NavLink>
-          {(user?.permissions?.includes('USERS_VIEW') || user?.permissions?.includes('ADMIN')) && (
-            <NavLink
-              to="/users"
-              className={({ isActive }) => cn(
-                "flex-1 flex flex-col items-center justify-center gap-1 py-2.5 min-h-[56px] transition-colors",
-                isActive ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              <User className="w-5 h-5" />
-              <span className="text-[10px] font-medium">Usuarios</span>
-            </NavLink>
-          )}
         </div>
       </nav>
 

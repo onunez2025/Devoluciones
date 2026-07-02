@@ -1,7 +1,5 @@
 import { NavLink } from 'react-router-dom';
 import {
-  Users,
-  Shield,
   LogOut,
   ChevronRight,
   ClipboardList,
@@ -37,18 +35,6 @@ export function Sidebar({ className, onNavigate, isEffectivelyExpanded = true }:
       icon: ClipboardList,
       label: 'Devoluciones',
       permission: 'USERS_VIEW'
-    },
-    {
-      to: '/users',
-      icon: Users,
-      label: 'Gestión de Usuarios',
-      permission: 'USERS_VIEW'
-    },
-    {
-      to: '/roles',
-      icon: Shield,
-      label: 'Perfiles y Permisos',
-      permission: 'ROLES_VIEW'
     }
   ];
 
