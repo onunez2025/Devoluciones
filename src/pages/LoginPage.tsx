@@ -160,7 +160,7 @@ export default function LoginPage() {
     return (
         <div className={SIATC_THEME.LOGIN_LAYOUT.CONTAINER}>
             {/* ===== MOBILE ONLY (<768px): header con color de marca + tarjeta blanca ===== */}
-            <div className="flex flex-col md:hidden min-h-screen w-full bg-background">
+            <div className="flex flex-col md:hidden min-h-dvh w-full bg-background">
                 <div className="relative bg-primary overflow-hidden shrink-0 pb-10">
                     {/* Blobs decorativos sutiles, en blanco translúcido sobre el color de marca de la app */}
                     <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-white/10 pointer-events-none" />
