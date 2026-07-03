@@ -207,7 +207,7 @@ export default function LoginPage() {
                     </svg>
                 </div>
 
-                <div className="flex-1 px-6 pt-2 pb-10 bg-background">
+                <div className="flex-1 flex flex-col justify-center px-6 py-6 bg-background">
                     <div className="max-w-md mx-auto w-full">
                         {renderFormFields()}
                     </div>
