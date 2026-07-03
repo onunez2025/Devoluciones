@@ -56,7 +56,7 @@ export default function LoginPage() {
     return (
         <div className={SIATC_THEME.LOGIN_LAYOUT.CONTAINER}>
             {/* Left Side - Brand / Visual */}
-            <div className={cn(SIATC_THEME.LOGIN_LAYOUT.LEFT_PANEL, "h-screen min-h-screen relative flex flex-col justify-between p-12")}>
+            <div className={cn(SIATC_THEME.LOGIN_LAYOUT.LEFT_PANEL, "h-screen min-h-screen")}>
                 {/* Abstract Background Pattern */}
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+IDxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0ibm9uZSIvPiA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjIiPiA8cGF0aCBkPSJNMCAzdjU0TTMgMGg1NCIvPiA8L2c+IDwvc3ZnPg==')] bg-[size:60px_60px] pointer-events-none" />
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/50 pointer-events-none" />
