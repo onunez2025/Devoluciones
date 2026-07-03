@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogIn, Lock, User, Loader2, Eye, EyeOff, Globe } from 'lucide-react';
+import { LogIn, Lock, User, Loader2, Eye, EyeOff, Globe, Sun, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { useAppConfig } from '../context/AppConfigContext';
+import { useTheme } from '../context/ThemeContext';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
@@ -14,6 +15,7 @@ export default function LoginPage() {
     const { t, i18n } = useTranslation();
     const { login } = useAuth();
     const { refreshApplications } = useAppConfig();
+    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
     const [username, setUsername] = useState('');
@@ -53,173 +55,235 @@ export default function LoginPage() {
         i18n.changeLanguage(i18n.language === 'es' ? 'en' : 'es');
     };
 
-    return (
-        <div className={SIATC_THEME.LOGIN_LAYOUT.CONTAINER}>
-            {/* Left Side - Brand / Visual */}
-            <div className={cn(SIATC_THEME.LOGIN_LAYOUT.LEFT_PANEL, "h-screen min-h-screen")}>
-                {/* Abstract Background Pattern */}
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+IDxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0ibm9uZSIvPiA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjIiPiA8cGF0aCBkPSJNMCAzdjU0TTMgMGg1NCIvPiA8L2c+IDwvc3ZnPg==')] bg-[size:60px_60px] pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/50 pointer-events-none" />
-
-                <div className="relative z-10 flex flex-col h-full justify-between">
-                    <div>
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 flex items-center justify-center shrink-0 overflow-hidden">
-                                <img src="/Logo.png" alt="Devoluciones Logo" className="h-full w-full object-contain" />
-                            </div>
-                            <span className="text-2xl font-bold tracking-tight uppercase">Devoluciones</span>
+    const renderFormFields = () => (
+        <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium mb-1.5 ml-1">
+                        {t('auth.username')}
+                    </label>
+                    <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                            <User className="w-5 h-5" />
                         </div>
-                        <h1 className="text-5xl font-bold mb-4 leading-tight text-white">
-                            Gestión de<br />Devoluciones<br />y Garantías
-                        </h1>
-                        <div className="text-slate-400 text-lg max-w-md space-y-6">
-                            <p>Control integrado de solicitudes de devoluciones, aprobaciones técnicas y garantías de productos.</p>
-                            <div className="flex flex-col w-fit gap-2">
-                                <span className="text-2xl font-bold text-slate-100 tracking-tight">Gerencia de Atención al Cliente</span>
-                                <img 
-                                    src="https://res.cloudinary.com/dvfljye2u/image/upload/v1781643958/Logo_-_Grupo_Sole_-_Transparente_blanco-_of11va.png" 
-                                    alt="Logo Grupo Sole" 
-                                    className="h-auto max-w-[12rem] object-contain"
-                                />
-                            </div>
-                        </div>
+                        <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                            className={SIATC_THEME.LOGIN_LAYOUT.INPUT}
+                            placeholder="Ingrese usuario"
+                            required
+                            autoFocus
+                        />
                     </div>
-                    
-                    <div className="text-sm text-slate-500 mt-8">
-                        © 2026 GAC - Grupo Sole. Rinnai Corporation. Todos los derechos reservados.
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium mb-1.5 ml-1">
+                        {t('auth.password')}
+                    </label>
+                    <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                            <Lock className="w-5 h-5" />
+                        </div>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className={SIATC_THEME.LOGIN_LAYOUT.INPUT}
+                            placeholder="Ingrese contraseña"
+                            required
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        >
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* Right Side - Login Form */}
-            <div className={SIATC_THEME.LOGIN_LAYOUT.RIGHT_PANEL}>
-                {/* Top Right Controls */}
-                <div className="absolute top-6 right-6 flex items-center gap-4">
-                    <ThemeToggle />
-                    <button
-                        onClick={toggleLanguage}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-accent text-sm font-medium transition-colors cursor-pointer"
+            <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-4 h-4 rounded border-cb-border text-primary focus:ring-primary"
+                    />
+                    <span className="text-muted-foreground">{t('auth.rememberMe')}</span>
+                </label>
+                <button
+                    type="button"
+                    onClick={() => setError(t('auth.forgotPasswordMessage'))}
+                    className="font-medium text-primary hover:text-primary/80 transition-colors bg-transparent border-none p-0 cursor-pointer text-xs"
+                >
+                    {t('auth.forgotPassword')}
+                </button>
+            </div>
+
+            {error && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium text-center border border-destructive/20"
+                >
+                    {error}
+                </motion.div>
+            )}
+
+            <button
+                type="submit"
+                disabled={loading}
+                className={cn(
+                    SIATC_THEME.COMPONENTS.BUTTON_PRIMARY,
+                    "w-full flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                )}
+            >
+                {loading ? (
+                    <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>{t('common.loading')}</span>
+                    </>
+                ) : (
+                    <>
+                        <span>{t('auth.loginButton')}</span>
+                        <LogIn className="w-4 h-4" />
+                    </>
+                )}
+            </button>
+        </form>
+    );
+
+    return (
+        <div className={SIATC_THEME.LOGIN_LAYOUT.CONTAINER}>
+            {/* ===== MOBILE ONLY (<768px): header con color de marca + tarjeta blanca ===== */}
+            <div className="flex flex-col md:hidden min-h-screen w-full bg-background">
+                <div className="relative bg-primary overflow-hidden shrink-0 pb-10">
+                    {/* Blobs decorativos sutiles, en blanco translúcido sobre el color de marca de la app */}
+                    <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-white/10 pointer-events-none" />
+                    <div className="absolute top-16 left-4 w-10 h-10 rounded-full bg-white/10 pointer-events-none" />
+                    <div className="absolute top-28 right-10 w-6 h-6 rounded-full bg-white/10 pointer-events-none" />
+
+                    <div className="relative z-10 flex items-center justify-between px-6 pt-8">
+                        <div className="flex items-center gap-2">
+                            <div className="w-9 h-9 flex items-center justify-center shrink-0 overflow-hidden rounded-lg bg-white/10">
+                                <img src="/Logo.png" alt="Devoluciones Logo" className="h-6 w-6 object-contain" />
+                            </div>
+                            <span className="text-white font-bold text-base tracking-tight uppercase">Devoluciones</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={toggleTheme}
+                                aria-label="Toggle theme"
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors cursor-pointer"
+                            >
+                                {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                            </button>
+                            <button
+                                onClick={toggleLanguage}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors text-xs font-medium cursor-pointer"
+                            >
+                                <Globe className="w-3.5 h-3.5" />
+                                {i18n.language === 'es' ? 'ES' : 'EN'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="relative z-10 px-6 mt-10">
+                        <h1 className="text-white text-3xl font-bold leading-tight">{t('common.welcome')}</h1>
+                        <p className="text-white/80 text-sm mt-2 max-w-xs">{t('auth.subtitle')}</p>
+                    </div>
+
+                    {/* Transición tipo ola hacia la tarjeta blanca */}
+                    <svg
+                        className="absolute bottom-0 left-0 w-full h-10"
+                        viewBox="0 0 375 48"
+                        preserveAspectRatio="none"
                     >
-                        <Globe className="w-4 h-4" />
-                        {i18n.language === 'es' ? 'ES' : 'EN'}
-                    </button>
+                        <path d="M0,24 C90,52 285,-4 375,20 L375,48 L0,48 Z" fill="var(--background)" />
+                    </svg>
                 </div>
 
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="w-full max-w-md space-y-8"
-                >
-                    <div className="text-center">
-                        <h2 className={SIATC_THEME.LOGIN_LAYOUT.TITLE}>{t('common.welcome')}</h2>
-                        <p className={SIATC_THEME.LOGIN_LAYOUT.SUBTITLE}>
-                            {t('auth.subtitle')}
-                        </p>
+                <div className="flex-1 px-6 pt-2 pb-10 bg-background">
+                    <div className="max-w-md mx-auto w-full">
+                        {renderFormFields()}
                     </div>
+                </div>
+            </div>
 
-                    <div className={SIATC_THEME.LOGIN_LAYOUT.CARD}>
-                        <form onSubmit={handleLogin} className="space-y-6">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1.5 ml-1">
-                                        {t('auth.username')}
-                                    </label>
-                                    <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
-                                            <User className="w-5 h-5" />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            value={username}
-                                            onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                                            className={SIATC_THEME.LOGIN_LAYOUT.INPUT}
-                                            placeholder="Ingrese usuario"
-                                            required
-                                            autoFocus
-                                        />
-                                    </div>
-                                </div>
+            {/* ===== DESKTOP (>=768px): panel dividido existente, sin cambios ===== */}
+            <div className="hidden md:flex md:flex-row w-full">
+                {/* Left Side - Brand / Visual */}
+                <div className={SIATC_THEME.LOGIN_LAYOUT.LEFT_PANEL}>
+                    {/* Abstract Background Pattern */}
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+IDxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0ibm9uZSIvPiA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjIiPiA8cGF0aCBkPSJNMCAzdjU0TTMgMGg1NCIvPiA8L2c+IDwvc3ZnPg==')] bg-[size:60px_60px] pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/50 pointer-events-none" />
 
-                                <div>
-                                    <label className="block text-sm font-medium mb-1.5 ml-1">
-                                        {t('auth.password')}
-                                    </label>
-                                    <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
-                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
-                                            <Lock className="w-5 h-5" />
-                                        </div>
-                                        <input
-                                            type={showPassword ? 'text' : 'password'}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className={SIATC_THEME.LOGIN_LAYOUT.INPUT}
-                                            placeholder="Ingrese contraseña"
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                                        >
-                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                        </button>
-                                    </div>
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-12 h-12 flex items-center justify-center shrink-0 overflow-hidden">
+                                    <img src="/Logo.png" alt="Devoluciones Logo" className="h-full w-full object-contain" />
                                 </div>
+                                <span className="text-2xl font-bold tracking-tight uppercase">Devoluciones</span>
                             </div>
-
-                            <div className="flex items-center justify-between text-sm">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={rememberMe}
-                                        onChange={(e) => setRememberMe(e.target.checked)}
-                                        className="w-4 h-4 rounded border-cb-border text-primary focus:ring-primary"
+                            <h1 className="text-5xl font-bold mb-4 leading-tight text-white">
+                                Gestión de<br />Devoluciones<br />y Garantías
+                            </h1>
+                            <div className="text-slate-400 text-lg max-w-md space-y-6">
+                                <p>Control integrado de solicitudes de devoluciones, aprobaciones técnicas y garantías de productos.</p>
+                                <div className="flex flex-col w-fit gap-2">
+                                    <span className="text-2xl font-bold text-slate-100 tracking-tight">Gerencia de Atención al Cliente</span>
+                                    <img
+                                        src="https://res.cloudinary.com/dvfljye2u/image/upload/v1781643958/Logo_-_Grupo_Sole_-_Transparente_blanco-_of11va.png"
+                                        alt="Logo Grupo Sole"
+                                        className="h-auto max-w-[12rem] object-contain"
                                     />
-                                    <span className="text-muted-foreground">{t('auth.rememberMe')}</span>
-                                </label>
-                                <button
-                                    type="button"
-                                    onClick={() => setError(t('auth.forgotPasswordMessage'))}
-                                    className="font-medium text-primary hover:text-primary/80 transition-colors bg-transparent border-none p-0 cursor-pointer text-xs"
-                                >
-                                    {t('auth.forgotPassword')}
-                                </button>
+                                </div>
                             </div>
+                        </div>
 
-                            {error && (
-                                <motion.div 
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium text-center border border-destructive/20"
-                                >
-                                    {error}
-                                </motion.div>
-                            )}
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className={cn(
-                                    SIATC_THEME.COMPONENTS.BUTTON_PRIMARY,
-                                    "w-full flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
-                                )}
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span>{t('common.loading')}</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span>{t('auth.loginButton')}</span>
-                                        <LogIn className="w-4 h-4" />
-                                    </>
-                                )}
-                            </button>
-                        </form>
+                        <div className="text-sm text-slate-500 mt-8">
+                            © 2026 GAC - Grupo Sole. Rinnai Corporation. Todos los derechos reservados.
+                        </div>
                     </div>
-                </motion.div>
+                </div>
+
+                {/* Right Side - Login Form */}
+                <div className={SIATC_THEME.LOGIN_LAYOUT.RIGHT_PANEL}>
+                    {/* Top Right Controls */}
+                    <div className="absolute top-6 right-6 flex items-center gap-4">
+                        <ThemeToggle />
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border hover:bg-accent text-sm font-medium transition-colors cursor-pointer"
+                        >
+                            <Globe className="w-4 h-4" />
+                            {i18n.language === 'es' ? 'ES' : 'EN'}
+                        </button>
+                    </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="w-full max-w-md space-y-8"
+                    >
+                        <div className="text-center">
+                            <h2 className={SIATC_THEME.LOGIN_LAYOUT.TITLE}>{t('common.welcome')}</h2>
+                            <p className={SIATC_THEME.LOGIN_LAYOUT.SUBTITLE}>
+                                {t('auth.subtitle')}
+                            </p>
+                        </div>
+
+                        <div className={SIATC_THEME.LOGIN_LAYOUT.CARD}>
+                            {renderFormFields()}
+                        </div>
+                    </motion.div>
+                </div>
             </div>
         </div>
     );
