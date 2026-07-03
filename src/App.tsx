@@ -13,11 +13,10 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Vista Pública (Escaneo QR) */}
-          <Route path="/public/equipment/:idEquipo" element={<PublicEquipmentPage />} />
-
-          {/* Rutas Privadas con Layout Unificado */}
+          {/* Rutas Privadas — toda consulta de datos, incluida la de historial de equipo
+              (antes "pública", ahora requiere sesión iniciada sin excepción), vive aquí. */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/public/equipment/:idEquipo" element={<PublicEquipmentPage />} />
             <Route element={<MainLayout />}>
               <Route path="/" element={<DashboardPage />} />
             </Route>

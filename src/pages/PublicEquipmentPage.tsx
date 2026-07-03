@@ -21,6 +21,7 @@ import {
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
+import { openAuthenticatedFile } from '../utils/openAuthenticatedFile';
 import { TechnicalReport } from '../types';
 
 const PublicEquipmentPage = () => {
@@ -67,8 +68,12 @@ const PublicEquipmentPage = () => {
     fetchHistory();
   }, [idEquipo]);
 
-  const openPdf = (ticket: string) => {
-    window.open(`/api/c4c/pdf/${ticket}`, '_blank');
+  const openPdf = async (ticket: string) => {
+    try {
+      await openAuthenticatedFile(`/c4c/pdf/${ticket}`);
+    } catch (err) {
+      console.error('Error al abrir reporte SAP:', err);
+    }
   };
 
   const downloadAsImage = () => {
