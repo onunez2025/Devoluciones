@@ -50,7 +50,7 @@ export function Sidebar({ className, onNavigate, isEffectivelyExpanded = true }:
     )}>
       {/* Header / Brand */}
       {showFull ? (
-        <div className="p-6 flex items-center gap-4 border-b border-border/50 bg-gradient-to-br from-primary/5 to-transparent">
+        <div className="p-4 pr-10 gap-3 lg:p-6 lg:gap-4 flex items-center border-b border-border/50 bg-gradient-to-br from-primary/5 to-transparent">
           <div className={cn(
             "w-12 h-12 flex items-center justify-center shrink-0 overflow-hidden transition-transform hover:scale-105",
             !logoUrl && "bg-primary rounded-xl shadow-premium p-2.5"
