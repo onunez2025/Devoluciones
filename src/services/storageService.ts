@@ -2,7 +2,13 @@ const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'current_user';
 
 export const storageService = {
-  setToken: (token: string, _remember = true) => localStorage.setItem(TOKEN_KEY, token),
+  setToken: (token: string, _remember = true) => {
+    localStorage.setItem(TOKEN_KEY, token);
+    // Notifica a AppConfigContext (montado una sola vez al cargar la página,
+    // antes de que exista sesión) que ya hay un token disponible para
+    // reintentar el fetch de /api/applications (branding, logo, etc.).
+    window.dispatchEvent(new Event('siatc:token-updated'));
+  },
   getToken: (): string | null => localStorage.getItem(TOKEN_KEY),
   clearToken: () => localStorage.removeItem(TOKEN_KEY),
 
