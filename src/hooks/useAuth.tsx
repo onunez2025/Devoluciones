@@ -8,7 +8,7 @@ interface AuthContextType {
   sessionConfig: SessionConfig | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (user: User, token?: string, remember?: boolean, sessionConfig?: SessionConfig) => void;
+  login: (user: User, token?: string, remember?: boolean, sessionConfig?: SessionConfig, skipSharedCookie?: boolean) => void;
   logout: () => void;
   hasPermission: (permission: string) => boolean;
 }
@@ -66,14 +66,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = '/login';
   }, []);
 
-  const login = useCallback((userData: User, token?: string, _remember = true, newSessionConfig?: SessionConfig) => {
+  const login = useCallback((userData: User, token?: string, _remember = true, newSessionConfig?: SessionConfig, skipSharedCookie = false) => {
     if (newSessionConfig) {
       setSessionConfig(newSessionConfig);
       localStorage.setItem('session_config', JSON.stringify(newSessionConfig));
     }
     if (token) {
       storageService.setToken(token);
-      setSsoCookie(token);
+      // Se omite en el piloto de Casdoor (SsoLoginPage) para no interferir con sesiones
+      // reales del resto del ecosistema mientras esto corre en "Devoluciones QA".
+      if (!skipSharedCookie) setSsoCookie(token);
     }
     storageService.setUser(userData);
     setUser(userData);
@@ -132,7 +134,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         storageService.setToken(freshToken);
         storageService.setUser(freshUser);
-        setSsoCookie(freshToken);
+        // No reescribir la cookie compartida si el token viene del piloto Casdoor (ssoPilot=true,
+        // propagado por el servidor en /auth/me) — este useEffect corre en cada carga de página,
+        // así que sin este chequeo terminaría reescribiendo la cookie igual en cada montaje.
+        const freshPayload = decodeJwt(freshToken);
+        if (!freshPayload?.ssoPilot) setSsoCookie(freshToken);
         setUser(freshUser);
       } catch (error) {
         console.error('Session validation error:', error);
