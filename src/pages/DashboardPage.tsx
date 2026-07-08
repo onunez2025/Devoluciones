@@ -20,7 +20,8 @@ import {
   Eye,
   Edit,
   DownloadCloud,
-  ClipboardList
+  ClipboardList,
+  HelpCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
@@ -310,10 +311,10 @@ const DashboardPage = () => {
 
       {/* Unified Filter Bar */}
       <div className={cn(
-        "p-1.5 md:p-2 flex flex-col md:flex-row gap-1.5 md:gap-2 items-stretch md:items-center bg-card border border-cb-border shadow-cb-level-1",
+        "p-1.5 md:p-2 flex flex-row gap-1.5 md:gap-2 items-center bg-card border border-cb-border shadow-cb-level-1",
         SIATC_THEME.TOKENS.RADIUS.CARD
       )}>
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
           <input
             type="text"
@@ -327,28 +328,24 @@ const DashboardPage = () => {
           />
         </div>
 
-        <div className="flex items-center gap-1.5 w-full md:w-auto">
-          <div className="h-9 md:h-10 flex flex-1 md:flex-none items-center px-2.5 md:px-3 bg-muted/40 rounded-xl border border-border/50 min-w-0">
-            <Calendar className="w-3 md:w-3.5 h-3 md:h-3.5 text-muted-foreground/60 mr-1.5 md:mr-2 shrink-0" />
-            <span className="text-[9px] md:text-[10px] font-bold uppercase text-muted-foreground/80 whitespace-nowrap truncate">{t('dashboard.filter.period')}</span>
-          </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all">
+            <Filter className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground/60" />
+          </button>
 
-          <div className="flex gap-1.5 shrink-0">
-            <button className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all">
-              <Filter className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground/60" />
-            </button>
-
-            <button
-              onClick={() => {
-                fetchDevoluciones();
-                fetchStats();
-              }}
-              className="h-9 px-3 md:h-10 md:px-4 flex items-center gap-1.5 md:gap-2 bg-primary/5 border border-primary/10 text-primary rounded-xl hover:bg-primary/10 transition-all"
-            >
-              <RefreshCcw className={`w-3 md:w-3.5 h-3 md:h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline text-[9px] md:text-[10px] font-black uppercase tracking-widest px-0.5 md:px-1">{t('common.refresh')}</span>
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              fetchDevoluciones();
+              fetchStats();
+            }}
+            className="h-9 w-9 md:h-10 md:px-4 flex items-center justify-center md:gap-2 bg-primary/5 border border-primary/10 text-primary rounded-xl hover:bg-primary/10 transition-all group relative"
+          >
+            <RefreshCcw className={`w-3.5 md:w-4 h-3.5 md:h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span className="hidden md:inline text-[9px] md:text-[10px] font-black uppercase tracking-widest px-0.5 md:px-1">{t('common.refresh')}</span>
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50 md:hidden">
+              {t('common.refresh')}
+            </span>
+          </button>
 
           <AnimatePresence>
             {selectedTickets.size > 0 && (
@@ -357,13 +354,25 @@ const DashboardPage = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 onClick={exportToExcel}
-                className="h-9 px-3 md:h-10 md:px-4 flex-1 md:flex-none bg-emerald-600 text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 md:gap-2"
+                className="h-9 w-9 md:h-10 md:px-4 flex items-center justify-center md:gap-2 bg-emerald-600 text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 group relative"
               >
                 <Download className="w-3.5 md:w-4 h-3.5 md:h-4" />
-                <span>Excel ({selectedTickets.size})</span>
+                <span className="hidden md:inline">Excel ({selectedTickets.size})</span>
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50 md:hidden">
+                  Excel ({selectedTickets.size})
+                </span>
               </motion.button>
             )}
           </AnimatePresence>
+
+          <div className="group relative">
+            <button className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all cursor-help">
+              <HelpCircle className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground/60" />
+            </button>
+            <span className="absolute bottom-full right-0 mb-1.5 px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50">
+              {t('dashboard.filter.period')}
+            </span>
+          </div>
         </div>
       </div>
 
