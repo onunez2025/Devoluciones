@@ -203,7 +203,7 @@ const DashboardPage = () => {
   return (
     <div className="flex-1 w-full flex flex-col gap-3 min-h-0 overflow-hidden animate-in fade-in duration-700">
       {/* Top Header */}
-      <div className={SIATC_THEME.LAYOUT.HEADER_WRAPPER}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4 shrink-0 px-1">
         <div>
           <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('dashboard.title')}</h1>
           <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>
@@ -218,11 +218,11 @@ const DashboardPage = () => {
           <button
             onClick={() => setIsBatchModalOpen(true)}
             className={cn(
-              "h-10 px-4 bg-muted/50 border border-border/50 text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2",
+              "h-9 md:h-10 px-3 md:px-4 bg-muted/50 border border-border/50 text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-1.5 md:gap-2",
               SIATC_THEME.TOKENS.RADIUS.BUTTON
             )}
           >
-            <ClipboardList className="w-3.5 h-3.5" />
+            <ClipboardList className="w-3 md:w-3.5 h-3 md:h-3.5" />
             {t('dashboard.bulkUpload')}
           </button>
           <button
@@ -231,11 +231,11 @@ const DashboardPage = () => {
               setIsModalOpen(true);
             }}
             className={cn(
-              "h-10 px-6 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2",
+              "h-9 md:h-10 px-4 md:px-6 bg-primary text-primary-foreground text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-1.5 md:gap-2",
               SIATC_THEME.TOKENS.RADIUS.BUTTON
             )}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 md:w-4 h-3.5 md:h-4" />
             {t('dashboard.newDevolucion')}
           </button>
         </div>
@@ -274,7 +274,7 @@ const DashboardPage = () => {
 
       {/* Unified Filter Bar */}
       <div className={cn(
-        "p-2 flex flex-col md:flex-row gap-2 items-stretch md:items-center bg-card border border-cb-border shadow-cb-level-1",
+        "p-1.5 md:p-2 flex flex-col md:flex-row gap-1.5 md:gap-2 items-stretch md:items-center bg-card border border-cb-border shadow-cb-level-1",
         SIATC_THEME.TOKENS.RADIUS.CARD
       )}>
         <div className="relative flex-1">
@@ -285,51 +285,51 @@ const DashboardPage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={cn(
-              "w-full pl-10 h-10 text-[11px] font-bold bg-background border border-border focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all",
+              "w-full pl-10 h-9 md:h-10 text-[11px] font-bold bg-background border border-border focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all",
               SIATC_THEME.TOKENS.RADIUS.BUTTON
             )}
           />
         </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="h-10 flex flex-1 md:flex-none items-center px-3 bg-muted/40 rounded-xl border border-border/50">
-              <Calendar className="w-3.5 h-3.5 text-muted-foreground/60 mr-2" />
-              <span className="text-[10px] font-bold uppercase text-muted-foreground/80 whitespace-nowrap">{t('dashboard.filter.period')}</span>
-            </div>
-
-            <div className="flex gap-2">
-              <button className="h-10 w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all">
-                <Filter className="w-4 h-4 text-muted-foreground/60" />
-              </button>
-
-              <button
-                onClick={() => {
-                  fetchDevoluciones();
-                  fetchStats();
-                }}
-                className="h-10 px-4 flex items-center gap-2 bg-primary/5 border border-primary/10 text-primary rounded-xl hover:bg-primary/10 transition-all"
-              >
-                <RefreshCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest px-1">{t('common.refresh')}</span>
-              </button>
-            </div>
-
-            <AnimatePresence>
-              {selectedTickets.size > 0 && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  onClick={exportToExcel}
-                  className="h-10 px-4 flex-1 md:flex-none bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>Excel ({selectedTickets.size})</span>
-                </motion.button>
-              )}
-            </AnimatePresence>
+        <div className="flex items-center gap-1.5 w-full md:w-auto">
+          <div className="h-9 md:h-10 flex flex-1 md:flex-none items-center px-2.5 md:px-3 bg-muted/40 rounded-xl border border-border/50 min-w-0">
+            <Calendar className="w-3 md:w-3.5 h-3 md:h-3.5 text-muted-foreground/60 mr-1.5 md:mr-2 shrink-0" />
+            <span className="text-[9px] md:text-[10px] font-bold uppercase text-muted-foreground/80 whitespace-nowrap truncate">{t('dashboard.filter.period')}</span>
           </div>
+
+          <div className="flex gap-1.5 shrink-0">
+            <button className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all">
+              <Filter className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground/60" />
+            </button>
+
+            <button
+              onClick={() => {
+                fetchDevoluciones();
+                fetchStats();
+              }}
+              className="h-9 px-3 md:h-10 md:px-4 flex items-center gap-1.5 md:gap-2 bg-primary/5 border border-primary/10 text-primary rounded-xl hover:bg-primary/10 transition-all"
+            >
+              <RefreshCcw className={`w-3 md:w-3.5 h-3 md:h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline text-[9px] md:text-[10px] font-black uppercase tracking-widest px-0.5 md:px-1">{t('common.refresh')}</span>
+            </button>
+          </div>
+
+          <AnimatePresence>
+            {selectedTickets.size > 0 && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                onClick={exportToExcel}
+                className="h-9 px-3 md:h-10 md:px-4 flex-1 md:flex-none bg-emerald-600 text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 md:gap-2"
+              >
+                <Download className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                <span>Excel ({selectedTickets.size})</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
+      </div>
 
         {/* High-Density Table / Mobile Cards */}
         <div className="flex-1 min-h-0 flex flex-col gap-2">
@@ -423,14 +423,14 @@ const DashboardPage = () => {
                             >
                               <History size={14} strokeWidth={2.5} />
                             </Link>
-                             <button
+                            <button
                                onClick={(e) => {
                                  e.stopPropagation();
                                  const publicUrl = `https://${window.location.host}/public/equipment/${dev.Ticket}`;
                                  setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
                                  setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                                 }}
-                               className="px-3 py-1.5 bg-orange-500/10 text-orange-600 hover:bg-orange-500 hover:text-white rounded-lg transition-all flex items-center gap-2 border border-orange-500/20 shadow-sm"
+                               className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-all flex items-center gap-2 border border-primary/20 shadow-sm"
                                title={t('dashboard.table.downloadZLabel')}
                              >
                                <DownloadCloud size={13} strokeWidth={2.5} />
@@ -479,9 +479,8 @@ const DashboardPage = () => {
               </table>
             </div>
           </div>
-
           {/* Mobile Card View */}
-          <div className="md:hidden space-y-3">
+          <div className="md:hidden flex-1 overflow-y-auto space-y-3 pr-1 min-h-0 pb-6">
             <AnimatePresence mode="popLayout">
               {devoluciones.map((dev, idx) => (
                 <motion.div
@@ -582,7 +581,7 @@ const DashboardPage = () => {
                           setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
                           setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                         }}
-                        className="flex items-center justify-center gap-2 py-2.5 bg-orange-500 text-white rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-orange-500/20 active:scale-95 transition-all uppercase"
+                        className="flex items-center justify-center gap-2 py-2.5 bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white rounded-xl font-black text-[10px] tracking-widest shadow-sm active:scale-95 transition-all uppercase"
                         title={t('dashboard.table.downloadZLabel')}
                       >
                         <DownloadCloud size={14} />
