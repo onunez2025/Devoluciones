@@ -204,25 +204,61 @@ const DashboardPage = () => {
     <div className="flex-1 w-full flex flex-col gap-3 min-h-0 overflow-hidden animate-in fade-in duration-700">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4 shrink-0 px-1">
-        <div>
-          <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('dashboard.title')}</h1>
-          <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>
-            <span className="inline-flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {t('dashboard.subtitle')}
-            </span>
-          </p>
+        <div className="flex items-center justify-between w-full md:w-auto gap-4">
+          <div>
+            <h1 className={SIATC_THEME.TYPOGRAPHY.PAGE_TITLE}>{t('dashboard.title')}</h1>
+            <p className={SIATC_THEME.TYPOGRAPHY.PAGE_SUBTITLE}>
+              <span className="inline-flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {t('dashboard.subtitle')}
+              </span>
+            </p>
+          </div>
+
+          {/* Mobile Buttons (Only visible on mobile, icon-only with tooltips) */}
+          <div className="flex md:hidden items-center gap-1.5">
+            <button
+              onClick={() => setIsBatchModalOpen(true)}
+              className={cn(
+                "group relative w-9 h-9 p-0 flex items-center justify-center bg-muted/50 border border-border/50 hover:bg-muted transition-all active:scale-95",
+                SIATC_THEME.TOKENS.RADIUS.BUTTON
+              )}
+              title={t('dashboard.bulkUpload')}
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50">
+                {t('dashboard.bulkUpload')}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                setDevolucionToEdit(null);
+                setIsModalOpen(true);
+              }}
+              className={cn(
+                "group relative w-9 h-9 p-0 flex items-center justify-center bg-primary text-primary-foreground hover:opacity-90 transition-all active:scale-95 shadow-md shadow-primary/20",
+                SIATC_THEME.TOKENS.RADIUS.BUTTON
+              )}
+              title={t('dashboard.newDevolucion')}
+            >
+              <Plus className="w-4 h-4" />
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50">
+                {t('dashboard.newDevolucion')}
+              </span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Desktop Buttons (Only visible on desktop/tablet) */}
+        <div className="hidden md:flex items-center gap-2">
           <button
             onClick={() => setIsBatchModalOpen(true)}
             className={cn(
-              "h-9 md:h-10 px-3 md:px-4 bg-muted/50 border border-border/50 text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-1.5 md:gap-2",
+              "h-10 px-4 bg-muted/50 border border-border/50 text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all flex items-center gap-2",
               SIATC_THEME.TOKENS.RADIUS.BUTTON
             )}
           >
-            <ClipboardList className="w-3 md:w-3.5 h-3 md:h-3.5" />
+            <ClipboardList className="w-3.5 h-3.5" />
             {t('dashboard.bulkUpload')}
           </button>
           <button
@@ -231,11 +267,11 @@ const DashboardPage = () => {
               setIsModalOpen(true);
             }}
             className={cn(
-              "h-9 md:h-10 px-4 md:px-6 bg-primary text-primary-foreground text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-1.5 md:gap-2",
+              "h-10 px-6 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2",
               SIATC_THEME.TOKENS.RADIUS.BUTTON
             )}
           >
-            <Plus className="w-3.5 md:w-4 h-3.5 md:h-4" />
+            <Plus className="w-4 h-4" />
             {t('dashboard.newDevolucion')}
           </button>
         </div>
