@@ -48,6 +48,7 @@ const DashboardPage = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set<string>());
   const [isPrinting, setIsPrinting] = useState(false);
+  const [showPeriodTooltip, setShowPeriodTooltip] = useState(false);
 
   // Pagination & Search state
   const [page, setPage] = useState(1);
@@ -365,13 +366,21 @@ const DashboardPage = () => {
             )}
           </AnimatePresence>
 
-          <div className="group relative">
-            <button className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all cursor-help">
+          <div className="relative">
+            <button
+              onClick={() => setShowPeriodTooltip(!showPeriodTooltip)}
+              onMouseEnter={() => setShowPeriodTooltip(true)}
+              onMouseLeave={() => setShowPeriodTooltip(false)}
+              className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all cursor-help"
+              title={t('dashboard.filter.period')}
+            >
               <HelpCircle className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground/60" />
             </button>
-            <span className="absolute bottom-full right-0 mb-1.5 px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg z-50">
-              {t('dashboard.filter.period')}
-            </span>
+            {showPeriodTooltip && (
+              <span className="absolute bottom-full right-0 mb-1.5 px-2 py-1 bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest rounded-lg pointer-events-none whitespace-nowrap shadow-lg z-50 animate-in fade-in zoom-in-95 duration-150">
+                {t('dashboard.filter.period')}
+              </span>
+            )}
           </div>
         </div>
       </div>
