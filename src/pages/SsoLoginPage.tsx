@@ -28,8 +28,10 @@ export const SsoLoginPage: React.FC = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
+                // Se usa data.token (el "freshToken" que /auth/me re-firma con fullName y demás
+                // campos completos), no el ssoToken crudo del callback.
                 // skipSharedCookie=true — este piloto no escribe la cookie domain=.siatc.cloud
-                login(data.user, token, true, undefined, true);
+                login(data.user, data.token, true, undefined, true);
                 navigate('/', { replace: true });
             } catch (err) {
                 console.error('SSO login error:', err);
