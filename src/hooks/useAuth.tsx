@@ -17,6 +17,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const SSO_COOKIE = 'token';
 
+// Fase 20: dominio de la cookie SSO compartida, configurable en build-time. Sin definir, el
+// comportamiento es idéntico al de siempre (.siatc.cloud) -- producción real no cambia.
+const COOKIE_DOMAIN = import.meta.env.VITE_COOKIE_DOMAIN || '.siatc.cloud';
+
 function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -26,13 +30,13 @@ function getCookie(name: string): string | null {
 
 function setSsoCookie(token: string) {
   const isProd = window.location.hostname.endsWith('.siatc.cloud');
-  const cookieDomain = isProd ? '; domain=.siatc.cloud' : '';
+  const cookieDomain = isProd ? `; domain=${COOKIE_DOMAIN}` : '';
   document.cookie = `token=${token}; path=/${cookieDomain}; max-age=${24 * 60 * 60}; SameSite=Lax; Secure=${isProd ? 'true' : 'false'}`;
 }
 
 function clearSsoCookie() {
   const isProd = window.location.hostname.endsWith('.siatc.cloud');
-  const cookieDomain = isProd ? '; domain=.siatc.cloud' : '';
+  const cookieDomain = isProd ? `; domain=${COOKIE_DOMAIN}` : '';
   document.cookie = `token=; path=/${cookieDomain}; max-age=0; SameSite=Lax; Secure=${isProd ? 'true' : 'false'}`;
 }
 
