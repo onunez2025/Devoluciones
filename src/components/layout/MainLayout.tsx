@@ -24,7 +24,7 @@ export const MainLayout: React.FC = () => {
   const expandedWidth  = sidebarCfg?.expandedWidth  || SIATC_THEME.SIDEBAR.EXPANDED_WIDTH;
   const collapsedWidth = sidebarCfg?.collapsedWidth || SIATC_THEME.SIDEBAR.COLLAPSED_WIDTH;
   const isHoverExpanded       = isCollapsed && isHovering && hoverExpand && allowCollapse;
-  const isEffectivelyExpanded = !isCollapsed || isHoverExpanded;
+  const isEffectivelyExpanded = !allowCollapse || !isCollapsed || isHoverExpanded;
   const sidebarPanelWidth     = isEffectivelyExpanded ? expandedWidth : collapsedWidth;
   const spacerWidth           = (allowCollapse && isCollapsed) ? collapsedWidth : expandedWidth;
 
