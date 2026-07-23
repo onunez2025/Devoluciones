@@ -247,11 +247,39 @@
   animation: zoomIn95 0.3s ease-out forwards;
 }
 
+/* Sistema "animate-in" (fade-in / zoom-in-95 / slide-in-from-*): estas clases se usaban
+   en 9 lugares (incl. SIATC_THEME.LAYOUT.PAGE_WRAPPER, aplicado a TODAS las paginas) sin
+   ninguna definicion real de animation-name — no hacian nada visualmente. Al implementarlas
+   se usa el patron "solo keyframe from + variables CSS por clase" (mismo enfoque de
+   tailwindcss-animate) en vez de definir un `to {}` con transform explicito: como el 100%
+   implicito ya es el valor propio del elemento (transform: none si nada mas lo fija), el
+   animation nunca deja un transform residual que rompa el containing-block de descendientes
+   position:fixed (bug real ya resuelto en Gestor FSM, ver plan-ui-ux-movil-tablet-centralizada
+   punto ciego #13 — aqui se evita desde el origen en vez de repetirlo).
+   Combinar clases (ej. "fade-in zoom-in-95") funciona porque cada una solo setea sus propias
+   variables --tw-enter-*, consumidas por el keyframe "enter" compartido. */
+@keyframes enter {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0)
+               scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), 1);
+  }
+}
+
 .animate-in {
+  animation-name: enter;
   animation-duration: 300ms;
-  animation-fill-mode: forwards;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+.animate-in.duration-150 { animation-duration: 150ms; }
+.animate-in.duration-500 { animation-duration: 500ms; }
+.animate-in.duration-700 { animation-duration: 700ms; }
+
+.fade-in { --tw-enter-opacity: 0; }
+.zoom-in-95 { --tw-enter-scale: 0.95; }
+.slide-in-from-bottom-2 { --tw-enter-translate-y: 0.5rem; }
+.slide-in-from-bottom { --tw-enter-translate-y: 1rem; }
+.slide-in-from-top-2 { --tw-enter-translate-y: -0.5rem; }
 
 @media print {
   body * {

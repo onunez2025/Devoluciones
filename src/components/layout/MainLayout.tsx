@@ -66,7 +66,7 @@ export const MainLayout: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#050F1A] flex flex-col justify-center items-center">
+      <div className="min-h-dvh bg-[#F9FAFB] dark:bg-[#050F1A] flex flex-col justify-center items-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         <p className="mt-4 text-sm font-bold text-cb-text-secondary uppercase tracking-widest animate-pulse">Cargando Sistema...</p>
       </div>
@@ -78,7 +78,7 @@ export const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-[#F8FAFC] dark:bg-[#020617] text-foreground flex overflow-hidden font-sans relative">
+    <div className="h-dvh bg-[#F8FAFC] dark:bg-[#020617] text-foreground flex overflow-hidden font-sans relative">
       {/* Mobile Sidebar Overlay */}
       <div
         className={cn(
@@ -171,7 +171,7 @@ export const MainLayout: React.FC = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="w-9 h-9 lg:w-11 lg:h-11 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-full transition-all duration-300 cursor-pointer"
+              className="min-h-[44px] min-w-[44px] lg:w-11 lg:h-11 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-full transition-all duration-300 cursor-pointer"
               title="Alternar Tema"
             >
               {theme === 'dark' ? <Sun className="w-4.5 h-4.5 lg:w-5 lg:h-5" /> : <Moon className="w-4.5 h-4.5 lg:w-5 lg:h-5" />}

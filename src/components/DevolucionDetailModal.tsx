@@ -64,7 +64,7 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-full transition-all group"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-red-500/10 hover:text-red-500 rounded-full transition-all group"
           >
             <X className="w-5 h-5 opacity-40 group-hover:opacity-100" />
           </button>

@@ -214,7 +214,7 @@ export default function LoginPage() {
                             <button
                                 onClick={toggleTheme}
                                 aria-label="Toggle theme"
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors cursor-pointer"
+                                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors cursor-pointer"
                             >
                                 {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                             </button>

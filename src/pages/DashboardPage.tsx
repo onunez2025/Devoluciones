@@ -222,7 +222,7 @@ const DashboardPage = () => {
             <button
               onClick={() => setIsBatchModalOpen(true)}
               className={cn(
-                "group relative w-9 h-9 p-0 flex items-center justify-center bg-muted/50 border border-border/50 hover:bg-muted transition-all active:scale-95",
+                "group relative w-11 h-11 p-0 flex items-center justify-center bg-muted/50 border border-border/50 hover:bg-muted transition-all active:scale-95",
                 SIATC_THEME.TOKENS.RADIUS.BUTTON
               )}
               title={t('dashboard.bulkUpload')}
@@ -238,7 +238,7 @@ const DashboardPage = () => {
                 setIsModalOpen(true);
               }}
               className={cn(
-                "group relative w-9 h-9 p-0 flex items-center justify-center bg-primary text-primary-foreground hover:opacity-90 transition-all active:scale-95 shadow-md shadow-primary/20",
+                "group relative w-11 h-11 p-0 flex items-center justify-center bg-primary text-primary-foreground hover:opacity-90 transition-all active:scale-95 shadow-md shadow-primary/20",
                 SIATC_THEME.TOKENS.RADIUS.BUTTON
               )}
               title={t('dashboard.newDevolucion')}
@@ -323,14 +323,14 @@ const DashboardPage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={cn(
-              "w-full pl-10 h-9 md:h-10 text-[11px] font-bold bg-background border border-border focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all",
+              "w-full pl-10 min-h-[44px] md:h-10 text-base md:text-[11px] font-bold bg-background border border-border focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all",
               SIATC_THEME.TOKENS.RADIUS.BUTTON
             )}
           />
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          <button className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all">
+          <button className="h-11 w-11 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all">
             <Filter className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground/60" />
           </button>
 
@@ -339,7 +339,7 @@ const DashboardPage = () => {
               fetchDevoluciones();
               fetchStats();
             }}
-            className="h-9 w-9 md:h-10 md:px-4 flex items-center justify-center md:gap-2 bg-primary/5 border border-primary/10 text-primary rounded-xl hover:bg-primary/10 transition-all group relative"
+            className="h-11 w-11 md:h-10 md:w-auto md:px-4 flex items-center justify-center md:gap-2 bg-primary/5 border border-primary/10 text-primary rounded-xl hover:bg-primary/10 transition-all group relative"
           >
             <RefreshCcw className={`w-3.5 md:w-4 h-3.5 md:h-4 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden md:inline text-[9px] md:text-[10px] font-black uppercase tracking-widest px-0.5 md:px-1">{t('common.refresh')}</span>
@@ -355,7 +355,7 @@ const DashboardPage = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 onClick={exportToExcel}
-                className="h-9 w-9 md:h-10 md:px-4 flex items-center justify-center md:gap-2 bg-emerald-600 text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 group relative"
+                className="h-11 w-11 md:h-10 md:w-auto md:px-4 flex items-center justify-center md:gap-2 bg-emerald-600 text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 group relative"
               >
                 <Download className="w-3.5 md:w-4 h-3.5 md:h-4" />
                 <span className="hidden md:inline">Excel ({selectedTickets.size})</span>
@@ -371,7 +371,7 @@ const DashboardPage = () => {
               onClick={() => setShowPeriodTooltip(!showPeriodTooltip)}
               onMouseEnter={() => setShowPeriodTooltip(true)}
               onMouseLeave={() => setShowPeriodTooltip(false)}
-              className="h-9 w-9 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all cursor-help"
+              className="h-11 w-11 md:h-10 md:w-10 flex items-center justify-center bg-muted/40 border border-border/50 rounded-xl hover:bg-muted transition-all cursor-help"
               title={t('dashboard.filter.period')}
             >
               <HelpCircle className="w-3.5 md:w-4 h-3.5 md:h-4 text-muted-foreground/60" />
@@ -600,7 +600,7 @@ const DashboardPage = () => {
                             setSelectedDevolucion(dev);
                             setIsDetailModalOpen(true);
                           }}
-                          className="w-9 h-9 flex items-center justify-center bg-primary/10 text-primary rounded-xl"
+                          className="w-11 h-11 flex items-center justify-center bg-primary/10 text-primary rounded-xl"
                           title={t('dashboard.table.viewDetails')}
                         >
                           <Eye size={16} />
@@ -611,14 +611,14 @@ const DashboardPage = () => {
                             setDevolucionToEdit(dev);
                             setIsModalOpen(true);
                           }}
-                          className="w-9 h-9 flex items-center justify-center bg-amber-500/10 text-amber-500 rounded-xl"
+                          className="w-11 h-11 flex items-center justify-center bg-amber-500/10 text-amber-500 rounded-xl"
                           title={t('common.edit')}
                         >
                           <Edit size={16} />
                         </button>
                         <Link
                           to={`/public/equipment/${dev.IdEquipo}`}
-                          className="w-9 h-9 flex items-center justify-center bg-primary/5 text-primary rounded-xl"
+                          className="w-11 h-11 flex items-center justify-center bg-primary/5 text-primary rounded-xl"
                           onClick={(e) => e.stopPropagation()}
                           title={t('dashboard.table.history')}
                         >
@@ -635,7 +635,7 @@ const DashboardPage = () => {
                           setPrintData({ id: dev.IdEquipo || '', url: publicUrl, nSerie: dev.N_Serie });
                           setTimeout(() => downloadAsImage(dev.IdEquipo || ''), 500);
                         }}
-                        className="flex items-center justify-center gap-2 py-2.5 bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white rounded-xl font-black text-[10px] tracking-widest shadow-sm active:scale-95 transition-all uppercase"
+                        className="flex items-center justify-center gap-2 min-h-[44px] py-2.5 bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white rounded-xl font-black text-[10px] tracking-widest shadow-sm active:scale-95 transition-all uppercase"
                         title={t('dashboard.table.downloadZLabel')}
                       >
                         <DownloadCloud size={14} />
@@ -647,7 +647,7 @@ const DashboardPage = () => {
                           handleBluetoothPrint(dev);
                         }}
                         disabled={isPrinting}
-                        className="flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all uppercase disabled:opacity-50"
+                        className="flex items-center justify-center gap-2 min-h-[44px] py-2.5 bg-primary text-primary-foreground rounded-xl font-black text-[10px] tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all uppercase disabled:opacity-50"
                       >
                         <RefreshCcw size={14} className={isPrinting ? 'animate-spin' : ''} />
                         {t('dashboard.table.print')}

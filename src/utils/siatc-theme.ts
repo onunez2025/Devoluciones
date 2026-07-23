@@ -97,7 +97,7 @@ export const SIATC_THEME = {
         BUTTON_DANGER: "h-[36px] px-4 inline-flex items-center justify-center gap-2 bg-[#DF2935] text-white rounded-cb-btn hover:bg-[#DF2935]/90 transition-all active:scale-95 font-bold text-sm shadow-sm",
         BUTTON_INFO: "h-[36px] px-4 inline-flex items-center justify-center gap-2 bg-cb-blue text-white rounded-cb-btn hover:bg-cb-blue/90 transition-all active:scale-95 font-bold text-sm shadow-sm",
         BUTTON_GHOST: "h-[36px] px-4 inline-flex items-center justify-center gap-2 bg-transparent text-cb-text-secondary rounded-cb-btn hover:bg-cb-bg transition-all active:scale-95 font-bold text-sm",
-        INPUT: "h-[36px] w-full px-4 bg-card text-cb-text-primary border border-cb-border rounded-cb-btn focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all text-sm font-medium placeholder:text-cb-neutral/40",
+        INPUT: "min-h-[44px] w-full px-4 bg-card text-cb-text-primary border border-cb-border rounded-cb-btn focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all text-base md:text-sm font-medium placeholder:text-cb-neutral/40",
         MODAL_CONTENT: "bg-card text-cb-text-primary rounded-cb-modal border border-cb-border shadow-cb-level-3 p-6 overflow-hidden",
         CARD_CONTAINER: "bg-card border border-cb-border rounded-cb-card shadow-cb-level-1",
         KPI_CARD_CONTAINER: "bg-card border border-cb-border rounded-cb-card h-[121px] py-2.5 px-6 shadow-cb-level-1 flex flex-col justify-between",
@@ -120,7 +120,7 @@ export const SIATC_THEME = {
     // 7. ESTRUCTURA DE INICIO DE SESIÓN (LOGIN_LAYOUT)
     LOGIN_LAYOUT: {
         CONTAINER: "min-h-dvh flex flex-col md:flex-row bg-[#F9FAFB] dark:bg-[#050F1A] text-cb-text-primary transition-colors duration-300",
-        CENTERED_CONTAINER: "min-h-screen bg-[#F9FAFB] dark:bg-[#050F1A] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 text-cb-text-primary",
+        CENTERED_CONTAINER: "min-h-dvh bg-[#F9FAFB] dark:bg-[#050F1A] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 text-cb-text-primary",
         CENTERED_HEADER: "sm:mx-auto sm:w-full sm:max-w-md flex flex-col items-center text-center",
         LEFT_PANEL: "hidden md:flex flex-col justify-between w-1/2 bg-slate-900 text-white p-12 relative overflow-hidden",
         RIGHT_PANEL: "flex-1 flex flex-col justify-center items-center p-8 bg-[#F9FAFB] dark:bg-[#050F1A] relative",
@@ -129,7 +129,7 @@ export const SIATC_THEME = {
         SUBTITLE: "mt-2 text-cb-text-secondary text-sm",
         ALERT_EXPIRED: "p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500 text-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-2",
         INPUT_WRAPPER: "relative rounded-cb-btn shadow-sm",
-        INPUT: "block w-full pl-10 pr-3 py-2.5 bg-card text-cb-text-primary border border-cb-border rounded-cb-btn focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-sm font-medium",
+        INPUT: "block w-full min-h-[44px] pl-10 pr-3 py-2.5 bg-card text-cb-text-primary border border-cb-border rounded-cb-btn focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-base md:text-sm font-medium",
     },
 
     // 8. ECOSISTEMA DE APLICACIONES (App Switcher)
@@ -199,6 +199,19 @@ export const SIATC_THEME = {
         ALLOW_COLLAPSE:           true,
         HOVER_EXPAND:             true,
         MOBILE_CLOSE_ON_NAVIGATE: true,
+    },
+
+    MOBILE: {
+        // Área táctil mínima en móvil/tablet: 44px, vs. 36px en escritorio.
+        TOUCH_TARGET: "min-h-[44px]",
+        TOUCH_INPUT: "min-h-[44px] text-base md:text-sm",
+
+        // Chip de estado de sincronización — comunica si un proceso largo
+        // (carga, generación de reporte) quedó pendiente, guardado o falló.
+        SYNC_STATUS_BASE: "inline-flex items-center gap-1.5 px-2.5 h-7 rounded-cb-chip border text-[11px] font-bold uppercase tracking-wide shrink-0",
+        SYNC_PENDING: "bg-[#FFF4E5] text-[#F0AD4E] border-[#FFF4E5]",
+        SYNC_SAVED: "bg-[#E6F6EF] text-[#05B169] border-[#E6F6EF]",
+        SYNC_ERROR: "bg-[#FDECEE] text-[#DF2935] border-[#FDECEE]",
     },
 };
 

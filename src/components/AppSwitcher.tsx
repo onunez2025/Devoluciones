@@ -156,7 +156,7 @@ export function AppSwitcher({ currentAppId = 'DEV' }: AppSwitcherProps) {
             {isOpen && (
                 isMobile ? (
                     createPortal(
-                        <div className="fixed inset-0 w-screen h-screen rounded-none border-none bg-card z-[100] flex flex-col p-0 overflow-y-auto">
+                        <div className="fixed inset-0 w-screen h-dvh rounded-none border-none bg-card z-[100] flex flex-col p-0 overflow-y-auto">
                             {renderSwitcherContent()}
                         </div>,
                         document.body
