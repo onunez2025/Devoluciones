@@ -150,14 +150,19 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 md:flex md:items-center md:justify-center md:p-4">
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs md:bg-background/80 md:backdrop-blur-sm touch-none animate-in fade-in duration-300"
+        onClick={onClose}
+      />
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         className={cn(
-          "bg-card text-cb-text-primary border border-cb-border shadow-cb-level-3 w-full max-w-2xl max-h-[92vh] overflow-hidden flex flex-col",
-          SIATC_THEME.TOKENS.RADIUS.MODAL
+          "fixed bottom-0 inset-x-0 max-h-[85dvh] rounded-t-cb-modal animate-in slide-in-from-bottom duration-300",
+          "md:relative md:bottom-auto md:inset-x-auto md:w-full md:max-w-2xl md:max-h-[92vh] md:rounded-cb-modal md:[--tw-enter-translate-y:0] md:zoom-in-95",
+          "bg-card text-cb-text-primary border border-cb-border shadow-cb-level-3 overflow-hidden flex flex-col"
         )}
       >
         {/* Modal Header */}

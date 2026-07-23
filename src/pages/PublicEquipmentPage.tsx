@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
 import { openAuthenticatedFile } from '../utils/openAuthenticatedFile';
 import { TechnicalReport } from '../types';
+import { cn } from '../utils/cn';
 
 const PublicEquipmentPage = () => {
   const { t } = useTranslation();
@@ -292,20 +293,24 @@ const PublicEquipmentPage = () => {
 
       <AnimatePresence>
         {selectedReport && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="fixed inset-0 z-50 md:flex md:items-center md:justify-center md:p-6">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedReport(null)}
-              className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/40 backdrop-blur-xs md:bg-background/80 md:backdrop-blur-sm touch-none"
             />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl glass-card overflow-hidden shadow-2xl border-primary/20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className={cn(
+                "fixed bottom-0 inset-x-0 max-h-[85dvh] rounded-t-cb-modal animate-in slide-in-from-bottom duration-300",
+                "md:relative md:bottom-auto md:inset-x-auto md:w-full md:max-w-2xl md:max-h-[85vh] md:rounded-cb-modal md:[--tw-enter-translate-y:0] md:zoom-in-95",
+                "glass-card overflow-hidden shadow-2xl border-primary/20"
+              )}
             >
               {/* Header Modal */}
               <div className="p-6 border-b border-border/50 flex items-center justify-between bg-muted/30">
