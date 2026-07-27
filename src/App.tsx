@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import SsoLoginPage from './pages/SsoLoginPage';
 import SsoStatusPage from './pages/SsoStatusPage';
 import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage';
 import PublicEquipmentPage from './pages/PublicEquipmentPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import MainLayout from './components/layout/MainLayout';
@@ -23,6 +24,7 @@ function App() {
             <Route path="/public/equipment/:idEquipo" element={<PublicEquipmentPage />} />
             <Route element={<MainLayout />}>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Route>
           </Route>
 

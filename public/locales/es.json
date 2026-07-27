@@ -195,6 +195,48 @@
       "saveError": "Error al guardar permisos"
     }
   },
+  "profile": {
+    "title": "Mi Perfil",
+    "subtitle": "Gestiona tu información personal y credenciales.",
+    "changePhoto": "Cambiar foto de perfil",
+    "noRole": "Sin rol",
+    "info": {
+      "title": "Información",
+      "email": "Email",
+      "noEmail": "Sin email registrado",
+      "company": "Empresa",
+      "noCompany": "Sole",
+      "status": "Estado",
+      "active": "Activo"
+    },
+    "account": {
+      "title": "Cuenta",
+      "subtitle": "Tu nombre de usuario y correo electrónico."
+    },
+    "fields": {
+      "username": "Usuario",
+      "email": "Email",
+      "newPassword": "Nueva Contraseña",
+      "confirmPassword": "Confirmar Contraseña"
+    },
+    "readonlyAlert": "Estos campos son de solo lectura. Si necesitas un cambio, contacta al administrador del sistema.",
+    "security": {
+      "title": "Seguridad",
+      "subtitle": "Cambia tu contraseña de acceso."
+    },
+    "passwordNote": "Deja los campos vacíos para mantener tu contraseña actual. Mínimo 4 caracteres.",
+    "saving": "Guardando...",
+    "saveChanges": "Guardar Cambios",
+    "errors": {
+      "imageProcess": "Error al procesar la imagen",
+      "passwordMismatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 4 caracteres",
+      "updateFailed": "Error al actualizar el perfil"
+    },
+    "success": {
+      "updated": "Perfil actualizado correctamente"
+    }
+  },
   "devolucion": {
     "detail": {
       "title": "Detalle de Devolución",

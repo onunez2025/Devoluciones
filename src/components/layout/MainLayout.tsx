@@ -182,7 +182,13 @@ export const MainLayout: React.FC = () => {
             <div className="w-px h-6 bg-border/50 mx-1" />
 
             {/* User Profile Avatar */}
-            <div className="flex items-center gap-3 pl-1 pr-4 py-1 rounded-full border border-transparent hover:bg-white dark:hover:bg-white/5">
+            <NavLink
+              to="/profile"
+              className={({ isActive }) => cn(
+                "flex items-center gap-3 pl-1 pr-4 py-1 rounded-full border border-transparent transition-all duration-300",
+                isActive ? "bg-primary/10 border-primary/20" : "hover:bg-white dark:hover:bg-white/5"
+              )}
+            >
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-primary/20 ring-2 ring-white dark:ring-slate-900 overflow-hidden shrink-0">
                 {user?.avatarUrl || user?.avatar_url ? (
                   <img src={user.avatarUrl || user?.avatar_url} alt="Profile" className="w-full h-full object-cover" />
@@ -196,7 +202,7 @@ export const MainLayout: React.FC = () => {
                   {user?.roleId === 1 ? 'Admin' : 'Operador'}
                 </span>
               </div>
-            </div>
+            </NavLink>
           </div>
         </header>
 

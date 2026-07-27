@@ -430,12 +430,15 @@ app.post('/api/auth/login', async (req, res) => {
       user: {
         id: user.Id,
         username: user.Username,
+        email: user.Email,
         fullName: user.FullName,
         role_name: user.RoleName,
         role: user.RoleName,
         permissions: perms,
         perms: perms,
         apps: user.Apps || '',
+        avatarUrl: user.AvatarUrl,
+        casName: user.cas_name || null,
         requires_password_change: user.RequiresPasswordChange === 1
       },
       sessionConfig: { timeoutMinutes, warningMinutes }
@@ -472,7 +475,7 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
       .input('id', sql.UniqueIdentifier, userId)
       .input('app', sql.NVarChar(sql.MAX), APP_IDENTIFIER)
       .query(`
-        SELECT u.Id, u.Username, u.FullName, r.Name as RoleName, u.RoleId, u.Apps, u.RequiresPasswordChange, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
+        SELECT u.Id, u.Username, u.Email, u.FullName, u.AvatarUrl, r.Name as RoleName, u.RoleId, u.Apps, u.RequiresPasswordChange, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
         FROM [EBM].[Users] u
         LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id
         LEFT JOIN [EBM].[UserCAS] uc ON u.Id = uc.UserId
@@ -537,12 +540,16 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
       user: {
         id: user.Id,
         username: user.Username,
+        email: user.Email,
         fullName: user.FullName,
         role_name: user.RoleName,
         role: user.RoleName,
         permissions: perms,
         perms: perms,
-        apps: user.Apps || ''
+        apps: user.Apps || '',
+        avatarUrl: user.AvatarUrl,
+        casName: user.cas_name || null,
+        requires_password_change: user.RequiresPasswordChange === 1
       }
     });
   } catch (error: any) {
@@ -1221,6 +1228,43 @@ app.post('/api/users', verifyToken, checkPermission('USERS_EDIT'), async (req, r
     res.status(201).json({ message: 'Usuario creado correctamente' });
   } catch (error: any) {
     res.status(500).json({ message: 'Error al crear usuario', error: safeError(error) });
+  }
+});
+
+// PUT /api/profile — autoservicio: cualquier usuario autenticado puede guardar SU PROPIO
+// avatar y/o contraseña. A diferencia de PUT /api/users/:id (gateado por checkPermission
+// ('USERS_EDIT')), nunca acepta un id por parametro: siempre opera sobre req.user.id, y
+// solo toca AvatarUrl/PasswordHash -- nunca username/email/fullName/roleId/managementId/apps.
+app.put('/api/profile', verifyToken, async (req: any, res: any) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ message: 'No autenticado' });
+    const { avatar_url, password_hash } = req.body;
+
+    const pool = await poolPromise;
+    const request = pool.request().input('id', sql.UniqueIdentifier, userId);
+
+    const sets: string[] = [];
+    if (avatar_url !== undefined) {
+      request.input('avatarUrl', sql.NVarChar(500), avatar_url || null);
+      sets.push('AvatarUrl = @avatarUrl');
+    }
+    if (password_hash && String(password_hash).trim() !== '') {
+      const hashedPwd = await bcrypt.hash(password_hash, 10);
+      request.input('password', sql.NVarChar(sql.MAX), hashedPwd);
+      sets.push('PasswordHash = @password', 'RequiresPasswordChange = 0');
+    }
+
+    if (sets.length > 0) {
+      await request.query(`UPDATE [EBM].[Users] SET ${sets.join(', ')} WHERE Id = @id`);
+    }
+
+    const result = await pool.request().input('id', sql.UniqueIdentifier, userId)
+      .query('SELECT FullName as fullName, AvatarUrl as avatarUrl, CAST(RequiresPasswordChange AS BIT) as requires_password_change FROM [EBM].[Users] WHERE Id = @id');
+    if (result.recordset.length === 0) return res.status(404).json({ message: 'Usuario no encontrado' });
+    res.json(result.recordset[0]);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Error al actualizar el perfil', error: safeError(error) });
   }
 });
 

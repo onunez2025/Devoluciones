@@ -195,6 +195,48 @@
       "saveError": "Error saving permissions"
     }
   },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage your personal information and credentials.",
+    "changePhoto": "Change profile photo",
+    "noRole": "No role",
+    "info": {
+      "title": "Information",
+      "email": "Email",
+      "noEmail": "No email registered",
+      "company": "Company",
+      "noCompany": "Sole",
+      "status": "Status",
+      "active": "Active"
+    },
+    "account": {
+      "title": "Account",
+      "subtitle": "Your username and email address."
+    },
+    "fields": {
+      "username": "Username",
+      "email": "Email",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password"
+    },
+    "readonlyAlert": "These fields are read-only. If you need a change, contact the system administrator.",
+    "security": {
+      "title": "Security",
+      "subtitle": "Change your access password."
+    },
+    "passwordNote": "Leave fields empty to keep your current password. Minimum 4 characters.",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "errors": {
+      "imageProcess": "Error processing the image",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 4 characters",
+      "updateFailed": "Error updating profile"
+    },
+    "success": {
+      "updated": "Profile updated successfully"
+    }
+  },
   "devolucion": {
     "detail": {
       "title": "Return Detail",

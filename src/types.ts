@@ -6,6 +6,7 @@ export interface SessionConfig {
 export interface User {
   id: string;
   username: string;
+  email?: string;
   fullName: string;
   role: string;
   roleId?: number;
@@ -14,6 +15,8 @@ export interface User {
   avatarUrl?: string;
   avatar_url?: string;
   apps?: string;
+  casName?: string;
+  requires_password_change?: boolean;
 }
 
 export interface Devolucion {
