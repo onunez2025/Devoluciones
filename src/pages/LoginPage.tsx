@@ -40,7 +40,10 @@ export default function LoginPage() {
             });
             const { token, user, sessionConfig } = response.data;
 
-            login(user, token, rememberMe, sessionConfig);
+            // skipSharedCookie=true: el backend ya escribe la cookie compartida via Set-Cookie
+            // -- reescribirla aca duplica la cookie "token" y rompe su parseo en cualquier
+            // otra app a la que se navegue despues.
+            login(user, token, rememberMe, sessionConfig, true);
             refreshApplications();
             navigate('/');
         } catch (err: any) {
