@@ -164,6 +164,8 @@ const sqlConfig = {
   },
 };
 
+// Etapa 6 -- pool admin, reservado para operaciones DDL/migraciones que ni siatc_reader ni
+// siatc_writer pueden ejecutar (ninguno tiene permiso de modificar esquema).
 const poolPromise = new sql.ConnectionPool(sqlConfig)
   .connect()
   .then(pool => {
@@ -172,6 +174,38 @@ const poolPromise = new sql.ConnectionPool(sqlConfig)
   })
   .catch(err => {
     console.error('❌ Error de conexión SQL Server:', err);
+    process.exit(1);
+  });
+void poolPromise; // Se conecta al arrancar (fail-fast) y queda reservado para DDL futuro -- ningún endpoint actual lo usa.
+
+// Etapa 6 -- usuarios de BD de privilegio minimo (siatc_reader/siatc_writer). Si las env
+// vars DB_USER_READ/DB_USER_WRITE todavia no estan configuradas en Dokploy, caen de vuelta
+// al usuario admin original -- permite desplegar este codigo antes de agregar esas env vars,
+// y revertir a admin-only con solo quitarlas, sin tocar codigo.
+const readSqlConfig = {
+  ...sqlConfig,
+  user: process.env.DB_USER_READ || process.env.DB_USER,
+  password: process.env.DB_PASS_READ || process.env.DB_PASSWORD,
+};
+const writeSqlConfig = {
+  ...sqlConfig,
+  user: process.env.DB_USER_WRITE || process.env.DB_USER,
+  password: process.env.DB_PASS_WRITE || process.env.DB_PASSWORD,
+};
+
+// Endpoints GET -- solo lectura, usa siatc_reader (privilegio minimo).
+const readPoolPromise = new sql.ConnectionPool(readSqlConfig)
+  .connect()
+  .catch(err => {
+    console.error('❌ Error de conexión SQL Server (read pool):', err);
+    process.exit(1);
+  });
+
+// Endpoints POST/PUT/DELETE/PATCH -- usa siatc_writer (lectura + escritura en dbo/EBM).
+const writePoolPromise = new sql.ConnectionPool(writeSqlConfig)
+  .connect()
+  .catch(err => {
+    console.error('❌ Error de conexión SQL Server (write pool):', err);
     process.exit(1);
   });
 
@@ -357,7 +391,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
   const { username, password } = parseResult.data;
   try {
-    const pool = await poolPromise;
+    const pool = await writePoolPromise;
     const result = await pool.request()
       .input('u', sql.NVarChar(sql.MAX), username)
       .input('app', sql.NVarChar(sql.MAX), APP_IDENTIFIER)
@@ -470,7 +504,7 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: 'No autenticado' });
 
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const userResult = await pool.request()
       .input('id', sql.UniqueIdentifier, userId)
       .input('app', sql.NVarChar(sql.MAX), APP_IDENTIFIER)
@@ -597,7 +631,7 @@ app.get('/api/auth/sso/callback', async (req: any, res: any) => {
         const email = (profile.email || '').trim().toLowerCase();
         if (!email) return redirectToSsoStatus(res, 'error', 'Casdoor no devolvió un correo verificado.');
 
-        const pool = await poolPromise;
+        const pool = await readPoolPromise;
 
         // 1. ¿Ya existe un usuario real con este correo y con acceso a Devoluciones?
         // Igual que el login normal: se calcula casId (LEFT JOIN EBM.UserCAS) — en Devoluciones
@@ -716,7 +750,7 @@ app.get('/api/devoluciones', verifyToken, async (req: any, res) => {
   const offset = (page - 1) * limit;
 
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
 
     let whereClause = '';
     const request = pool.request();
@@ -795,7 +829,7 @@ app.get('/api/devoluciones', verifyToken, async (req: any, res) => {
 // Estadísticas del dashboard
 app.get('/api/devoluciones/stats', verifyToken, async (req: any, res) => {
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const casId = req.user?.casId || null;
     const sqlReq = pool.request();
     // RLS: filtro adicional por empresa CAS si el usuario es CAS
@@ -825,7 +859,7 @@ app.get('/api/devoluciones/stats', verifyToken, async (req: any, res) => {
 app.get('/api/equipos/lookup/:ticket', verifyToken, async (req, res) => {
   const { ticket } = req.params;
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const result = await pool.request()
       .input('ticket', sql.VarChar(255), ticket)
       .query(`
@@ -864,7 +898,7 @@ app.get('/api/equipos/lookup/:ticket', verifyToken, async (req, res) => {
 app.get('/api/sap/lookup/:ticket', verifyToken, async (req, res) => {
   const { ticket } = req.params;
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const result = await pool.request()
       .input('ticket', sql.VarChar(255), ticket)
       .query(`
@@ -887,7 +921,7 @@ app.get('/api/sap/lookup/:ticket', verifyToken, async (req, res) => {
 // Listado de técnicos únicos para carga masiva
 app.get('/api/lookups/technicians', verifyToken, async (_req, res) => {
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const result = await pool.request().query(`
       SELECT DISTINCT TRIM(NombreTecnico + ' ' + ApellidoTecnico) as Tecnico 
       FROM [SIATC].[Dashboard_FSM] 
@@ -904,7 +938,7 @@ app.get('/api/lookups/technicians', verifyToken, async (_req, res) => {
 app.get('/api/lookups/tickets-by-period', verifyToken, async (req, res) => {
   const { date, tech } = req.query;
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const result = await pool.request()
       .input('date', sql.Date, date)
       .input('tech', sql.VarChar(255), tech)
@@ -937,7 +971,7 @@ app.post('/api/devoluciones/batch', verifyToken, async (req: any, res) => {
   const username = req.user?.username || 'unknown';
 
   try {
-    const pool = await poolPromise;
+    const pool = await writePoolPromise;
     const transaction = new sql.Transaction(pool);
     await transaction.begin();
 
@@ -977,7 +1011,7 @@ app.post('/api/devoluciones', verifyToken, async (req: any, res) => {
   const username = req.user?.username || 'unknown';
 
   try {
-    const pool = await poolPromise;
+    const pool = await writePoolPromise;
 
     // RLS: usuario CAS solo puede registrar devoluciones de sus propios tickets
     const casId = req.user?.casId || null;
@@ -1025,7 +1059,7 @@ app.put('/api/devoluciones/:ticket', verifyToken, async (req: any, res) => {
   const data = parsed.data;
 
   try {
-    const pool = await poolPromise;
+    const pool = await writePoolPromise;
 
     // RLS: usuario CAS solo puede editar devoluciones de sus tickets
     const casId = req.user?.casId || null;
@@ -1119,7 +1153,7 @@ app.get('/api/public/equipment/:idEquipo/history', verifyToken, async (req, res)
   console.log(`🔍 [Public] Buscando historial para equipo: ${sanitizeLog(safeId)}`);
   
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     
     // Paso 1: Obtener la información básica del equipo (IdCliente y CodigoExterno)
     // Buscamos por Ticket (Indexado), IdEquipo o CodigoExterno
@@ -1185,7 +1219,7 @@ app.get('/api/public/equipment/:idEquipo/history', verifyToken, async (req, res)
 // Listado de usuarios
 app.get('/api/users', verifyToken, checkPermission('USERS_VIEW'), async (_req, res) => {
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const result = await pool.request()
       .input('app', sql.VarChar(255), APP_IDENTIFIER)
       .query(`
@@ -1208,7 +1242,7 @@ app.post('/api/users', verifyToken, checkPermission('USERS_EDIT'), async (req, r
   if (!parsedUser.success) return res.status(400).json({ message: 'Datos inválidos', details: parsedUser.error.issues });
   const { username, email, fullName, password, roleId, managementId, apps } = parsedUser.data;
   try {
-    const pool = await poolPromise;
+    const pool = await writePoolPromise;
     const passwordHash = await bcrypt.hash(password, 10);
     const userId = uuidv4();
     
@@ -1241,7 +1275,7 @@ app.put('/api/profile', verifyToken, async (req: any, res: any) => {
     if (!userId) return res.status(401).json({ message: 'No autenticado' });
     const { avatar_url, password_hash } = req.body;
 
-    const pool = await poolPromise;
+    const pool = await writePoolPromise;
     const request = pool.request().input('id', sql.UniqueIdentifier, userId);
 
     const sets: string[] = [];
@@ -1275,7 +1309,7 @@ app.put('/api/users/:id', verifyToken, checkPermission('USERS_EDIT'), async (req
   if (!parsedUser.success) return res.status(400).json({ message: 'Datos inválidos', details: parsedUser.error.issues });
   const { username, email, fullName, password, roleId, managementId, isActive, apps } = parsedUser.data;
   try {
-    const pool = await poolPromise;
+    const pool = await writePoolPromise;
     let query = `
       UPDATE [EBM].[Users] 
       SET Username = @u, Email = @e, FullName = @fn, RoleId = @rid, ManagementId = @mid, IsActive = @active, Apps = @apps
@@ -1308,7 +1342,7 @@ app.put('/api/users/:id', verifyToken, checkPermission('USERS_EDIT'), async (req
 // Listado de roles
 app.get('/api/roles', verifyToken, async (_req, res) => {
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const result = await pool.request()
       .input('app', sql.VarChar(255), APP_IDENTIFIER)
       .query(`
@@ -1326,7 +1360,7 @@ app.get('/api/roles', verifyToken, async (_req, res) => {
 app.get('/api/roles/:id/permissions', verifyToken, checkPermission('ROLES_VIEW'), async (req, res) => {
   const { id } = req.params;
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const result = await pool.request()
       .input('rid', sql.UniqueIdentifier, id)
       .query("SELECT Permission FROM [EBM].[RolePermissions] WHERE RoleId = @rid");
@@ -1341,7 +1375,7 @@ app.post('/api/roles/:id/permissions', verifyToken, checkPermission('ROLES_EDIT'
   const { id } = req.params;
   const { permissions } = req.body;
   try {
-    const pool = await poolPromise;
+    const pool = await writePoolPromise;
     const transaction = new sql.Transaction(pool);
     await transaction.begin();
     try {
@@ -1369,7 +1403,7 @@ app.post('/api/roles/:id/permissions', verifyToken, checkPermission('ROLES_EDIT'
 // Listado de gerencias
 app.get('/api/managements', verifyToken, async (_req, res) => {
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const result = await pool.request().query("SELECT * FROM [EBM].[Managements] ORDER BY Name ASC");
     res.json(result.recordset);
   } catch (error: any) {
@@ -1386,7 +1420,7 @@ app.get('/api/c4c/pdf/:ticket', verifyTokenForDownload, async (req, res) => {
   const baseUrl = process.env.C4C_BASE_URL;
 
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const dbTicket = await pool.request()
       .input('ticket', sql.VarChar(255), ticket)
       .query('SELECT TOP 1 LlamadaFSM FROM [SIATC].[Dashboard_FSM] WHERE Ticket = @ticket');
@@ -1483,7 +1517,7 @@ app.get('/api/c4c/pdf/:ticket', verifyTokenForDownload, async (req, res) => {
 // --- APPLICATIONS (AppSwitcher dinámico) ---
 app.get('/api/applications', verifyToken, async (req, res) => {
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const activeOnly = req.query.activeOnly === 'true';
     let query = `
       SELECT 
@@ -1638,7 +1672,7 @@ interface SessionConfig { rateLimitMaxAttempts: number; rateLimitWindowMinutes: 
 
 async function fetchSessionConfig(): Promise<SessionConfig> {
   try {
-    const pool = await poolPromise;
+    const pool = await readPoolPromise;
     const result = await pool.request().input('code', sql.VarChar(20), APP_IDENTIFIER)
       .query('SELECT RateLimitMaxAttempts, RateLimitWindowMinutes FROM EBM.AppSessionConfig WHERE UPPER(AppCode) = UPPER(@code)');
     if (result.recordset.length > 0) {
