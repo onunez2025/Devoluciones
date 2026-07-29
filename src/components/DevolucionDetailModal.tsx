@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { X, Calendar, Package, ClipboardList, Tag, FileText, Camera, Printer, RefreshCcw, User, Wrench, ExternalLink } from 'lucide-react';
 import { Devolucion } from '../types';
 import { bluetoothPrinter } from '../services/bluetoothPrinter';

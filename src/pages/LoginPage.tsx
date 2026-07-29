@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { LogIn, Lock, User, Loader2, Eye, EyeOff, Globe, Sun, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
