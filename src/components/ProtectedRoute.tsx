@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { LottiePlayer } from './common/LottiePlayer';
 
 interface ProtectedRouteProps {
   allowedRoles?: number[];
@@ -13,7 +14,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles, requiredP
   if (isLoading) {
     return (
       <div className="min-h-dvh bg-background flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-40 h-40">
+          <LottiePlayer
+            src={() => import('../assets/lottie/loading.json')}
+            fallback={<div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />}
+            className="w-40 h-40"
+            loop
+          />
+        </div>
       </div>
     );
   }
