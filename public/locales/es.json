@@ -22,6 +22,10 @@
     "noResultsHint": "Intente cambiar los filtros de búsqueda"
   },
   "auth": {
+    "transition": {
+      "welcomeTitle": "¡Bienvenido{{name}}!",
+      "farewellTitle": "Hasta pronto{{name}}"
+    },
     "subtitle": "Ingresa tus credenciales para acceder a la plataforma.",
     "username": "Usuario",
     "password": "Contraseña",

@@ -10,6 +10,8 @@ interface AuthContextType {
   isLoading: boolean;
   login: (user: User, token?: string, remember?: boolean, sessionConfig?: SessionConfig, skipSharedCookie?: boolean) => void;
   logout: () => void;
+  requestLogout: () => void;
+  isLoggingOut: boolean;
   hasPermission: (permission: string) => boolean;
 }
 
@@ -54,6 +56,7 @@ function decodeJwt(token: string): any | null {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [sessionConfig, setSessionConfig] = useState<SessionConfig | null>(() => {
     try { const s = localStorage.getItem('session_config'); return s ? JSON.parse(s) : null; } catch { return null; }
   });
@@ -66,11 +69,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(null);
     setSessionConfig(null);
+    setIsLoggingOut(false);
     localStorage.removeItem('session_config');
     storageService.clearAll();
     clearSsoCookie();
     window.location.href = '/login';
   }, []);
+
+  const requestLogout = useCallback(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      logout();
+      return;
+    }
+    setIsLoggingOut(true);
+  }, [logout]);
 
   const login = useCallback((userData: User, token?: string, _remember = true, newSessionConfig?: SessionConfig, skipSharedCookie = false) => {
     if (newSessionConfig) {
@@ -170,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, sessionConfig, isAuthenticated: !!user, isLoading, login, logout, hasPermission }}>
+    <AuthContext.Provider value={{ user, sessionConfig, isAuthenticated: !!user, isLoading, login, logout, requestLogout, isLoggingOut, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

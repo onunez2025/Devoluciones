@@ -11,6 +11,9 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
 
+const prefersReducedMotion = () =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 export default function LoginPage() {
     const { t, i18n } = useTranslation();
     const { login } = useAuth();
@@ -45,6 +48,13 @@ export default function LoginPage() {
             // otra app a la que se navegue despues.
             login(user, token, rememberMe, sessionConfig, true);
             refreshApplications();
+
+            // La bienvenida se muestra ya autenticado (ver MainLayout), no aca -- demorar
+            // el navigate() dejaria al usuario "autenticado pero todavia en /login" por
+            // un rato, una ventana que ProtectedRoute podria interpretar mal.
+            if (!prefersReducedMotion()) {
+                sessionStorage.setItem('siatc_welcome_user', user.fullName || user.username || '');
+            }
             navigate('/');
         } catch (err: any) {
             console.error('Login error:', err);
