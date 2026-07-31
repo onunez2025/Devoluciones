@@ -138,13 +138,9 @@ export default function LoginPage() {
             </div>
 
             {error && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium text-center border border-destructive/20"
-                >
+                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium text-center border border-destructive/20 error-shake">
                     {error}
-                </motion.div>
+                </div>
             )}
 
             <button

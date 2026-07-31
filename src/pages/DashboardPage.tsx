@@ -35,6 +35,7 @@ import { bluetoothPrinter } from '../services/bluetoothPrinter';
 import { generateZPL } from '../services/zplService';
 import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
+import { LottiePlayer } from '../components/common/LottiePlayer';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -665,8 +666,17 @@ const DashboardPage = () => {
               SIATC_THEME.TOKENS.MASTER_ROUNDNESS
             )}>
               <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in-95 duration-500">
-                <div className="p-6 bg-muted/20 rounded-full">
-                  <SearchX size={40} className="text-muted-foreground/20" />
+                <div className="w-28 h-28">
+                  <LottiePlayer
+                    src={() => import('../assets/lottie/empty-state.json')}
+                    fallback={
+                      <div className="p-6 bg-muted/20 rounded-full">
+                        <SearchX size={40} className="text-muted-foreground/20" />
+                      </div>
+                    }
+                    className="w-28 h-28"
+                    loop
+                  />
                 </div>
                 <div className="text-center">
                   <p className="text-[13px] font-black uppercase tracking-widest text-muted-foreground/40">{t('common.noResults')}</p>
