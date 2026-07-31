@@ -325,6 +325,28 @@ const verifyTokenForDownload = async (req: any, res: any, next: any) => {
 
 const APP_IDENTIFIER = 'DEV';
 
+// Helper for Auditing
+async function logAudit(req: any, action: string, entity: string, entityId: string, details: Record<string, unknown>) {
+  try {
+    const user = req.user;
+    if (!user) return;
+    const pool = await writePoolPromise;
+    await pool.request()
+      .input('uid', sql.UniqueIdentifier, user.id)
+      .input('un', sql.NVarChar(255), user.full_name || user.username)
+      .input('acc', sql.NVarChar(100), action)
+      .input('ent', sql.NVarChar(100), entity)
+      .input('eid', sql.NVarChar(100), entityId)
+      .input('det', sql.NVarChar(sql.MAX), JSON.stringify(details))
+      .input('app', sql.VarChar(20), APP_IDENTIFIER)
+      .input('ip', sql.VarChar(50), req.ip || null)
+      .query(`INSERT INTO [dbo].[GAC_APP_TB_AUDIT_LOG] (UsuarioID, UsuarioNombre, Accion, Entidad, EntidadID, Detalle, ApplicationCode, IPAddress, Fecha)
+              VALUES (@uid, @un, @acc, @ent, @eid, @det, @app, @ip, GETDATE())`);
+  } catch (err) {
+    console.error('❌ Falla en Log de Auditoría DEV:', err);
+  }
+}
+
 // --- Middleware de Permisos ---
 const checkPermission = (requiredPermission: string) => {
   return (_req: any, res: any, next: any) => {
@@ -980,6 +1002,7 @@ app.post('/api/devoluciones/batch', verifyToken, async (req: any, res) => {
           `);
       }
       await transaction.commit();
+      await logAudit(req, 'CARGA_MASIVA_DEVOLUCIONES', 'Devolucion', `${tickets.length} tickets`, { tickets: tickets.map(d => d.Ticket) });
       res.status(201).json({ message: `${tickets.length} devoluciones registradas correctamente` });
     } catch (error) {
       await transaction.rollback();
@@ -1031,7 +1054,8 @@ app.post('/api/devoluciones', verifyToken, async (req: any, res) => {
         (Ticket, Personal_ST, Personal_Ope, N_Guia, N_Serie, Sticker, Comentario, Adjunto, Creado_el)
         VALUES (@Ticket, @Personal_ST, @Personal_Ope, @N_Guia, @N_Serie, @Sticker, @Comentario, @Adjunto, @FechaRegistro)
       `);
-    
+
+    await logAudit(req, 'CREAR_DEVOLUCION', 'Devolucion', data.Ticket, { N_Guia: data.N_Guia, N_Serie: data.N_Serie, Sticker: data.Sticker });
     res.status(201).json({ message: 'Devolución registrada correctamente' });
   } catch (error: any) {
     console.error('Error al registrar devolución:', error);
@@ -1085,7 +1109,8 @@ app.put('/api/devoluciones/:ticket', verifyToken, async (req: any, res) => {
     if (result.rowsAffected[0] === 0) {
       return res.status(404).json({ message: 'No se encontró la devolución para actualizar' });
     }
-    
+
+    await logAudit(req, 'EDITAR_DEVOLUCION', 'Devolucion', ticket, { N_Guia: data.N_Guia, N_Serie: data.N_Serie, Sticker: data.Sticker, Comentario: data.Comentario });
     res.json({ message: 'Devolución actualizada correctamente' });
   } catch (error: any) {
     console.error('Error al actualizar devolución:', error);
