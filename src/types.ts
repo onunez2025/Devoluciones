@@ -16,6 +16,8 @@ export interface User {
   avatar_url?: string;
   apps?: string;
   casName?: string;
+  management_id?: string;
+  management_name?: string;
   requires_password_change?: boolean;
 }
 

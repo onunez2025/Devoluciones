@@ -364,26 +364,6 @@ const batchDevolucionSchema = z.object({
     Comentario: z.string().max(500).optional(),
   })).min(1, 'Se requiere al menos un ticket'),
 });
-const createUserSchema = z.object({
-  username: z.string().min(1).max(100),
-  email: z.email('Email inválido'),
-  fullName: z.string().min(1).max(200),
-  password: z.string().min(6, 'Mínimo 6 caracteres').max(255),
-  roleId: z.uuid('roleId debe ser UUID'),
-  managementId: z.uuid().optional(),
-  apps: z.string().optional(),
-});
-const updateUserSchema = z.object({
-  username: z.string().min(1).max(100).optional(),
-  email: z.email('Email inválido').optional(),
-  fullName: z.string().min(1).max(200).optional(),
-  password: z.string().min(6).max(255).optional(),
-  roleId: z.uuid('roleId debe ser UUID').optional(),
-  managementId: z.uuid().optional(),
-  isActive: z.boolean().optional(),
-  apps: z.string().optional(),
-});
-
 app.post('/api/auth/login', async (req, res) => {
   const parseResult = loginSchema.safeParse(req.body);
   if (!parseResult.success) {
@@ -397,11 +377,13 @@ app.post('/api/auth/login', async (req, res) => {
       .input('app', sql.NVarChar(sql.MAX), APP_IDENTIFIER)
       .query(`
         SELECT u.*, r.Name as RoleName, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo,
-            r.InactivityTimeoutMinutes as role_timeout, r.WarningBeforeMinutes as role_warning
+            r.InactivityTimeoutMinutes as role_timeout, r.WarningBeforeMinutes as role_warning,
+            m.Name as management_name
         FROM [EBM].[Users] u
         LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id
         LEFT JOIN [EBM].[UserCAS] uc ON u.Id = uc.UserId
         LEFT JOIN [dbo].[GAC_APP_TB_CAS] c ON uc.CASId = c.ID_CAS
+        LEFT JOIN [EBM].[Managements] m ON u.ManagementId = m.Id
         WHERE (u.Username = @u OR u.Email = @u)
           AND u.IsActive = 1
           AND (u.Apps LIKE '%' + @app + '%' OR u.Apps LIKE '%ADMIN%')
@@ -473,6 +455,8 @@ app.post('/api/auth/login', async (req, res) => {
         apps: user.Apps || '',
         avatarUrl: user.AvatarUrl,
         casName: user.cas_name || null,
+        management_id: user.ManagementId || null,
+        management_name: user.management_name || null,
         requires_password_change: user.RequiresPasswordChange === 1
       },
       sessionConfig: { timeoutMinutes, warningMinutes }
@@ -509,11 +493,13 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
       .input('id', sql.UniqueIdentifier, userId)
       .input('app', sql.NVarChar(sql.MAX), APP_IDENTIFIER)
       .query(`
-        SELECT u.Id, u.Username, u.Email, u.FullName, u.AvatarUrl, r.Name as RoleName, u.RoleId, u.Apps, u.RequiresPasswordChange, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo
+        SELECT u.Id, u.Username, u.Email, u.FullName, u.AvatarUrl, r.Name as RoleName, u.RoleId, u.Apps, u.RequiresPasswordChange, uc.CASId as cas_id, c.Nombre_CAS as cas_name, LTRIM(RTRIM(c.Abrev_nombre_colaboradores)) as cas_prefijo,
+            u.ManagementId as management_id, m.Name as management_name
         FROM [EBM].[Users] u
         LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id
         LEFT JOIN [EBM].[UserCAS] uc ON u.Id = uc.UserId
         LEFT JOIN [dbo].[GAC_APP_TB_CAS] c ON uc.CASId = c.ID_CAS
+        LEFT JOIN [EBM].[Managements] m ON u.ManagementId = m.Id
         WHERE u.Id = @id AND u.IsActive = 1
           AND (u.Apps LIKE '%' + @app + '%' OR u.Apps LIKE '%ADMIN%')
       `);
@@ -583,6 +569,8 @@ app.get('/api/auth/me', verifyToken, async (req: any, res: any) => {
         apps: user.Apps || '',
         avatarUrl: user.AvatarUrl,
         casName: user.cas_name || null,
+        management_id: user.management_id || null,
+        management_name: user.management_name || null,
         requires_password_change: user.RequiresPasswordChange === 1
       }
     });
@@ -1215,55 +1203,9 @@ app.get('/api/public/equipment/:idEquipo/history', verifyToken, async (req, res)
 });
 
 // --- Gestión de Usuarios, Roles y Permisos ---
-
-// Listado de usuarios
-app.get('/api/users', verifyToken, checkPermission('USERS_VIEW'), async (_req, res) => {
-  try {
-    const pool = await readPoolPromise;
-    const result = await pool.request()
-      .input('app', sql.VarChar(255), APP_IDENTIFIER)
-      .query(`
-        SELECT u.Id, u.Username, u.Email, u.FullName, u.RoleId, u.ManagementId, u.IsActive, u.Apps, r.Name as RoleName, m.Name as ManagementName
-        FROM [EBM].[Users] u
-        LEFT JOIN [EBM].[Roles] r ON u.RoleId = r.Id
-        LEFT JOIN [EBM].[Managements] m ON u.ManagementId = m.Id
-        WHERE u.Apps LIKE '%' + @app + '%' OR u.Apps LIKE '%ADMIN%'
-        ORDER BY u.FullName ASC
-      `);
-    res.json(result.recordset);
-  } catch (error: any) {
-    res.status(500).json({ message: 'Error al obtener usuarios', error: safeError(error) });
-  }
-});
-
-// Crear usuario
-app.post('/api/users', verifyToken, checkPermission('USERS_EDIT'), async (req, res) => {
-  const parsedUser = createUserSchema.safeParse(req.body);
-  if (!parsedUser.success) return res.status(400).json({ message: 'Datos inválidos', details: parsedUser.error.issues });
-  const { username, email, fullName, password, roleId, managementId, apps } = parsedUser.data;
-  try {
-    const pool = await writePoolPromise;
-    const passwordHash = await bcrypt.hash(password, 10);
-    const userId = uuidv4();
-    
-    await pool.request()
-      .input('id', sql.UniqueIdentifier, userId)
-      .input('u', sql.NVarChar(sql.MAX), username)
-      .input('e', sql.NVarChar(sql.MAX), email)
-      .input('fn', sql.NVarChar(sql.MAX), fullName)
-      .input('ph', sql.NVarChar(sql.MAX), passwordHash)
-      .input('rid', sql.UniqueIdentifier, roleId)
-      .input('mid', sql.UniqueIdentifier, managementId)
-      .input('apps', sql.NVarChar(sql.MAX), apps || APP_IDENTIFIER)
-      .query(`
-        INSERT INTO [EBM].[Users] (Id, Username, Email, FullName, PasswordHash, RoleId, ManagementId, IsActive, Apps, CreatedAt)
-        VALUES (@id, @u, @e, @fn, @ph, @rid, @mid, 1, @apps, GETDATE())
-      `);
-    res.status(201).json({ message: 'Usuario creado correctamente' });
-  } catch (error: any) {
-    res.status(500).json({ message: 'Error al crear usuario', error: safeError(error) });
-  }
-});
+// Nota: el CRUD admin de usuarios (GET/POST/PUT /api/users) fue removido — huérfano desde
+// que la gestión de usuarios se centralizó en SIATC Console (ver project_remove_roles_users_
+// audit_from_apps en SIATC Memory); no tenía consumidor en el frontend de esta app.
 
 // PUT /api/profile — autoservicio: cualquier usuario autenticado puede guardar SU PROPIO
 // avatar y/o contraseña. A diferencia de PUT /api/users/:id (gateado por checkPermission
@@ -1299,43 +1241,6 @@ app.put('/api/profile', verifyToken, async (req: any, res: any) => {
     res.json(result.recordset[0]);
   } catch (error: any) {
     res.status(500).json({ message: 'Error al actualizar el perfil', error: safeError(error) });
-  }
-});
-
-// Actualizar usuario
-app.put('/api/users/:id', verifyToken, checkPermission('USERS_EDIT'), async (req, res) => {
-  const { id } = req.params;
-  const parsedUser = updateUserSchema.safeParse(req.body);
-  if (!parsedUser.success) return res.status(400).json({ message: 'Datos inválidos', details: parsedUser.error.issues });
-  const { username, email, fullName, password, roleId, managementId, isActive, apps } = parsedUser.data;
-  try {
-    const pool = await writePoolPromise;
-    let query = `
-      UPDATE [EBM].[Users] 
-      SET Username = @u, Email = @e, FullName = @fn, RoleId = @rid, ManagementId = @mid, IsActive = @active, Apps = @apps
-    `;
-    
-    const request = pool.request()
-      .input('id', sql.UniqueIdentifier, id)
-      .input('u', sql.NVarChar(sql.MAX), username)
-      .input('e', sql.NVarChar(sql.MAX), email)
-      .input('fn', sql.NVarChar(sql.MAX), fullName)
-      .input('rid', sql.UniqueIdentifier, roleId)
-      .input('mid', sql.UniqueIdentifier, managementId)
-      .input('active', sql.Bit, isActive)
-      .input('apps', sql.NVarChar(sql.MAX), apps);
-
-    if (password) {
-      const passwordHash = await bcrypt.hash(password, 10);
-      query += `, PasswordHash = @ph`;
-      request.input('ph', sql.NVarChar(sql.MAX), passwordHash);
-    }
-
-    query += ` WHERE Id = @id`;
-    await request.query(query);
-    res.json({ message: 'Usuario actualizado correctamente' });
-  } catch (error: any) {
-    res.status(500).json({ message: 'Error al actualizar usuario', error: safeError(error) });
   }
 });
 

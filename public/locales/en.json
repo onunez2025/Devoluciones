@@ -210,6 +210,8 @@
       "noEmail": "No email registered",
       "company": "Company",
       "noCompany": "Sole",
+      "management": "Management",
+      "noManagement": "No management assigned",
       "status": "Status",
       "active": "Active"
     },

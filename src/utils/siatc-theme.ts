@@ -171,6 +171,7 @@ export const SIATC_THEME = {
         INFO_ITEM_ICON_PRIMARY: "bg-primary/10 text-primary",
         INFO_ITEM_ICON_PURPLE: "bg-purple-500/10 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400",
         INFO_ITEM_ICON_EMERALD: "bg-emerald-500/10 dark:bg-emerald-950/20 text-[#05B169] dark:text-emerald-400",
+        INFO_ITEM_ICON_BLUE: "bg-blue-500/10 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400",
         INFO_ITEM_DETAILS: "overflow-hidden",
         INFO_ITEM_LABEL: "text-[10px] text-cb-neutral uppercase tracking-wider font-bold",
         INFO_ITEM_VALUE: "text-sm font-bold truncate text-cb-text-primary",

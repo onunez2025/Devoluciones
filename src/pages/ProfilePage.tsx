@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'r
 import { useTranslation } from 'react-i18next';
 import {
     User, Mail, Lock, Camera, Save, CheckCircle, AlertCircle,
-    Shield, Building2, BadgeCheck, Loader2
+    Shield, Building2, BadgeCheck, Loader2, Briefcase
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../services/apiClient';
@@ -227,6 +227,16 @@ export default function ProfilePage() {
                                     <div className={layout.INFO_ITEM_DETAILS}>
                                         <p className={layout.INFO_ITEM_LABEL}>{t('profile.info.company')}</p>
                                         <p className={layout.INFO_ITEM_VALUE}>{user.casName || t('profile.info.noCompany')}</p>
+                                    </div>
+                                </div>
+
+                                <div className={layout.INFO_ITEM}>
+                                    <div className={cn(layout.INFO_ITEM_ICON_BASE, layout.INFO_ITEM_ICON_BLUE)}>
+                                        <Briefcase className="w-5 h-5" />
+                                    </div>
+                                    <div className={layout.INFO_ITEM_DETAILS}>
+                                        <p className={layout.INFO_ITEM_LABEL}>{t('profile.info.management')}</p>
+                                        <p className={layout.INFO_ITEM_VALUE}>{user.management_name || user.management_id || t('profile.info.noManagement')}</p>
                                     </div>
                                 </div>
 
