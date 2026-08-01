@@ -1,16 +1,18 @@
 # Build stage
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN corepack enable && corepack prepare pnpm@11.18.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # Production stage
-FROM node:20-slim
+FROM node:22-slim
 WORKDIR /app
-COPY package*.json ./
-RUN npm install --omit=dev --legacy-peer-deps
+RUN corepack enable && corepack prepare pnpm@11.18.0 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.ts ./
 COPY --from=builder /app/lib/ ./lib/
