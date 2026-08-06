@@ -193,11 +193,11 @@ check_file() {
         fi
     fi
 
-    # C10-RLS: server.ts con endpoints pero sin casFilter (verificar RLS)
-    if [[ "$f" == *"server.ts" ]]; then
-        if grep -qE "app\.(get|post|put|delete|patch)\(" "$f" 2>/dev/null; then
+    # C10-RLS: server.ts o server/routes/*.ts con endpoints pero sin casFilter (verificar RLS)
+    if [[ "$f" == *"server.ts" || "$f" == *"/server/routes/"*".ts" ]]; then
+        if grep -qE "(app|router)\.(get|post|put|delete|patch)\(" "$f" 2>/dev/null; then
             if ! grep -qE "from ['\"].*casFilter|casId|casRUC" "$f" 2>/dev/null; then
-                echo -e "${YELLOW}[C10-RLS-ADVERTENCIA]${NC} server.ts con endpoints pero sin referencia a casId/casRUC — verificar RLS → $f"
+                echo -e "${YELLOW}[C10-RLS-ADVERTENCIA]${NC} endpoints sin referencia a casId/casRUC — verificar RLS → $f"
                 WARNINGS=$((WARNINGS+1))
             fi
         fi
