@@ -102,6 +102,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function validateSession() {
+      if (window.location.pathname === '/login') {
+          // Ya estamos en /login -- no repetir logout()+reload si la sesion
+          // sigue invalida, corta el bucle de recarga infinita (2026-08-06).
+          setIsLoading(false);
+          return;
+      }
+
       try {
         const cookieToken = getCookie(SSO_COOKIE);
         const localToken = storageService.getToken();
