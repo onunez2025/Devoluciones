@@ -2,10 +2,28 @@
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
+
+    /*
+     * `target`/`lib` explícitos: sin ellos TypeScript cae a ES5, donde no existen
+     * `AggregateError` (ES2021) ni `ErrorOptions` (ES2022) que usan los .d.ts de tedious.
+     * Aquí no fallaba porque `skipLibCheck` ya estaba puesto, pero la configuración quedaba
+     * dependiendo de él para algo que debería resolver la librería base.
+     */
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "types": ["node"],
+
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+
+    /*
+     * La salida va a node_modules/.tmp y no a la raíz: sin esto cada `tsc -b` dejaba
+     * `vite.config.js` y `vite.config.d.ts` sueltos en el repo, sin estar en .gitignore.
+     */
+    "outDir": "./node_modules/.tmp/tsconfig-node",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
   "include": ["vite.config.ts"]
 }
