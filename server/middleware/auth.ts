@@ -1,4 +1,5 @@
 import sql from 'mssql';
+import { dominioCookie } from '../lib/dominioCookie.js';
 import jwt from 'jsonwebtoken';
 import { writePoolPromise } from '../db';
 import { isTokenBlacklisted, isSessionInvalidated } from '../lib/redis';
@@ -12,16 +13,17 @@ export const JWT_SECRET = process.env.JWT_SECRET as string;
 // Fase 20: dominio de la cookie SSO compartida configurable por entorno. Sin definir, el
 // comportamiento es idéntico al de siempre (.siatc.cloud) -- producción real no cambia.
 // En QA se configura como .qa.siatc.cloud para aislar la sesión compartida de producción.
-export const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || '.siatc.cloud';
+// El dominio se deriva del host de la peticion; process.env.COOKIE_DOMAIN sigue mandando si
+// esta definida. Ver server/lib/dominioCookie.ts.
 
 // Borra la cookie compartida del lado del servidor (Set-Cookie en la respuesta) cuando se
 // detecta un token invalidado/blacklisteado. No depende de que el JS del cliente logre borrarla
 // antes de la siguiente navegación -- evita el bucle de recarga infinita que eso puede causar
 // (ver bitácora Fase 20: la limpieza vía document.cookie + window.location.href en el mismo
 // tick no siempre alcanza a comprometerse antes de que la página navegue).
-export function clearSharedCookie(res: any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
+export function clearSharedCookie(res: any, req?: any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
     if (process.env.NODE_ENV === 'production') {
-        res.cookie('token', '', { domain: COOKIE_DOMAIN, maxAge: 0, httpOnly: false, secure: true, sameSite: 'lax', path: '/' });
+        res.cookie('token', '', { domain: req ? dominioCookie(req) : process.env.COOKIE_DOMAIN, maxAge: 0, httpOnly: false, secure: true, sameSite: 'lax', path: '/' });
     }
 }
 
@@ -35,11 +37,11 @@ export const verifyToken = async (req: any, res: any, next: any) => { // eslint-
   try {
     const user = jwt.verify(token, JWT_SECRET) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (await isTokenBlacklisted(token)) {
-      clearSharedCookie(res);
+      clearSharedCookie(res, req);
       return res.status(401).json({ message: 'Sesión cerrada. Inicia sesión nuevamente.' });
     }
     if (await isSessionInvalidated(user.id, user.iat)) {
-      clearSharedCookie(res);
+      clearSharedCookie(res, req);
       return res.status(401).json({ message: 'Sesión cerrada. Inicia sesión nuevamente.' });
     }
     req.user = user;
@@ -57,11 +59,11 @@ export const verifyTokenForDownload = async (req: any, res: any, next: any) => {
   try {
     const user = jwt.verify(token, JWT_SECRET) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (await isTokenBlacklisted(token)) {
-      clearSharedCookie(res);
+      clearSharedCookie(res, req);
       return res.status(401).json({ message: 'Sesión cerrada. Inicia sesión nuevamente.' });
     }
     if (await isSessionInvalidated(user.id, user.iat)) {
-      clearSharedCookie(res);
+      clearSharedCookie(res, req);
       return res.status(401).json({ message: 'Sesión cerrada. Inicia sesión nuevamente.' });
     }
     req.user = user;

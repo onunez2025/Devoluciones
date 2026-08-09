@@ -1,10 +1,11 @@
 import { Router } from 'express';
+import { dominioCookie } from '../lib/dominioCookie.js';
 import sql from 'mssql';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { readPoolPromise, writePoolPromise } from '../db';
-import { verifyToken, JWT_SECRET, COOKIE_DOMAIN, APP_IDENTIFIER, clearSharedCookie } from '../middleware/auth';
+import { verifyToken, JWT_SECRET, APP_IDENTIFIER, clearSharedCookie } from '../middleware/auth';
 import { blacklistToken, invalidateAllUserSessions } from '../lib/redis';
 import { safeError } from '../lib/security';
 
@@ -84,7 +85,7 @@ router.post('/login', async (req, res) => {
     );
     if (IS_PRODUCTION) {
       res.cookie('token', ssoToken, {
-        domain: COOKIE_DOMAIN,
+        domain: dominioCookie(req),
         maxAge: 12 * 60 * 60 * 1000,
         httpOnly: false,
         secure: true,
@@ -130,7 +131,7 @@ router.post('/logout', verifyToken, async (req: any, res: any) => { // eslint-di
     // Borrar la cookie compartida aquí mismo (Set-Cookie de la respuesta) en vez de depender
     // solo del document.cookie del cliente, que puede no alcanzar a comprometerse antes de que
     // la página navegue tras el logout.
-    clearSharedCookie(res);
+    clearSharedCookie(res, req);
     res.json({ message: 'Sesión cerrada correctamente.' });
 });
 
@@ -186,8 +187,8 @@ router.get('/me', verifyToken, async (req: any, res: any) => { // eslint-disable
     );
 
     // Los tokens marcados ssoPilot=true no deben reescribir la cookie compartida aquí — hoy eso
-    // pasa solo cuando COOKIE_DOMAIN no está configurada (producción real, sin dominio QA propio).
-    // Cuando COOKIE_DOMAIN sí está configurada (Fase 20, entorno QA), el callback de Casdoor deja
+    // pasa solo cuando NO se esta en el dominio QA aislado (produccion real). En QA el callback
+    // de Casdoor deja
     // de firmar ssoPilot=true, así que esta cookie sí se escribe y el SSO cruzado real funciona.
     if (!req.user?.ssoPilot) {
       const ssoToken = jwt.sign(
@@ -197,7 +198,7 @@ router.get('/me', verifyToken, async (req: any, res: any) => { // eslint-disable
       );
       if (IS_PRODUCTION) {
         res.cookie('token', ssoToken, {
-          domain: COOKIE_DOMAIN,
+          domain: dominioCookie(req),
           maxAge: 12 * 60 * 60 * 1000,
           httpOnly: false,
           secure: true,

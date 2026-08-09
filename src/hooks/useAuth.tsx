@@ -2,6 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { User, SessionConfig } from '../types';
 import { storageService } from '../services/storageService';
 import apiClient from '../services/apiClient';
+import { esDespliegueReal, fragmentoDominio, limpiarCookieHeredada } from '../utils/dominioCookie';
+
+// La limpieza de la cookie heredada corre al cargar el modulo, ANTES de que nadie lea el
+// token: si quedara la vieja de `.siatc.cloud` conviviendo con la nueva, el lector podria
+// tomar la equivocada. Es idempotente y corre una sola vez por navegador.
+limpiarCookieHeredada();
 
 interface AuthContextType {
   user: User | null;
@@ -19,9 +25,6 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const SSO_COOKIE = 'token';
 
-// Fase 20: dominio de la cookie SSO compartida, configurable en build-time. Sin definir, el
-// comportamiento es idéntico al de siempre (.siatc.cloud) -- producción real no cambia.
-const COOKIE_DOMAIN = import.meta.env.VITE_COOKIE_DOMAIN || '.siatc.cloud';
 
 function getCookie(name: string): string | null {
   // No usar split('; name=') aqui -- si llegan a coexistir dos cookies con el mismo nombre
@@ -33,15 +36,13 @@ function getCookie(name: string): string | null {
 }
 
 function setSsoCookie(token: string) {
-  const isProd = window.location.hostname.endsWith('.siatc.cloud');
-  const cookieDomain = isProd ? `; domain=${COOKIE_DOMAIN}` : '';
-  document.cookie = `token=${token}; path=/${cookieDomain}; max-age=${24 * 60 * 60}; SameSite=Lax; Secure=${isProd ? 'true' : 'false'}`;
+  const enDespliegue = esDespliegueReal();
+  document.cookie = `token=${token}; path=/${fragmentoDominio()}; max-age=${24 * 60 * 60}; SameSite=Lax; Secure=${enDespliegue ? 'true' : 'false'}`;
 }
 
 function clearSsoCookie() {
-  const isProd = window.location.hostname.endsWith('.siatc.cloud');
-  const cookieDomain = isProd ? `; domain=${COOKIE_DOMAIN}` : '';
-  document.cookie = `token=; path=/${cookieDomain}; max-age=0; SameSite=Lax; Secure=${isProd ? 'true' : 'false'}`;
+  const enDespliegue = esDespliegueReal();
+  document.cookie = `token=; path=/${fragmentoDominio()}; max-age=0; SameSite=Lax; Secure=${enDespliegue ? 'true' : 'false'}`;
 }
 
 function decodeJwt(token: string): any | null {

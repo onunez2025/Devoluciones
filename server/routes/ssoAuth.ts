@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { dominioCookie } from '../lib/dominioCookie.js';
 import sql from 'mssql';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
@@ -77,11 +78,12 @@ router.get('/callback', async (req: any, res: any) => { // eslint-disable-line @
                 {
                     id: user.id, role_id: user.role_id, role: user.role_name, username: user.username,
                     permissions: perms, apps: user.apps, casId: user.cas_id || null,
-                    // Fase 20: ssoPilot solo se firma si no hay un COOKIE_DOMAIN propio configurado (ej.
-                    // producción real todavía sin dominio QA aislado). Con COOKIE_DOMAIN configurada
-                    // (entorno QA, dominio .qa.siatc.cloud), se omite para permitir la cookie compartida
-                    // real entre las 10 apps QA sin arriesgar sesiones de producción.
-                    ...(process.env.COOKIE_DOMAIN ? {} : { ssoPilot: true }),
+                    // El flag `ssoPilot` marca que la sesion sale del piloto de Casdoor y NO debe
+                    // compartirse. Se omite en QA, donde el dominio de cookie esta aislado y el SSO
+                    // cruzado entre las apps de QA es justamente lo que se quiere probar.
+                    // El chequeo era `process.env.COOKIE_DOMAIN`: bastaba olvidar esa variable en un
+                    // despliegue para que QA se comportara como produccion, en silencio.
+                    ...(dominioCookie(req) === '.qa.siatc.cloud' ? {} : { ssoPilot: true }),
                 },
                 JWT_SECRET,
                 { expiresIn: '12h' }

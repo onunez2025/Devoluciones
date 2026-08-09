@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../hooks/useAuth';
 import apiClient from '../services/apiClient';
 import { AlertTriangle } from 'lucide-react';
+import { esQa } from '../utils/dominioCookie';
 
 const prefersReducedMotion = () =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -35,7 +36,7 @@ export const SsoLoginPage: React.FC = () => {
                 // campos completos), no el ssoToken crudo del callback.
                 // Fase 20: skipSharedCookie solo se activa si no hay VITE_COOKIE_DOMAIN configurada
                 // (producción real, sin dominio QA propio) — en QA sí se escribe la cookie compartida.
-                login(data.user, data.token, true, undefined, !import.meta.env.VITE_COOKIE_DOMAIN);
+                login(data.user, data.token, true, undefined, !esQa());
 
                 // Mismo patron que el login clasico (LoginPage.tsx): el flag se lee ya en
                 // "/" (ver MainLayout), nunca se demora este navigate().
