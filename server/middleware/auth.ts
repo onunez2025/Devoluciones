@@ -22,8 +22,12 @@ export const JWT_SECRET = process.env.JWT_SECRET as string;
 // (ver bitácora Fase 20: la limpieza vía document.cookie + window.location.href en el mismo
 // tick no siempre alcanza a comprometerse antes de que la página navegue).
 export function clearSharedCookie(res: any, req?: any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (process.env.NODE_ENV === 'production') {
-        res.cookie('token', '', { domain: req ? dominioCookie(req) : process.env.COOKIE_DOMAIN, maxAge: 0, httpOnly: false, secure: true, sameSite: 'lax', path: '/' });
+    // La cookie compartida se escribe segun el DOMINIO de la peticion, no segun NODE_ENV: esa
+    // variable puede faltar en el despliegue sin que nada avise, y entonces la cookie no se
+    // escribe nunca -- se entra a la app pero el salto a cualquier otra pide login.
+    const dominioCompartido = req ? dominioCookie(req) : process.env.COOKIE_DOMAIN?.trim();
+    if (dominioCompartido) {
+        res.cookie('token', '', { domain: dominioCompartido, maxAge: 0, httpOnly: false, secure: true, sameSite: 'lax', path: '/' });
     }
 }
 

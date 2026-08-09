@@ -10,7 +10,6 @@ import { blacklistToken, invalidateAllUserSessions } from '../lib/redis';
 import { safeError } from '../lib/security';
 
 const router = Router();
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Usuario requerido').max(255),
@@ -83,9 +82,13 @@ router.post('/login', async (req, res) => {
       JWT_SECRET,
       { expiresIn: '12h' }
     );
-    if (IS_PRODUCTION) {
+    // La cookie compartida se escribe segun el DOMINIO de la peticion, no segun NODE_ENV: esa
+    // variable puede faltar en el despliegue sin que nada avise, y entonces la cookie no se
+    // escribe nunca -- se entra a la app pero el salto a cualquier otra pide login.
+    const dominioCompartido = dominioCookie(req);
+    if (dominioCompartido) {
       res.cookie('token', ssoToken, {
-        domain: dominioCookie(req),
+        domain: dominioCompartido,
         maxAge: 12 * 60 * 60 * 1000,
         httpOnly: false,
         secure: true,
@@ -196,9 +199,13 @@ router.get('/me', verifyToken, async (req: any, res: any) => { // eslint-disable
         JWT_SECRET,
         { expiresIn: '12h' }
       );
-      if (IS_PRODUCTION) {
+      // La cookie compartida se escribe segun el DOMINIO de la peticion, no segun NODE_ENV: esa
+      // variable puede faltar en el despliegue sin que nada avise, y entonces la cookie no se
+      // escribe nunca -- se entra a la app pero el salto a cualquier otra pide login.
+      const dominioCompartido = dominioCookie(req);
+      if (dominioCompartido) {
         res.cookie('token', ssoToken, {
-          domain: dominioCookie(req),
+          domain: dominioCompartido,
           maxAge: 12 * 60 * 60 * 1000,
           httpOnly: false,
           secure: true,
