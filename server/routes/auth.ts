@@ -5,9 +5,10 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { readPoolPromise, writePoolPromise } from '../db';
-import { verifyToken, JWT_SECRET, APP_IDENTIFIER, clearSharedCookie } from '../middleware/auth';
+import { verifyToken, APP_IDENTIFIER, clearSharedCookie } from '../middleware/auth';
 import { blacklistToken, invalidateAllUserSessions } from '../lib/redis';
 import { safeError } from '../lib/security';
+import { JWT_SECRET } from '../lib/env.js';
 
 const router = Router();
 

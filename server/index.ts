@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import './lib/env.js';   // PRIMERO: carga el .env y valida los secretos antes que nada
 
 import express from 'express';
 import cors from 'cors';

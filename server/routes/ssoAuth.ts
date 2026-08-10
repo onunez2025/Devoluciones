@@ -4,10 +4,11 @@ import sql from 'mssql';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { readPoolPromise } from '../db';
-import { JWT_SECRET, APP_IDENTIFIER } from '../middleware/auth';
+import { APP_IDENTIFIER } from '../middleware/auth';
 import { safeError, sanitizeLog } from '../lib/security';
 import { exchangeCodeForToken, getCasdoorUserInfo, getCasdoorAuthorizeUrl } from '../lib/casdoorClient';
 import { sendSsoPendingEmail, sendSsoFirstRetryEmail, sendSsoFinalRetryEmail } from '../lib/mailer';
+import { JWT_SECRET } from '../lib/env.js';
 
 const router = Router();
 

@@ -3,12 +3,8 @@ import { dominioCookie } from '../lib/dominioCookie.js';
 import jwt from 'jsonwebtoken';
 import { writePoolPromise } from '../db';
 import { isTokenBlacklisted, isSessionInvalidated } from '../lib/redis';
+import { JWT_SECRET } from '../lib/env.js';
 
-if (!process.env.JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET no configurado. El servidor no puede iniciarse de forma segura.');
-  process.exit(1);
-}
-export const JWT_SECRET = process.env.JWT_SECRET as string;
 
 // Fase 20: dominio de la cookie SSO compartida configurable por entorno. Sin definir, el
 // comportamiento es idéntico al de siempre (.siatc.cloud) -- producción real no cambia.
