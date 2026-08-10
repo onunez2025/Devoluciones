@@ -80,7 +80,7 @@ router.get('/lookups/technicians', async (_req, res) => {
       ORDER BY Tecnico
     `);
     res.json(result.recordset.map(r => r.Tecnico));
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: 'Error al obtener técnicos' });
   }
 });
@@ -109,7 +109,7 @@ router.get('/lookups/tickets-by-period', async (req, res) => {
           AND NOT EXISTS (SELECT 1 FROM [dbo].[GAC_APP_TB_DEVOLUCION] d WHERE d.Ticket = f.Ticket)
       `);
     res.json(result.recordset);
-  } catch (error) {
+  } catch {
     res.status(500).json({ message: 'Error al buscar tickets' });
   }
 });

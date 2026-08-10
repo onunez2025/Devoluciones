@@ -69,7 +69,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
       }));
 
       setIdEquipoFound(true);
-    } catch (err: any) {
+    } catch {
       setError(t('devolucion.new.errors.notFound'));
       setIdEquipoFound(false);
     } finally {
@@ -99,7 +99,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
 
       setFormData(prev => ({ ...prev, Adjunto: response.data.imageUrl }));
       console.log('✅ Imagen subida a Azure:', response.data.imageUrl);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al subir imagen:', err);
       setError(t('devolucion.new.errors.uploadFailed'));
     } finally {
@@ -121,7 +121,7 @@ const NewDevolucionModal = ({ onClose, onSuccess, devolucion }: Props) => {
       }
       setStep(2);
       onSuccess();
-    } catch (err) {
+    } catch {
       setError(t(isEditing ? 'devolucion.new.errors.updateFailed' : 'devolucion.new.errors.registerFailed'));
     } finally {
       setLoading(false);

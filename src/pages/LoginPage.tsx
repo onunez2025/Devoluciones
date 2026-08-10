@@ -1,3 +1,4 @@
+import { mensajeApi } from '../utils/errores';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -58,9 +59,9 @@ export default function LoginPage() {
                 sessionStorage.setItem('siatc_welcome_user', user.fullName || user.username || '');
             }
             navigate('/');
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Login error:', err);
-            setError(err.response?.data?.message || err.response?.data?.error || t('auth.errors.invalid'));
+            setError(mensajeApi(err, t('auth.errors.invalid')));
         } finally {
             setLoading(false);
         }

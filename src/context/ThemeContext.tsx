@@ -41,6 +41,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
+// Exportar el hook junto al Provider es el patron habitual de React Context; solo afecta al
+// refresco rapido de Vite en desarrollo, no al build.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {

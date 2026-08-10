@@ -45,7 +45,16 @@ function clearSsoCookie() {
   document.cookie = `token=; path=/${fragmentoDominio()}; max-age=0; SameSite=Lax; Secure=${enDespliegue ? 'true' : 'false'}`;
 }
 
-function decodeJwt(token: string): any | null {
+/** Campos del JWT que esta app lee. No es el payload completo: solo lo que se usa. */
+interface PayloadJwt {
+    id?: string;
+    full_name?: string;
+    fullName?: string;
+    role?: string;
+    [k: string]: unknown;
+}
+
+function decodeJwt(token: string): PayloadJwt | null {
   try {
     const payload = token.split('.')[1];
     return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
@@ -179,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     validateSession();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   const hasPermission = useCallback((permission: string): boolean => {
@@ -197,6 +206,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Exportar el hook junto al Provider es el patron habitual de React Context; solo afecta al
+// refresco rapido de Vite en desarrollo, no al build.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');

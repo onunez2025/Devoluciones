@@ -45,7 +45,7 @@ const PublicEquipmentPage = () => {
         setHistory(response.data);
 
         if (response.data.length > 0) {
-          const matchingTicket = response.data.find((r: any) => String(r.Ticket) === String(idEquipo));
+          const matchingTicket = response.data.find((r: { Ticket: string | number }) => String(r.Ticket) === String(idEquipo));
           if (matchingTicket) {
             setSelectedReport(matchingTicket);
           }
@@ -59,7 +59,7 @@ const PublicEquipmentPage = () => {
         } else {
            setEquipmentInfo(prev => ({ ...prev, nombre: 'Sin historial reciente' }));
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('❌ Error al cargar historial:', err);
         setError('No se pudo cargar el historial del equipo.');
       } finally {

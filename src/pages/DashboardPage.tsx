@@ -1,4 +1,5 @@
 // Build timestamp: 2026-04-28 11:54:00
+import { mensajeError } from '../utils/errores';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import ExcelJS from 'exceljs';
@@ -108,10 +109,12 @@ const DashboardPage = () => {
   }, [searchTerm]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- marca "cargando" al arrancar la peticion; no es derivable
     fetchDevoluciones();
   }, [page, debouncedSearch]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial de estadisticas, una sola vez
     fetchStats();
   }, []);
 
@@ -136,9 +139,9 @@ const DashboardPage = () => {
     try {
       const zpl = generateZPL(dev);
       await bluetoothPrinter.print(zpl);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al imprimir:', error);
-      alert(`Error al imprimir: ${error.message}`);
+      alert(`Error al imprimir: ${mensajeError(error)}`);
     } finally {
       setIsPrinting(false);
     }

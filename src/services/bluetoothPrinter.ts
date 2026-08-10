@@ -1,5 +1,5 @@
+import { mensajeError } from '../utils/errores';
 import { Capacitor } from '@capacitor/core';
-// @ts-ignore
 import { CapacitorZebraBluetooth } from 'capacitor-zebra-bluetooth';
 const ZebraBluetooth = CapacitorZebraBluetooth;
 
@@ -27,9 +27,47 @@ export const ZebraPrinterUUIDs = {
   genericAttribute: '00001801-0000-1000-8000-00805f9b34fb'
 };
 
+/**
+ * Tipos minimos de Web Bluetooth. La API no esta en la libreria estandar de TypeScript, asi que
+ * se declara aqui solo lo que este servicio usa, en vez de recurrir a `any`.
+ */
+interface GattServer {
+    connected: boolean;
+    connect(): Promise<GattServer>;
+    disconnect(): void;
+    getPrimaryService(uuid: string): Promise<{ getCharacteristic(uuid: string): Promise<BleCaracteristica> }>;
+}
+interface BleDispositivo {
+    name?: string;
+    gatt?: GattServer;
+}
+interface BleCaracteristica {
+    properties: { write?: boolean; writeWithoutResponse?: boolean };
+    writeValue(v: BufferSource): Promise<void>;
+    writeValueWithoutResponse(v: BufferSource): Promise<void>;
+}
+/** Impresora que devuelve el plugin nativo (Capacitor). */
+interface ImpresoraNativa { friendlyName: string }
+/**
+ * `device` guarda DOS cosas segun el transporte: una impresora del plugin nativo (Capacitor) o un
+ * dispositivo Web Bluetooth. Solo el segundo tiene `gatt`, y el codigo lo accedia sin distinguir.
+ * Tipado como `any` eso compilaba siempre; con el tipo union hay que preguntar antes.
+ */
+type DispositivoImpresora = BleDispositivo | ImpresoraNativa;
+
+/** Devuelve el servidor GATT solo si el dispositivo es de Web Bluetooth. */
+function gattDe(d: DispositivoImpresora | null): GattServer | undefined {
+    return d && 'gatt' in d ? d.gatt : undefined;
+}
+
+/** `navigator.bluetooth` tampoco esta tipado en la lib estandar. */
+interface NavegadorConBluetooth {
+    bluetooth?: { requestDevice(opts: unknown): Promise<BleDispositivo> };
+}
+
 class BluetoothPrinterService {
-  private device: any = null;
-  private characteristic: any = null;
+  private device: DispositivoImpresora | null = null;
+  private characteristic: BleCaracteristica | null = null;
   async connect() {
     if (Capacitor.isNativePlatform()) {
       return this.connectNative();
@@ -45,7 +83,6 @@ class BluetoothPrinterService {
 
       alert('Buscando impresoras Zebra...');
       console.log('Buscando impresoras Zebra...');
-      // @ts-ignore
       const result = await ZebraBluetooth.discoverPrinters();
       
       // DEPURACIÓN: Mostrar qué encontró exactamente
@@ -61,7 +98,7 @@ class BluetoothPrinterService {
         throw new Error('No se encontraron impresoras Zebra vinculadas. Por favor, verifica que el dispositivo XXZ esté emparejado en el sistema.');
       }
       
-      const target = printers.find((p: any) => 
+      const target = printers.find((p: ImpresoraNativa) => 
         p.friendlyName.toUpperCase().includes('ZEBRA') || 
         p.friendlyName.toUpperCase().startsWith('ZQ') || 
         p.friendlyName.toUpperCase().startsWith('ZR') ||
@@ -71,7 +108,6 @@ class BluetoothPrinterService {
       alert(`Conectando a ${target.friendlyName}...`);
       console.log(`Conectando a impresora nativa: ${target.friendlyName}...`);
       
-      // @ts-ignore
       await ZebraBluetooth.connectToPrinter({ friendlyName: target.friendlyName });
       
       // Aumentamos a 2 segundos para asegurar que el canal esté abierto
@@ -79,16 +115,16 @@ class BluetoothPrinterService {
       this.device = target;
       
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error en conexión nativa:', error);
-      throw new Error(`Error Bluetooth Nativo: ${error.message || 'Fallo de conexión'}`);
+      throw new Error(`Error Bluetooth Nativo: ${mensajeError(error) || 'Fallo de conexión'}`);
     }
   }
 
   private async connectWeb() {
     try {
       console.log('Solicitando dispositivo Bluetooth (Web)...');
-      this.device = await (navigator as any).bluetooth.requestDevice({
+      this.device = await (navigator as unknown as NavegadorConBluetooth).bluetooth!.requestDevice({
         filters: [
           { name: 'XXZSV231200858' },
           { namePrefix: 'XXZSV' },
@@ -111,15 +147,15 @@ class BluetoothPrinterService {
       console.log('Conectando al servidor GATT...');
       let server;
       try {
-        if (this.device.gatt?.connected) {
-          await this.device.gatt.disconnect();
+        if (gattDe(this.device)?.connected) {
+          await gattDe(this.device)?.disconnect();
           await new Promise(resolve => setTimeout(resolve, 500));
         }
-        server = await this.device.gatt?.connect();
-      } catch (e: any) {
+        server = await gattDe(this.device)?.connect();
+      } catch (e: unknown) {
         console.warn('Primer intento fallido, reintentando...', e);
         await new Promise(resolve => setTimeout(resolve, 1500));
-        server = await this.device.gatt?.connect();
+        server = await gattDe(this.device)?.connect();
       }
       
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -128,27 +164,27 @@ class BluetoothPrinterService {
       try {
         service = await server?.getPrimaryService(ZebraPrinterUUIDs.service);
         this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.characteristic)) || null;
-      } catch (e) {
+      } catch {
         try {
           service = await server?.getPrimaryService(ZebraPrinterUUIDs.service2);
           this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.characteristic)) || null;
-        } catch (e2) {
+        } catch {
           try {
             service = await server?.getPrimaryService(ZebraPrinterUUIDs.service3);
             try {
               this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char3)) || null;
-            } catch (e3a) {
+            } catch {
               this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char3_alt)) || null;
             }
-          } catch (e3) {
+          } catch {
             try {
               service = await server?.getPrimaryService(ZebraPrinterUUIDs.service4);
               this.characteristic = (await service?.getCharacteristic(ZebraPrinterUUIDs.char4)) || null;
-            } catch (e4: any) {
+            } catch {
               try {
                 service = await server?.getPrimaryService(ZebraPrinterUUIDs.service5);
-                this.characteristic = await service?.getCharacteristic(ZebraPrinterUUIDs.char5);
-              } catch (e5) {
+                this.characteristic = await service?.getCharacteristic(ZebraPrinterUUIDs.char5) ?? null;
+              } catch {
                 throw new Error('No se encontró canal de impresión BLE compatible.');
               }
             }
@@ -160,7 +196,7 @@ class BluetoothPrinterService {
 
       console.log('Impresora Web conectada');
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al conectar Web Bluetooth:', error);
       throw error;
     }
@@ -182,18 +218,17 @@ class BluetoothPrinterService {
       // Añadimos \r\n al inicio y al final para asegurar que el buffer se limpie y ejecute
       const formattedZpl = "\r\n" + zpl.trim() + "\r\n";
       console.log('Enviando impresión via CPCL (CRLF)...');
-      // @ts-ignore
       await ZebraBluetooth.sendZPL({ zpl: formattedZpl });
       alert('¡Impresión enviada!');
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error en impresión nativa:', error);
-      throw new Error(`Fallo en impresión nativa: ${error.message}`);
+      throw new Error(`Fallo en impresión nativa: ${mensajeError(error)}`);
     }
   }
 
   private async printWeb(zpl: string) {
-    const isConnected = this.device?.gatt?.connected && this.characteristic;
+    const isConnected = gattDe(this.device)?.connected && this.characteristic;
     
     if (!isConnected) {
       const connected = await this.connectWeb();
@@ -202,15 +237,16 @@ class BluetoothPrinterService {
 
     try {
       const encoder = new TextEncoder();
-      const sanitizedZpl = zpl.replace(/[^\x00-\x7F]/g, "");
+      const sanitizedZpl = zpl.replace(/[^\x00-\x7F]/g, "");  // eslint-disable-line no-control-regex
       const data = encoder.encode(sanitizedZpl);
       const chunkSize = 10; 
       
       for (let i = 0; i < data.length; i += chunkSize) {
         const chunk = data.slice(i, i + chunkSize);
-        if (!this.device?.gatt?.connected) throw new Error('Conexión perdida');
+        if (!gattDe(this.device)?.connected) throw new Error('Conexión perdida');
 
-        if (this.characteristic.properties.writeWithoutResponse) {
+        if (!this.characteristic) throw new Error('Canal de impresion no disponible');
+            if (this.characteristic.properties.writeWithoutResponse) {
           await this.characteristic.writeValueWithoutResponse(chunk);
         } else {
           await this.characteristic.writeValue(chunk);
@@ -218,16 +254,16 @@ class BluetoothPrinterService {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.characteristic = null; 
-      try { await this.device?.gatt?.disconnect(); } catch(e) {}
+      try { await gattDe(this.device)?.disconnect(); } catch { /* el gatt ya podia estar desconectado; da igual */ }
       throw error;
     }
   }
 
   isSupported() {
     if (Capacitor.isNativePlatform()) return true;
-    return !!((navigator as any).bluetooth && (navigator as any).bluetooth.requestDevice);
+    return !!(navigator as unknown as NavegadorConBluetooth).bluetooth?.requestDevice;
   }
 }
 

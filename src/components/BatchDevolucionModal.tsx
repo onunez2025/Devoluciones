@@ -23,12 +23,22 @@ interface Props {
   onSuccess: () => void;
 }
 
+interface TicketBusqueda {
+    Ticket: string | number;
+    IdEquipo?: string;
+    N_Serie?: string;
+    N_Guia?: string;
+    NombreCliente?: string;
+    NombreEquipo?: string;
+}
+
 const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [technicians, setTechnicians] = useState<string[]>([]);
-  const [tickets, setTickets] = useState<any[]>([]);
+  // Forma de las filas que devuelve /lookups/tickets: solo lo que usa este modal.
+    const [tickets, setTickets] = useState<TicketBusqueda[]>([]);
   const [selectedTicketIds, setSelectedTicketIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
 
@@ -37,18 +47,23 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
     tech: ''
   });
 
-  useEffect(() => {
-    fetchTechnicians();
-  }, []);
 
   const fetchTechnicians = async () => {
     try {
       const response = await apiClient.get('/lookups/technicians');
       setTechnicians(response.data);
-    } catch (err) {
+    } catch {
       console.error('Error fetching technicians');
     }
   };
+
+    // El efecto va DESPUES de fetchTechnicians: antes se llamaba en la linea 41 y la funcion se
+    // declaraba en la 44. Funcionaba porque el efecto corre tras el render, pero acceder a un
+    // `const` antes de su declaracion es fragil y la regla react-hooks/immutability lo marca.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- carga inicial del desplegable de tecnicos, una sola vez
+    fetchTechnicians();
+  }, []);
 
   const searchTickets = async () => {
     if (!filters.date || !filters.tech) return;
@@ -61,7 +76,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
       if (response.data.length === 0) {
         setError(t('batch.errors.noTickets'));
       }
-    } catch (err) {
+    } catch {
       setError(t('batch.errors.searchFailed'));
     } finally {
       setLoading(false);
@@ -83,7 +98,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
     }
   };
 
-  const exportToExcel = async (selectedData: any[]) => {
+  const exportToExcel = async (selectedData: TicketBusqueda[]) => {
     const exportData = selectedData.map(dev => ({
       'Ticket': dev.Ticket,
       'ID_Equipo': dev.IdEquipo,
@@ -124,7 +139,7 @@ const BatchDevolucionModal = ({ onClose, onSuccess }: Props) => {
 
       setStep(2);
       onSuccess();
-    } catch (err) {
+    } catch {
       setError(t('batch.errors.batchFailed'));
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+import { mensajeError } from '../utils/errores';
 import { motion } from 'motion/react';
 import { X, Calendar, Package, ClipboardList, Tag, FileText, Camera, Printer, RefreshCcw, User, Wrench, ExternalLink } from 'lucide-react';
 import { Devolucion } from '../types';
@@ -28,9 +29,9 @@ const DevolucionDetailModal = ({ devolucion, onClose }: Props) => {
     try {
       const zpl = generateZPL(devolucion);
       await bluetoothPrinter.print(zpl);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al imprimir:', error);
-      alert(`Error al imprimir: ${error.message}`);
+      alert(`Error al imprimir: ${mensajeError(error)}`);
     } finally {
       setIsPrinting(false);
     }

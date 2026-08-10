@@ -50,7 +50,7 @@ export const verifyToken = async (req: any, res: any, next: any) => { // eslint-
     }
     req.user = user;
     next();
-  } catch (err) {
+  } catch {
     return res.status(403).json({ message: 'Token inválido o expirado' });
   }
 };
@@ -72,7 +72,7 @@ export const verifyTokenForDownload = async (req: any, res: any, next: any) => {
     }
     req.user = user;
     next();
-  } catch (err) {
+  } catch {
     return res.status(403).json({ message: 'Token inválido o expirado' });
   }
 };

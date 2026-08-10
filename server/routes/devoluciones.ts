@@ -63,7 +63,7 @@ router.get('/', async (req: any, res) => { // eslint-disable-line @typescript-es
     }
 
     // 1. Obtener el total de registros para paginación
-    let countQuery = `
+    const countQuery = `
       SELECT COUNT(*) as total
       FROM [dbo].[GAC_APP_TB_DEVOLUCION] d
       ${search ? 'LEFT JOIN [SIATC].[Dashboard_FSM] f ON d.Ticket = f.Ticket' : ''}
@@ -139,7 +139,7 @@ router.get('/stats', async (req: any, res) => { // eslint-disable-line @typescri
          ) ${casFilter}) as noDiagnosis
     `);
     res.json(result.recordset[0]);
-  } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  } catch { // eslint-disable-line @typescript-eslint/no-explicit-any
     res.status(500).json({ message: 'Error al obtener estadísticas' });
   }
 });

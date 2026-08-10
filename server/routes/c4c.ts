@@ -25,7 +25,7 @@ router.get('/pdf/:ticket', async (req, res) => {
     console.log(`📡 [C4C] Iniciando búsqueda para Ticket: ${ticket}, FSM: ${llamadaFSM}`);
 
     // Paso 1: Buscar el ticket para obtener su ObjectID único en SAP
-    let filterParts = [`ID eq '${ticket}'`, `ID eq '${normalizedTicket}'`];
+    const filterParts = [`ID eq '${ticket}'`, `ID eq '${normalizedTicket}'`];
     if (llamadaFSM) {
       filterParts.push(`ID eq '${llamadaFSM}'`);
       filterParts.push(`ID eq '${llamadaFSM.toString().padStart(10, '0')}'`);
@@ -59,7 +59,7 @@ router.get('/pdf/:ticket', async (req, res) => {
 
     // La respuesta puede venir como d.results (colección) o d (objeto único)
     const attData = attResponse.data?.d;
-    let attachments = attData?.results || (Array.isArray(attData) ? attData : (attData ? [attData] : []));
+    const attachments = attData?.results || (Array.isArray(attData) ? attData : (attData ? [attData] : []));
 
     console.log(`📂 [C4C] Total de adjuntos encontrados: ${attachments.length}`);
 
