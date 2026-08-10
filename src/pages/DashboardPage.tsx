@@ -24,7 +24,7 @@ import {
   ClipboardList,
   HelpCircle
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import NewDevolucionModal from '../components/NewDevolucionModal';

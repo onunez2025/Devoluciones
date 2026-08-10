@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
 import { LottiePlayer } from './common/LottiePlayer';
 import { useCargaMinima } from '../hooks/useCargaMinima';
