@@ -113,6 +113,7 @@ const limiter = rateLimit({
   keyGenerator: claveLimitador,
   handler: avisoLimite('limite general'),
   store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:' }), // eslint-disable-line @typescript-eslint/no-explicit-any
+  passOnStoreError: true,   // si Redis cae, la app sigue sirviendo (sin limitar) en vez de dar 500
 });
 app.use(limiter);
 
@@ -131,6 +132,7 @@ let authLimiter = rateLimit({
   keyGenerator: authKeyGenerator,
     handler: avisoLimite('limite de login'),
   store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:auth:' }), // eslint-disable-line @typescript-eslint/no-explicit-any
+  passOnStoreError: true,   // si Redis cae, la app sigue sirviendo (sin limitar) en vez de dar 500
 });
 
 // [SECURITY] Limitar tamaño de body para prevenir DoS
@@ -337,6 +339,7 @@ app.listen(port, () => {
       keyGenerator: authKeyGenerator,
       message: { error: `Demasiados intentos de inicio de sesión. Espera ${cfg.rateLimitWindowMinutes} minutos.` },
       store: new RedisStore({ sendCommand: (...args: string[]) => (getRedisClient() as any).call(...args) as any, prefix: 'rl:dev:auth:' }), // eslint-disable-line @typescript-eslint/no-explicit-any
+      passOnStoreError: true,   // si Redis cae, la app sigue sirviendo (sin limitar) en vez de dar 500
     });
     console.log(`[SessionConfig] Auth limiter: ${cfg.rateLimitMaxAttempts} intentos / ${cfg.rateLimitWindowMinutes} min`);
   }).catch(err => console.error('[SessionConfig] Failed to load rate limit config:', err));
