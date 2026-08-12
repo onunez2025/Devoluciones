@@ -13,19 +13,14 @@ const sqlConfig = {
   },
 };
 
-// Etapa 6 -- pool admin, reservado para operaciones DDL/migraciones que ni siatc_reader ni
-// siatc_writer pueden ejecutar (ninguno tiene permiso de modificar esquema).
-export const poolPromise = new sql.ConnectionPool(sqlConfig)
-  .connect()
-  .then(pool => {
-    console.log('✅ Conectado a SQL Server');
-    return pool;
-  })
-  .catch(err => {
-    console.error('❌ Error de conexión SQL Server:', err);
-    process.exit(1);
-  });
-void poolPromise; // Se conecta al arrancar (fail-fast) y queda reservado para DDL futuro -- ningún endpoint actual lo usa.
+// Etapa 6 -- aqui habia un tercer pool que se conectaba al arrancar con el usuario
+// administrador original "por si hiciera falta para DDL". No lo usaba ningun endpoint, pero
+// mantenia abierta una sesion de administrador contra la base durante toda la vida del proceso.
+// Retirado: ninguna app debe conectarse con las credenciales antiguas. Las migraciones que
+// necesiten DDL se ejecutan como scripts sueltos, no desde el servidor web.
+//
+// El arranque sigue siendo fail-fast: los dos pools de abajo hacen process.exit(1) si no
+// conectan.
 
 // Etapa 6 -- usuarios de BD de privilegio minimo (siatc_reader/siatc_writer). Si las env
 // vars DB_USER_READ/DB_USER_WRITE todavia no estan configuradas en Dokploy, caen de vuelta
@@ -45,6 +40,10 @@ const writeSqlConfig = {
 // Endpoints GET -- solo lectura, usa siatc_reader (privilegio minimo).
 export const readPoolPromise = new sql.ConnectionPool(readSqlConfig)
   .connect()
+  .then(pool => {
+    console.log('✅ Conectado a SQL Server');
+    return pool;
+  })
   .catch(err => {
     console.error('❌ Error de conexión SQL Server (read pool):', err);
     process.exit(1);
