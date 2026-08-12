@@ -5,3 +5,9 @@ dist
 .DS_Store
 .vscode
 build
+
+# Configuracion local de agentes de IA (Claude Code, Gemini/Antigravity).
+# Es de cada maquina, no del proyecto.
+.claude/
+.gemini/
+skills-lock.json
