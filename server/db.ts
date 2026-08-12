@@ -1,15 +1,13 @@
 import sql from 'mssql';
 
-// Configuración SQL Server
+// Base comun de los dos pools reales. SIN credenciales: cada pool pone las suyas.
 const sqlConfig = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
   server: process.env.DB_SERVER || '',
   database: process.env.DB_DATABASE || 'SIATC',
   requestTimeout: 30000,
   options: {
     encrypt: true,
-    trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true',
+    trustServerCertificate: false, // Azure SQL presenta certificado valido; no hay motivo para no verificarlo
   },
 };
 
