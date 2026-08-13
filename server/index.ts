@@ -1,4 +1,5 @@
 import './lib/env.js';   // PRIMERO: carga el .env y valida los secretos antes que nada
+import { ES_DESPLIEGUE } from './lib/env.js';
 
 import express from 'express';
 import cors from 'cors';
@@ -43,7 +44,7 @@ if (IS_PRODUCTION && !(process.env.ALLOWED_ORIGINS || '').trim()) {
 }
 app.use(cors({
   origin: (origin, callback) => {
-    if (!IS_PRODUCTION) return callback(null, true);
+    if (!ES_DESPLIEGUE) return callback(null, true);  // sin ALLOWED_ORIGINS = entorno local
     const allowed = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
     if (!origin || allowed.includes(origin)) callback(null, true);
     else callback(new Error('Not allowed by CORS'));
