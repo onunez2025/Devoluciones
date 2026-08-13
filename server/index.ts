@@ -69,7 +69,7 @@ app.use(helmet({
       upgradeInsecureRequests: [],
     },
   },
-  hsts: IS_PRODUCTION ? { maxAge: 31536000, includeSubDomains: true } : false,
+  hsts: { maxAge: 31536000, includeSubDomains: true },
 }));
 
 // [SECURITY] Rate limiting general (1000 req / 15 min)
