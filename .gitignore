@@ -11,3 +11,6 @@ build
 .claude/
 .gemini/
 skills-lock.json
+
+# Cache incremental de TypeScript: se regenera en cada `tsc -b`.
+*.tsbuildinfo
