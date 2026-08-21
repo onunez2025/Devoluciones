@@ -37,7 +37,7 @@ import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
 import { LottiePlayer } from '../components/common/LottiePlayer';
 import { EtiquetaImpresion, LienzoEtiqueta } from '../components/common/EtiquetaImpresion';
-import { SIATCTable, SIATCTableHead, SIATCTableHeader } from '../components/siatc/table/SIATCTable';
+import { SIATCTable, SIATCTableCell, SIATCTableHead, SIATCTableHeader } from '../components/siatc/table/SIATCTable';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -119,7 +119,6 @@ const DashboardPage = () => {
     fetchStats();
   }, []);
 
-
   const downloadAsImage = (id: string) => {
     const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
     if (!canvas) return;
@@ -195,7 +194,6 @@ const DashboardPage = () => {
     }
     setSelectedTickets(newSelected);
   };
-
 
   const metrics = [
     { label: t('dashboard.stats.total'), value: stats.total, icon: Package, color: 'text-primary', bg: 'bg-primary/10' },
@@ -437,7 +435,7 @@ const DashboardPage = () => {
                         )}
                         onClick={() => toggleSelect(String(dev.Ticket))}
                       >
-                        <td className="px-6 py-3">
+                        <SIATCTableCell className="px-6 py-3">
                           <input
                             type="checkbox"
                             checked={selectedTickets.has(String(dev.Ticket))}
@@ -445,39 +443,39 @@ const DashboardPage = () => {
                             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all"
                             onClick={(e) => e.stopPropagation()}
                           />
-                        </td>
-                        <td className="px-6 py-3 font-sans text-cb-text-primary">
+                        </SIATCTableCell>
+                        <SIATCTableCell className="px-6 py-3 font-sans text-cb-text-primary">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                             <span className="text-[12px] font-black text-foreground tracking-tight">#{dev.Ticket}</span>
                           </div>
-                        </td>
-                        <td className="px-6 py-3 font-sans text-cb-text-primary">
+                        </SIATCTableCell>
+                        <SIATCTableCell className="px-6 py-3 font-sans text-cb-text-primary">
                           <div className="flex flex-col">
                             <span className="text-[11px] font-black text-foreground uppercase">{dev.IdEquipo}</span>
                             <span className="text-[9px] font-bold text-muted-foreground/60 font-mono">{dev.N_Serie || t('common.noSerial')}</span>
                           </div>
-                        </td>
-                        <td className="px-6 py-3 font-sans text-cb-text-primary">
+                        </SIATCTableCell>
+                        <SIATCTableCell className="px-6 py-3 font-sans text-cb-text-primary">
                           <span className="text-[10px] font-bold text-muted-foreground/80 px-2 py-1 bg-muted/50 rounded-lg border border-border/30">
                             {dev.N_Guia || t('common.noGuide')}
                           </span>
-                        </td>
-                        <td className="px-6 py-3 font-sans text-cb-text-primary">
+                        </SIATCTableCell>
+                        <SIATCTableCell className="px-6 py-3 font-sans text-cb-text-primary">
                           <div className="flex items-center gap-2 text-muted-foreground/70">
                             <Calendar className="w-3 h-3" />
                             <span className="text-[10px] font-bold uppercase transition-colors group-hover:text-foreground">
                               {new Date(dev.FechaRegistro).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}
                             </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-3 font-sans text-cb-text-primary">
+                        </SIATCTableCell>
+                        <SIATCTableCell className="px-6 py-3 font-sans text-cb-text-primary">
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/10">
                             <CheckCircle2 className="w-3 h-3" />
                             <span className="text-[9px] font-black uppercase tracking-tighter">{t('dashboard.table.validated')}</span>
                           </div>
-                        </td>
-                        <td className="px-6 py-3 font-sans text-cb-text-primary">
+                        </SIATCTableCell>
+                        <SIATCTableCell className="px-6 py-3 font-sans text-cb-text-primary">
                           <div className="flex items-center justify-end gap-1">
                             <Link
                               to={`/public/equipment/${dev.IdEquipo}`}
@@ -535,7 +533,7 @@ const DashboardPage = () => {
                               <Eye size={15} strokeWidth={2.5} />
                             </button>
                           </div>
-                        </td>
+                        </SIATCTableCell>
                       </motion.tr>
                     ))}
                   </AnimatePresence>
