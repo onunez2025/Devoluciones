@@ -18,12 +18,12 @@ import {
   Clock,
   DownloadCloud
 } from 'lucide-react';
-import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../services/apiClient';
 import { openAuthenticatedFile } from '../utils/openAuthenticatedFile';
 import { TechnicalReport } from '../types';
 import { cn } from '../utils/cn';
+import { EtiquetaImpresion, LienzoEtiqueta } from '../components/common/EtiquetaImpresion';
 
 const PublicEquipmentPage = () => {
   const { t } = useTranslation();
@@ -464,55 +464,11 @@ const PublicEquipmentPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Vista de Impresión Oculta (3x2 pulgadas) */}
-      {printData && (
-        <div id="print-label" style={{ display: 'none' }}>
-          <div style={{ marginRight: '6mm' }}>
-            <QRCodeSVG value={printData.url} size={140} level="H" />
-          </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>
-            <div style={{ fontSize: '24px', fontWeight: '900', borderBottom: '2px solid black', marginBottom: '6px', paddingBottom: '2px' }}>
-              #{printData.id}
-            </div>
-            <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#000', marginTop: '4px', textTransform: 'uppercase' }}>
-              Sole - MT Industrial
-            </div>
-            <div style={{ fontSize: '8px', color: '#444', marginTop: '2px', fontWeight: 'bold' }}>
-              HISTORIAL TÉCNICO ONLINE
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Etiqueta física de 3x2 pulgadas: se imprime, no se ve en pantalla. */}
+      {printData && <EtiquetaImpresion datos={printData} />}
 
-      {/* Canvas oculto para generación de imagen */}
-      <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
-        {printData && (
-          <div id="capture-area" style={{
-            width: '600px',
-            height: '400px',
-            background: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '40px',
-            color: 'black'
-          }}>
-            <QRCodeCanvas
-              id="qr-canvas"
-              value={printData.url}
-              size={320}
-              level="H"
-              includeMargin={true}
-            />
-            <div style={{ marginLeft: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'Arial' }}>
-              <div style={{ fontSize: '60px', fontWeight: 'bold', borderBottom: '5px solid black', marginBottom: '20px' }}>
-                #{printData.id}
-              </div>
-              <div style={{ fontSize: '24px', fontWeight: 'bold' }}>Sole - MT Industrial</div>
-              <div style={{ fontSize: '20px', color: '#666' }}>HISTORIAL ONLINE</div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Fuera de pantalla: hay que renderizarla para poder capturarla como imagen. */}
+      {printData && <LienzoEtiqueta datos={printData} />}
     </div>
   );
 };

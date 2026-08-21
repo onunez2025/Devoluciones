@@ -25,7 +25,6 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { Link } from 'react-router';
-import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import NewDevolucionModal from '../components/NewDevolucionModal';
 import BatchDevolucionModal from '../components/BatchDevolucionModal';
@@ -37,6 +36,8 @@ import { generateZPL } from '../services/zplService';
 import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
 import { LottiePlayer } from '../components/common/LottiePlayer';
+import { EtiquetaImpresion, LienzoEtiqueta } from '../components/common/EtiquetaImpresion';
+import { SIATCTable, SIATCTableHead, SIATCTableHeader } from '../components/siatc/table/SIATCTable';
 
 const DashboardPage = () => {
   const { t } = useTranslation();
@@ -396,26 +397,25 @@ const DashboardPage = () => {
             "hidden md:flex md:flex-col flex-1 min-h-0 bg-card border border-cb-border shadow-cb-level-1 overflow-hidden",
             SIATC_THEME.TOKENS.MASTER_ROUNDNESS
           )}>
-            <div className="overflow-auto flex-1 min-h-0">
-              <table className="w-full text-left border-collapse min-w-[1000px]">
-                <thead>
-                  <tr className="sticky top-0 z-20 bg-card border-b border-cb-border shadow-sm">
-                    <th className="px-6 py-4 w-10">
+              <SIATCTable>
+                <SIATCTableHead>
+                  <tr>
+                    <SIATCTableHeader className="w-10">
                       <input
                         type="checkbox"
                         checked={selectedTickets.size === devoluciones.length && devoluciones.length > 0}
                         onChange={toggleSelectAll}
                         className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer transition-all"
                       />
-                    </th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.ticket')}</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.equipment')}</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.guide')}</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.date')}</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.status')}</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right text-muted-foreground opacity-60">{t('common.actions')}</th>
+                    </SIATCTableHeader>
+                    <SIATCTableHeader className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.ticket')}</SIATCTableHeader>
+                    <SIATCTableHeader className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.equipment')}</SIATCTableHeader>
+                    <SIATCTableHeader className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.guide')}</SIATCTableHeader>
+                    <SIATCTableHeader className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.date')}</SIATCTableHeader>
+                    <SIATCTableHeader className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">{t('dashboard.table.status')}</SIATCTableHeader>
+                    <SIATCTableHeader className="text-[10px] font-black uppercase tracking-widest text-right text-muted-foreground opacity-60">{t('common.actions')}</SIATCTableHeader>
                   </tr>
-                </thead>
+                </SIATCTableHead>
                 <tbody className="divide-y divide-border/30">
                   <AnimatePresence mode="popLayout">
                     {devoluciones.map((dev, idx) => (
@@ -425,8 +425,14 @@ const DashboardPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, x: -10 }}
                         transition={{ delay: Math.min(idx * 0.01, 0.3) }}
+                        /*
+                         * Es un `motion.tr`, no un `SIATCTableRow`: la animacion de entrada y
+                         * salida la pone framer-motion. Pero el estilo SI sale del tema, para que
+                         * el alto de fila obedezca a lo configurado en Console como en el resto.
+                         */
                         className={cn(
-                          "h-[64px] group hover:bg-cb-bg transition-colors border-b border-cb-border/60 cursor-pointer",
+                          SIATC_THEME.TABLE.BODY_ROW,
+                          "cursor-pointer",
                           selectedTickets.has(String(dev.Ticket)) ? "bg-primary/5" : ""
                         )}
                         onClick={() => toggleSelect(String(dev.Ticket))}
@@ -534,8 +540,7 @@ const DashboardPage = () => {
                     ))}
                   </AnimatePresence>
                 </tbody>
-              </table>
-            </div>
+              </SIATCTable>
           </div>
           {/* Mobile Card View */}
           <div className="md:hidden flex-1 overflow-y-auto space-y-3 pr-1 min-h-0 pb-6">
@@ -764,65 +769,11 @@ const DashboardPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Vista de Impresión Oculta (3x2 pulgadas) */}
-      {printData && (
-        <div id="print-label" style={{ display: 'none' }}>
-          <div style={{ marginRight: '6mm' }}>
-            <QRCodeSVG value={printData.url} size={140} level="H" />
-          </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'Arial, sans-serif' }}>
-            <div style={{ fontSize: '24px', fontWeight: '900', borderBottom: '2px solid black', marginBottom: '6px', paddingBottom: '2px' }}>
-              #{printData.id}
-            </div>
-            {printData.nSerie && (
-              <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
-                SERIE: {printData.nSerie}
-              </div>
-            )}
-            <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#000', marginTop: '4px', textTransform: 'uppercase' }}>
-              Sole - MT Industrial
-            </div>
-            <div style={{ fontSize: '8px', color: '#444', marginTop: '2px', fontWeight: 'bold' }}>
-              HISTORIAL TÉCNICO ONLINE
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Etiqueta física de 3x2 pulgadas: se imprime, no se ve en pantalla. */}
+      {printData && <EtiquetaImpresion datos={printData} />}
 
-      {/* Canvas oculto para generación de imagen */}
-      <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
-        {printData && (
-          <div id="capture-area" style={{
-            width: '600px',
-            height: '400px',
-            background: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            padding: '40px',
-            color: 'black'
-          }}>
-            <QRCodeCanvas
-              id="qr-canvas"
-              value={printData.url}
-              size={320}
-              level="H"
-              includeMargin={true}
-            />
-            <div style={{ marginLeft: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', fontFamily: 'Arial' }}>
-              <div style={{ fontSize: '60px', fontWeight: 'bold', borderBottom: '5px solid black', marginBottom: '20px' }}>
-                #{printData.id}
-              </div>
-              {printData.nSerie && (
-                <div style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '10px' }}>
-                  SERIE: {printData.nSerie}
-                </div>
-              )}
-              <div style={{ fontSize: '24px', fontWeight: 'bold' }}>Sole - MT Industrial</div>
-              <div style={{ fontSize: '20px', color: '#666' }}>HISTORIAL ONLINE</div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Fuera de pantalla: hay que renderizarla para poder capturarla como imagen. */}
+      {printData && <LienzoEtiqueta datos={printData} />}
     </div>
   );
 };

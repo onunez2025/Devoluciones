@@ -73,7 +73,7 @@ export const MainLayout: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-dvh bg-[#F9FAFB] dark:bg-[#050F1A] flex flex-col justify-center items-center">
+      <div className="min-h-dvh bg-cb-bg flex flex-col justify-center items-center">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         <p className="mt-4 text-sm font-bold text-cb-text-secondary uppercase tracking-widest animate-pulse">Cargando Sistema...</p>
       </div>
@@ -85,7 +85,7 @@ export const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="h-dvh bg-[#F8FAFC] dark:bg-[#020617] text-foreground flex overflow-hidden font-sans relative">
+    <div className="h-dvh bg-cb-bg text-foreground flex overflow-hidden font-sans relative">
       {isLoggingOut && (
         <AuthTransitionOverlay
           variant="farewell"
