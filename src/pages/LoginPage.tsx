@@ -12,6 +12,7 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { SIATC_THEME } from '../utils/siatc-theme';
 import { cn } from '../utils/cn';
 import { LogoGoogle, LogoMicrosoft } from '../components/common/LogosProveedores';
+import { recordarUsuario, usuarioRecordado } from '../utils/recordarUsuario';
 
 const prefersReducedMotion = () =>
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -25,9 +26,12 @@ export default function LoginPage() {
 
     const logoUrl = applications.find(a => a.code?.toUpperCase() === 'DEV')?.logo_url || '/Logo.png';
 
-    const [username, setUsername] = useState('');
+    // «Recordarme» arranca marcada si la última vez se pidió recordar: si no, el usuario la marca, vuelve y la ve
+    // desmarcada, y concluye que no sirve para nada.
+    const recordado = usuarioRecordado();
+    const [username, setUsername] = useState(recordado);
     const [password, setPassword] = useState('');
-    const [rememberMe, setRememberMe] = useState(false);
+    const [rememberMe, setRememberMe] = useState(recordado !== '');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -43,14 +47,16 @@ export default function LoginPage() {
             const response = await apiClient.post('/auth/login', {
                 username: cleanUsername,
                 password,
-                remember: rememberMe
             });
             const { token, user, sessionConfig } = response.data;
 
             // skipSharedCookie=true: el backend ya escribe la cookie compartida via Set-Cookie
             // -- reescribirla aca duplica la cookie "token" y rompe su parseo en cualquier
             // otra app a la que se navegue despues.
-            login(user, token, rememberMe, sessionConfig, true);
+            recordarUsuario(username, rememberMe);
+            // `true` = la sesión se guarda de forma persistente, como en el resto del ecosistema. Lo que la limita es
+            // la caducidad del token (12 h) y el cierre por inactividad, no esta casilla.
+            login(user, token, true, sessionConfig, true);
             refreshApplications();
 
             // La bienvenida se muestra ya autenticado (ver MainLayout), no aca -- demorar
@@ -72,11 +78,11 @@ export default function LoginPage() {
         i18n.changeLanguage(i18n.language === 'es' ? 'en' : 'es');
     };
 
-    const renderFormFields = () => (
+    const renderFormFields = (donde: string) => (
         <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium mb-1.5 ml-1">
+                    <label htmlFor={`${donde}-username`} className="block text-sm font-medium mb-1.5 ml-1">
                         {t('auth.username')}
                     </label>
                     <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
@@ -84,19 +90,22 @@ export default function LoginPage() {
                             <User className="w-5 h-5" />
                         </div>
                         <input
+                            id={`${donde}-username`}
+                            name="username"
+                            autoComplete="username"
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value.toLowerCase())}
                             className={SIATC_THEME.LOGIN_LAYOUT.INPUT}
                             placeholder="Ingrese usuario"
                             required
-                            autoFocus
+                            autoFocus={recordado === ''}
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium mb-1.5 ml-1">
+                    <label htmlFor={`${donde}-current-password`} className="block text-sm font-medium mb-1.5 ml-1">
                         {t('auth.password')}
                     </label>
                     <div className={SIATC_THEME.LOGIN_LAYOUT.INPUT_WRAPPER}>
@@ -104,6 +113,10 @@ export default function LoginPage() {
                             <Lock className="w-5 h-5" />
                         </div>
                         <input
+                            id={`${donde}-current-password`}
+                            name="password"
+                            autoComplete="current-password"
+                            autoFocus={recordado !== ''}
                             type={showPassword ? 'text' : 'password'}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -248,7 +261,7 @@ export default function LoginPage() {
 
                 <div className="flex-1 flex flex-col justify-center px-6 py-6 bg-background">
                     <div className="max-w-md mx-auto w-full">
-                        {renderFormFields()}
+                        {renderFormFields('movil')}
                         <div className="mt-6">
                             {renderSsoButtons()}
                         </div>
@@ -322,7 +335,7 @@ export default function LoginPage() {
                         </div>
 
                         <div className={SIATC_THEME.LOGIN_LAYOUT.CARD}>
-                            {renderFormFields()}
+                            {renderFormFields('escritorio')}
                             <div className="mt-6">
                                 {renderSsoButtons()}
                             </div>
