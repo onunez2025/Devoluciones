@@ -16,7 +16,7 @@
  *     desde caché no puede devolver nada obsoleto.
  *   - La página de «sin conexión» y los iconos, que es lo que hace falta para arrancar sin red.
  */
-const VERSION = 'dev-v1';
+const VERSION = 'dev-v2';
 const ESENCIALES = ['/offline.html', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', evento => {

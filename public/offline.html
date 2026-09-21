@@ -14,8 +14,8 @@
         img { width: 72px; height: 72px; margin-bottom: 16px; }
         h1 { font-size: 20px; margin: 0 0 8px; }
         p { margin: 0 0 20px; line-height: 1.5; opacity: .8; font-size: 14px; }
-        button { font: inherit; font-weight: 600; color: #fff; background: #4C5F80; border: 0;
-                 border-radius: 10px; padding: 10px 20px; cursor: pointer; }
+        a.boton { display: inline-block; font-weight: 600; color: #fff; background: #4C5F80; text-decoration: none;
+                  border-radius: 10px; padding: 10px 20px; }
     </style>
 </head>
 <body>
@@ -24,7 +24,10 @@
         <h1>Sin conexión</h1>
         <!-- Se dice la verdad: sin red no hay datos ni sesión, así que no se finge una aplicación vacía. -->
         <p>Esta aplicación necesita conexión para registrar devoluciones y consultar su estado. Vuelve a intentarlo cuando tengas red.</p>
-        <button type="button" onclick="location.reload()">Reintentar</button>
+        <!-- Un enlace y no un botón: la CSP del servidor (script-src 'self') bloquea los manejadores de eventos en
+             línea, y el botón no hacía nada en producción. Volver a «/» pasa otra vez por el service worker, que
+             prueba la red primero: si ya hay conexión entra en la aplicación; si no, vuelve a este aviso. -->
+        <a class="boton" href="/">Reintentar</a>
     </div>
 </body>
 </html>
