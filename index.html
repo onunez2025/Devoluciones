@@ -2,7 +2,17 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- El logo de la aplicación, no el de Vite (que además apuntaba a un fichero inexistente). Se usa una copia de
+         256 px: el logo original son 2160 px y 1,8 MB, un peso absurdo para el icono de una pestaña. -->
+    <link rel="icon" type="image/png" href="/favicon-256.png" />
+
+    <!-- Instalable como aplicación (Chrome, Edge, Android). El manifest y los iconos viven en /public. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#4C5F80" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Devoluciones" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Devoluciones | MT Industrial</title>
     <meta name="description" content="Plataforma de gestión de devoluciones y trazabilidad de equipos MT Industrial." />
