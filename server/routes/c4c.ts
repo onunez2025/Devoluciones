@@ -1,3 +1,4 @@
+import { alguno, igualA } from '../lib/odata.js';
 import { Router } from 'express';
 import sql from 'mssql';
 import axios from 'axios';
@@ -25,13 +26,13 @@ router.get('/pdf/:ticket', async (req, res) => {
     console.log(`📡 [C4C] Iniciando búsqueda para Ticket: ${ticket}, FSM: ${llamadaFSM}`);
 
     // Paso 1: Buscar el ticket para obtener su ObjectID único en SAP
-    const filterParts = [`ID eq '${ticket}'`, `ID eq '${normalizedTicket}'`];
+    const filterParts = [igualA('ID', ticket), igualA('ID', normalizedTicket)];
     if (llamadaFSM) {
-      filterParts.push(`ID eq '${llamadaFSM}'`);
-      filterParts.push(`ID eq '${llamadaFSM.toString().padStart(10, '0')}'`);
+      filterParts.push(igualA('ID', llamadaFSM));
+      filterParts.push(igualA('ID', llamadaFSM.toString().padStart(10, '0')));
     }
 
-    const filter = filterParts.join(' or ');
+    const filter = alguno(...filterParts);
     const findUrl = `${baseUrl}/ServiceRequestCollection?$filter=${encodeURIComponent(filter)}&$select=ObjectID,ID,UUID&$format=json`;
 
     const authConfig = {
