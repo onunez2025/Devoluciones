@@ -1,20 +1,32 @@
-import { alguno, igualA } from '../lib/odata.js';
 import { Router } from 'express';
 import sql from 'mssql';
-import axios from 'axios';
+import {
+    ErrorC4C,
+    adjuntosDeObjectId,
+    alguno,
+    descargarAdjuntoComoSea,
+    estaConfigurado,
+    igualA,
+    mensajePublico,
+    pedirFilas,
+    soloPdf,
+} from '@siatc/c4c-client';
 import { readPoolPromise } from '../db';
-import { safeError } from '../lib/security';
+import { safeError, sanitizeLog } from '../lib/security';
 
 const router = Router();
 
 // --- Integración SAP C4C (OData para PDF) ---
+// Usa el cliente compartido `@siatc/c4c-client`. Lo propio de Devoluciones que SÍ se conserva: buscar el
+// ticket por cuatro variantes a la vez, y preferir el PDF cuyo nombre suene a informe técnico.
 router.get('/pdf/:ticket', async (req, res) => {
-  const { ticket } = req.params;
-  const username = process.env.C4C_USER;
-  const password = process.env.C4C_PASSWORD;
-  const baseUrl = process.env.C4C_BASE_URL;
+  const ticket = String(req.params.ticket ?? '');
 
   try {
+    if (!estaConfigurado()) {
+      return res.status(503).json({ message: 'Integración C4C no configurada en el servidor.' });
+    }
+
     const pool = await readPoolPromise;
     const dbTicket = await pool.request()
       .input('ticket', sql.VarChar(255), ticket)
@@ -23,88 +35,48 @@ router.get('/pdf/:ticket', async (req, res) => {
     const llamadaFSM = dbTicket.recordset[0]?.LlamadaFSM;
     const normalizedTicket = ticket.padStart(10, '0');
 
-    console.log(`📡 [C4C] Iniciando búsqueda para Ticket: ${ticket}, FSM: ${llamadaFSM}`);
-
-    // Paso 1: Buscar el ticket para obtener su ObjectID único en SAP
-    const filterParts = [igualA('ID', ticket), igualA('ID', normalizedTicket)];
+    // El mismo ticket puede estar en C4C con o sin ceros a la izquierda, y bajo su número de llamada
+    // FSM. Se buscan las cuatro variantes de una vez en lugar de encadenar consultas.
+    const variantes = [igualA('ID', ticket), igualA('ID', normalizedTicket)];
     if (llamadaFSM) {
-      filterParts.push(igualA('ID', llamadaFSM));
-      filterParts.push(igualA('ID', llamadaFSM.toString().padStart(10, '0')));
+      variantes.push(igualA('ID', llamadaFSM));
+      variantes.push(igualA('ID', String(llamadaFSM).padStart(10, '0')));
     }
 
-    const filter = alguno(...filterParts);
-    const findUrl = `${baseUrl}/ServiceRequestCollection?$filter=${encodeURIComponent(filter)}&$select=ObjectID,ID,UUID&$format=json`;
-
-    const authConfig = {
-      auth: { username: username || '', password: password || '' },
-      headers: { 'Accept': 'application/json' }
-    };
-
-    const findResponse = await axios.get(findUrl, authConfig);
-    const ticketsFound = findResponse.data?.d?.results || [];
-
-    if (ticketsFound.length === 0) {
-      console.warn(`⚠️ [C4C] No se encontró el ticket en SAP con el filtro: ${filter}`);
+    const encontrados = await pedirFilas(
+      `ServiceRequestCollection?$filter=${encodeURIComponent(alguno(...variantes))}&$select=ObjectID,ID,UUID&$format=json`,
+    );
+    if (encontrados.length === 0) {
+      console.warn(`⚠️ [C4C] No se encontró el ticket ${sanitizeLog(ticket)} en SAP con ninguna de sus variantes.`);
       return res.status(404).json({ message: 'No se encontró el ticket en SAP C4C' });
     }
 
-    const sapTicket = ticketsFound[0];
-    const objectId = sapTicket.ObjectID;
-    console.log(`✅ [C4C] Ticket encontrado. ObjectID: ${objectId}`);
+    const objectId = String(encontrados[0].ObjectID);
+    const adjuntos = await adjuntosDeObjectId(objectId);
+    const pdfs = soloPdf(adjuntos);
 
-    // Paso 2: Navegar directamente a la carpeta de adjuntos usando el ObjectID (Lógica SIATC_Tecnical)
-    const attachmentsUrl = `${baseUrl}/ServiceRequestCollection('${objectId}')/ServiceRequestAttachmentFolder?$format=json`;
-    console.log(`📂 [C4C] Consultando adjuntos: ${attachmentsUrl}`);
-
-    const attResponse = await axios.get(attachmentsUrl, authConfig);
-
-    // La respuesta puede venir como d.results (colección) o d (objeto único)
-    const attData = attResponse.data?.d;
-    const attachments = attData?.results || (Array.isArray(attData) ? attData : (attData ? [attData] : []));
-
-    console.log(`📂 [C4C] Total de adjuntos encontrados: ${attachments.length}`);
-
-    // Paso 3: Filtrar para buscar el PDF (Priorizando Informe Técnico)
-    const pdf = attachments.find((a: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-      const name = (a.Name || '').toLowerCase();
-      const mime = (a.MimeType || '').toLowerCase();
-      return (mime.includes('pdf') || name.endsWith('.pdf')) &&
-             (name.includes('informe') || name.includes('technical') || name.includes('fsm'));
-    }) || attachments.find((a: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-      const name = (a.Name || '').toLowerCase();
-      const mime = (a.MimeType || '').toLowerCase();
-      return mime.includes('pdf') || name.endsWith('.pdf');
-    });
-
-    if (!pdf) {
-      console.warn(`⚠️ [C4C] Ticket ${ticket} encontrado pero sin PDF adjunto.`);
+    if (pdfs.length === 0) {
+      console.warn(`⚠️ [C4C] Ticket ${sanitizeLog(ticket)} encontrado pero sin PDF adjunto.`);
       return res.status(404).json({ message: 'El ticket existe en C4C pero no tiene un Informe Técnico (PDF) adjunto.' });
     }
 
-    // Usamos DocumentLink o __metadata.media_src como fallback
-    const downloadUrl = pdf.DocumentLink || pdf.__metadata?.media_src;
+    // Preferencia propia de Devoluciones: el PDF que suena a informe técnico. Si ninguno lo lleva, vale
+    // el más reciente, que es el primero porque los adjuntos vienen ordenados.
+    const informe = pdfs.find((a) => /informe|technical|fsm/i.test(a.nombre)) ?? pdfs[0];
 
-    if (!downloadUrl) {
-      return res.status(404).json({ message: 'No se pudo obtener la URL de descarga del PDF.' });
-    }
-
-    console.log(`📄 [C4C] Descargando PDF: ${pdf.Name} desde ${downloadUrl}`);
-
-    const pdfResponse = await axios.get(downloadUrl, {
-      ...authConfig,
-      responseType: 'stream'
-    });
+    // C4C a veces da la URL de descarga dentro del propio adjunto; cuando viene se usa esa, que es la
+    // que este endpoint venía usando (`DocumentLink`). Si no, la ruta estándar desde el ticket.
+    const pdf = await descargarAdjuntoComoSea(informe);
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${pdf.Name}"`);
-    pdfResponse.data.pipe(res);
+    res.setHeader('Content-Disposition', `inline; filename="${informe.nombre.replace(/["\r\n]/g, '')}"`);
+    res.send(pdf);
 
   } catch (error: unknown) {
-    console.error(`❌ [C4C] Error crítico:`, error instanceof Error ? error.message : String(error));
-    res.status(500).json({
-      message: 'Error de integración con SAP C4C',
-      error: safeError(error)
-    });
+    // El status de C4C NO se reenvía al navegador: un 401 suyo llegaría como sesión caducada nuestra.
+    const status = error instanceof ErrorC4C && error.clase === 'NO_ENCONTRADO' ? 404 : 502;
+    console.error(`❌ [C4C] Error con el ticket ${sanitizeLog(ticket)}:`, safeError(error));
+    res.status(status).json({ message: mensajePublico(error) });
   }
 });
 

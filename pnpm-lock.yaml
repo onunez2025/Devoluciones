@@ -31,6 +31,9 @@ importers:
       '@capacitor/core':
         specifier: ^8.3.1
         version: 8.5.0
+      '@siatc/c4c-client':
+        specifier: git+ssh://git@git.siatc.cloud:MT_Ind/SIATC-C4C-Client.git#v0.4.0
+        version: git+ssh://git@git.siatc.cloud/MT_Ind/SIATC-C4C-Client.git#09ebb110ff6c633370d7e90ddc6be539889ba1b3
       '@types/multer':
         specifier: ^2.1.0
         version: 2.2.0
@@ -964,6 +967,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@siatc/c4c-client@git+ssh://git@git.siatc.cloud/MT_Ind/SIATC-C4C-Client.git#09ebb110ff6c633370d7e90ddc6be539889ba1b3':
+    resolution: {commit: 09ebb110ff6c633370d7e90ddc6be539889ba1b3, repo: ssh://git@git.siatc.cloud/MT_Ind/SIATC-C4C-Client.git, type: git}
+    version: 0.4.0
+
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
 
@@ -1695,6 +1702,7 @@ packages:
   eslint@9.39.5:
     resolution: {integrity: sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -3804,6 +3812,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.62.3':
     optional: true
+
+  '@siatc/c4c-client@git+ssh://git@git.siatc.cloud/MT_Ind/SIATC-C4C-Client.git#09ebb110ff6c633370d7e90ddc6be539889ba1b3': {}
 
   '@tailwindcss/node@4.3.3':
     dependencies:
