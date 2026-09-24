@@ -32,8 +32,8 @@ importers:
         specifier: ^8.3.1
         version: 8.5.0
       '@siatc/c4c-client':
-        specifier: git+ssh://git@git.siatc.cloud:MT_Ind/SIATC-C4C-Client.git#v0.4.0
-        version: git+ssh://git@git.siatc.cloud/MT_Ind/SIATC-C4C-Client.git#09ebb110ff6c633370d7e90ddc6be539889ba1b3
+        specifier: ^0.5.0
+        version: 0.5.0
       '@types/multer':
         specifier: ^2.1.0
         version: 2.2.0
@@ -967,9 +967,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@siatc/c4c-client@git+ssh://git@git.siatc.cloud/MT_Ind/SIATC-C4C-Client.git#09ebb110ff6c633370d7e90ddc6be539889ba1b3':
-    resolution: {commit: 09ebb110ff6c633370d7e90ddc6be539889ba1b3, repo: ssh://git@git.siatc.cloud/MT_Ind/SIATC-C4C-Client.git, type: git}
-    version: 0.4.0
+  '@siatc/c4c-client@0.5.0':
+    resolution: {integrity: sha512-PkgZklldthR+29fDUlay9V5X9IjaDUX2CFDyRJxnsB0S5pChoDYx9hynSA7sk8Aau4A3k9m1O5hxYF6cWusQcg==, tarball: https://git.siatc.cloud/api/packages/MT_Ind/npm/%40siatc%2Fc4c-client/-/0.5.0/c4c-client-0.5.0.tgz}
 
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
@@ -1232,6 +1231,7 @@ packages:
   '@xmldom/xmldom@0.9.10':
     resolution: {integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==}
     engines: {node: '>=14.6'}
+    deprecated: this version has critical issues, please update to the latest version
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -3813,7 +3813,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.62.3':
     optional: true
 
-  '@siatc/c4c-client@git+ssh://git@git.siatc.cloud/MT_Ind/SIATC-C4C-Client.git#09ebb110ff6c633370d7e90ddc6be539889ba1b3': {}
+  '@siatc/c4c-client@0.5.0': {}
 
   '@tailwindcss/node@4.3.3':
     dependencies:
