@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { validateBody } from '../lib/validate.js';
 import { Router } from 'express';
 import sql from 'mssql';
 import bcrypt from 'bcrypt';
@@ -10,7 +12,20 @@ const router = Router();
 // avatar y/o contraseña. A diferencia de PUT /api/users/:id (gateado por checkPermission
 // ('USERS_EDIT')), nunca acepta un id por parametro: siempre opera sobre req.user.id, y
 // solo toca AvatarUrl/PasswordHash -- nunca username/email/fullName/roleId/managementId/apps.
-router.put('/', async (req: any, res: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+/**
+ * ⚠️ La contraseña NO se validaba: llegaba, se hasheaba y se guardaba, así que un usuario podía dejarse
+ * una de UN carácter desde su propio perfil. Barrido del 2026-09-25: pasaba en las aplicaciones que
+ * tienen este endpoint, con el mismo código copiado. El mínimo de 8 es el que ya exigía SIATC Console.
+ *
+ * El campo se llama `password_hash` por historia, pero lo que llega es la contraseña en claro: el hash
+ * lo hace este endpoint con bcrypt.
+ */
+const actualizarPerfilSchema = z.object({
+    avatar_url: z.string().max(2048).nullable().optional(),
+    password_hash: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.').max(100).optional(),
+});
+
+router.put('/', validateBody(actualizarPerfilSchema), async (req: any, res: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
   try {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: 'No autenticado' });
