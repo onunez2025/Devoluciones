@@ -39,6 +39,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles, requiredP
     return <Navigate to="/login" replace />;
   }
 
+  // El alta de usuarios marca RequiresPasswordChange = 1: hasta que no cambie la contrasena temporal
+  // no se le deja pasar. Va aqui y no en el login para que valga tambien cuando la sesion se
+  // restaura o se entra por SSO.
+  if (user.requires_password_change) return <Navigate to="/force-change-password" replace />;
+
   // Check roles (legacy)
   if (allowedRoles && user.roleId !== undefined && !allowedRoles.includes(user.roleId)) {
     return <Navigate to="/" replace />;

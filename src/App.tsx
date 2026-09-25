@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { AuthProvider } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import SsoLoginPage from './pages/SsoLoginPage';
+import ForceChangePasswordPage from './pages/ForceChangePasswordPage';
 import SsoStatusPage from './pages/SsoStatusPage';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
@@ -18,6 +19,7 @@ function App() {
           <Route path="/sso-login" element={<SsoLoginPage />} />
           <Route path="/sso-status" element={<SsoStatusPage />} />
 
+          <Route path="/force-change-password" element={<ForceChangePasswordPage />} />
           {/* Rutas Privadas — toda consulta de datos, incluida la de historial de equipo
               (antes "pública", ahora requiere sesión iniciada sin excepción), vive aquí. */}
           <Route element={<ProtectedRoute />}>
