@@ -23,7 +23,6 @@ import devolucionesRouter from './routes/devoluciones';
 import uploadRouter from './routes/upload';
 import publicEquipmentRouter from './routes/publicEquipment';
 import profileRouter from './routes/profile';
-import rolesRouter from './routes/roles';
 import managementsRouter from './routes/managements';
 import c4cRouter from './routes/c4c';
 import lookupsRouter from './routes/lookups';
@@ -147,8 +146,10 @@ app.use('/api/auth', authRouter);
 app.use('/api/devoluciones', verifyToken, devolucionesRouter);
 app.use('/api/upload', verifyToken, uploadRouter);
 app.use('/api/public/equipment', verifyToken, publicEquipmentRouter);
+// El CRUD de roles vivia aqui duplicado (lectura y escritura de EBM.RolePermissions) y se retiro el
+// 2026-09-25: ninguna pantalla de esta app lo llamaba desde que la administracion de roles se
+// centralizo en SIATC Console.
 app.use('/api/profile', verifyToken, profileRouter);
-app.use('/api/roles', verifyToken, rolesRouter);
 app.use('/api/managements', verifyToken, managementsRouter);
 app.use('/api/c4c', verifyTokenForDownload, c4cRouter);
 // Prefijo amplio -- mapea internamente /equipos/lookup, /sap/lookup, /lookups/* (paths
